@@ -9,7 +9,7 @@ function App() {
   return (
     <>
       <div>
-        <span>testing development merge</span>
+        <span> {import.meta.env.VITE_APP_TITLE}</span>
         <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
           <img src={viteLogo} className="logo" alt="Vite logo" />
         </a>
