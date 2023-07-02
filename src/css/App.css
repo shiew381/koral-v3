@@ -1,3 +1,58 @@
 #root {
   /* background-color: blue; */
 }
+
+.block {
+  display: block;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-end {
+  justify-content: end;
+}
+
+.flex-row {
+  display: row;
+}
+
+.flex-space-between {
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/*===================================================================*/
+
+.lightbox {
+  background-color: whitesmoke;
+  border: 1px solid gray;
+  border-radius: 8px;
+  left: 50%;
+  max-height: 85vh;
+  max-width: 400px;
+  outline: none;
+  overflow: auto;
+  padding: 25px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 85vw;
+}
+
+.link:hover {
+  cursor: pointer;
+}
