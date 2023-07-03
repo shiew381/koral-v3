@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import HomePage from "./pages/HomePage.jsx";
 import CoursesPage from "./pages/CoursesPage.jsx";
+import LinksPage from "./pages/LinksPage.jsx";
 import { NavBar } from "./components/navigation/NavBar.jsx";
 import { NavMenu } from "./components/navigation/NavMenu";
 import "./css/App.css";
@@ -33,6 +34,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="documents" element={<CoursesPage />} />
+              <Route path="content/links" element={<LinksPage />} />
             </Routes>
           </div>
         </ThemeProvider>

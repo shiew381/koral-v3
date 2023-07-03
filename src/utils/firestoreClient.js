@@ -127,7 +127,7 @@ export function fetchUserImages(user, setImages, setFetching) {
 }
 
 export function fetchUserLinks(user, setLinks, setFetching) {
-  const ref = collection(db, "users", user.id, "links");
+  const ref = collection(db, "users", user.uid, "links");
   const q = query(ref);
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({

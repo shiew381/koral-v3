@@ -19,6 +19,10 @@
   justify-content: end;
 }
 
+.flex-justify-center {
+  justify-content: center;
+}
+
 .flex-row {
   display: row;
 }
@@ -36,6 +40,14 @@
 }
 
 /*===================================================================*/
+
+.build-first-item {
+  width: 80vw;
+  background-color: whitesmoke;
+  border-radius: 10px;
+  padding-top: 90px;
+  padding-bottom: 70px;
+}
 
 .lightbox {
   background-color: whitesmoke;
@@ -55,4 +67,9 @@
 
 .link:hover {
   cursor: pointer;
+}
+
+.page-container {
+  padding-top: 60px;
+  min-height: calc(100vh - 60px);
 }
