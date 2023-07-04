@@ -1,3 +1,144 @@
 #root {
   /* background-color: blue; */
 }
+
+.block {
+  display: block;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-align-center {
+  align-items: center;
+}
+
+.flex-center {
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.flex-end {
+  justify-content: end;
+}
+
+.flex-justify-center {
+  justify-content: center;
+}
+
+.flex-row {
+  display: row;
+}
+
+.flex-space-between {
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.relative {
+  position: relative;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/*===================================================================*/
+
+.build-first-item {
+  width: 80vw;
+  background-color: whitesmoke;
+  border-radius: 10px;
+  padding-top: 90px;
+  padding-bottom: 70px;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.img-container {
+  background-color: whitesmoke;
+  height: 200px;
+  margin: 3px;
+  min-width: 220px;
+}
+
+.img-details {
+  background-color: whitesmoke;
+  bottom: 0;
+  opacity: 0.8;
+  position: absolute;
+  width: 100%;
+}
+
+.img-preview-box {
+  left: 50%;
+  max-height: 85vh;
+  outline: none;
+  overflow: auto;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.img-preview {
+  max-height: 80vh;
+  max-width: 100%;
+}
+
+.img-tile {
+  /* height: 100%; */
+  max-height: 100%;
+  max-width: 80vw;
+}
+
+.img-tile:hover {
+  cursor: pointer;
+}
+
+.img-upload-container {
+  background-color: whitesmoke;
+  border: 1px solid gainsboro;
+  height: 250px;
+  margin: 3px;
+  margin-top: 2px;
+  min-width: 220px;
+}
+
+.lightbox {
+  background-color: whitesmoke;
+  border: 1px solid gray;
+  border-radius: 8px;
+  left: 50%;
+  max-height: 85vh;
+  max-width: 400px;
+  outline: none;
+  overflow: auto;
+  padding: 25px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 85vw;
+}
+
+.link:hover {
+  cursor: pointer;
+}
+
+.page-container {
+  padding-top: 60px;
+  min-height: calc(100vh - 60px);
+}
