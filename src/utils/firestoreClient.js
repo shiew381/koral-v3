@@ -119,6 +119,7 @@ export function fetchUserImages(user, setImages, setFetching) {
       url: doc.data().url,
       uploaded: doc.data().uploaded?.toDate(),
       size: doc.data().size,
+      searchHandle: doc.data().name.toLowerCase(),
     }));
     setImages(fetchedItems);
     setFetching(false);

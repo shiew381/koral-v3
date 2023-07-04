@@ -260,7 +260,6 @@ export function SearchField({ onChange, value }) {
         ),
       }}
       size="small"
-      sx={{ width: "82%", mb: "8px" }}
       value={value}
       variant="outlined"
     />

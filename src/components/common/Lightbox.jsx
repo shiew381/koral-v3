@@ -65,7 +65,7 @@ export function ImagePreviewBox({ image, open, onClose }) {
     >
       <Fade in={open}>
         <Box className="img-preview-box" sx={{ minWidth: 400 }}>
-          <img style={{ maxWidth: "100%" }} src={image.url} alt={image.alt} />
+          <img className="img-preview" src={image.url} alt={image.alt} />
         </Box>
       </Fade>
     </Modal>

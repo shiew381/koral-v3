@@ -11,6 +11,7 @@ import {
   List,
   ListItem,
   ListItemButton,
+  ListItemText,
   Typography,
 } from "@mui/material";
 import { SearchField } from "../components/common/InputFields";
@@ -34,20 +35,19 @@ export default function LinksPage() {
   const [open, setOpen] = useState(false);
   const [selLink, setSelLink] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const filtered = filterByTerm(links, searchTerm);
 
   const { user } = useAuth();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const filtered = filterByTerm(links, searchTerm);
-
   function toggleOrder() {
     const updated = [...links].reverse();
     setLinks(updated);
   }
 
-  function handleSearch(e) {
+  function handleSearchTerm(e) {
     setSearchTerm(e.target.value.toLowerCase());
   }
 
@@ -76,7 +76,6 @@ export default function LinksPage() {
     return (
       <Page>
         <PageHeader title="Links" />
-        <pre>{JSON.stringify(user)}</pre>
         <div className="flex flex-center" style={{ height: "50vh" }}>
           <BuildFirstItem
             handleOpen={handleOpen}
@@ -95,8 +94,8 @@ export default function LinksPage() {
         <PageHeader title="Links" />
         <Box className="flex flex-row">
           <Box className="flex-col" sx={{ width: "300px", mx: "15px" }}>
-            <Box>
-              <SearchField onChange={handleSearch} value={searchTerm} />
+            <Box className="flex flex-space-between" sx={{ mb: 2 }}>
+              <SearchField onChange={handleSearchTerm} value={searchTerm} />
               <IconButton onClick={toggleOrder}>
                 <SwapVertIcon style={{ color: "gray" }} />
               </IconButton>
@@ -105,6 +104,7 @@ export default function LinksPage() {
             <Divider />
             <LinkList
               links={filtered}
+              searchTerm={searchTerm}
               selLink={selLink}
               setSelLink={setSelLink}
             />
@@ -122,8 +122,18 @@ export default function LinksPage() {
   }
 }
 
-function LinkList({ links, selLink, setSelLink }) {
-  if (!links) return null;
+function LinkList({ links, searchTerm, selLink, setSelLink }) {
+  if (links?.length == 0) {
+    return (
+      <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
+        <ListItem component="div" disablePadding sx={{ bgcolor: "none", p: 2 }}>
+          <ListItemText>
+            No links with name containing &quot;{searchTerm}&quot;
+          </ListItemText>
+        </ListItem>
+      </List>
+    );
+  }
 
   return (
     <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>

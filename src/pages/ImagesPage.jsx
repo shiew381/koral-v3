@@ -9,9 +9,10 @@ import {
   fetchUserImages,
 } from "../utils/firestoreClient.js";
 import { getFileExtension } from "../utils/fileUtils";
-
 import { formatDate } from "../utils/dateUtils";
+import { filterByTerm } from "../utils/filterUtils";
 import {
+  Alert,
   Box,
   Button,
   LinearProgress,
@@ -22,25 +23,28 @@ import {
   Typography,
 } from "@mui/material";
 import { LoadingIndicator, Page, PageHeader } from "../components/common/Pages";
-// import { UploadFirstImage } from "../components/common/CallsToAction";
 import { ImagePreviewBox } from "../components/common/Lightbox";
 import { MoreOptionsBtn } from "../components/common/Buttons";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { SearchField } from "../components/common/InputFields";
 
 export default function ImagesPage() {
-  const [anchorEl, setAnchorEl] = useState(null);
+  const { user } = useAuth();
+
   const [fetching, setFetching] = useState(true);
-  const [file, setFile] = useState(null);
   const [images, setImages] = useState([]);
-  const [previewOpen, setPreviewOpen] = useState(false);
   const [selImage, setSelImage] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const filtered = filterByTerm(images, searchTerm);
+
+  const [file, setFile] = useState(null);
+  const filePath = `users/${user?.uid}/images/${file?.name}`;
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [uploadProgress, setUploadProgress] = useState(null);
-
-  const { user } = useAuth();
-
+  const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
 
   const handleCloseMenu = () => setAnchorEl(null);
@@ -75,6 +79,10 @@ export default function ImagesPage() {
     addPointerToFile(user, file, url, "images");
   }
 
+  function handleSearchTerm(e) {
+    setSearchTerm(e.target.value.toLowerCase());
+  }
+
   function deleteImage(image) {
     const storageRef = ref(storage, `users/${user.uid}/images/${image?.name}`);
     deleteObject(storageRef)
@@ -92,13 +100,7 @@ export default function ImagesPage() {
     [user]
   );
 
-  useStorage(
-    file,
-    setFile,
-    `users/${user?.uid}/images/${file?.name}`,
-    setUploadProgress,
-    handleUploadSuccess
-  );
+  useStorage(file, setFile, filePath, setUploadProgress, handleUploadSuccess);
 
   if (!user) return null;
 
@@ -123,27 +125,16 @@ export default function ImagesPage() {
             >
               Welcome to your images! Choose a JPEG or PNG file to upload.
             </Typography>
-
-            <Box sx={{ width: "80%", margin: "auto" }}>
-              {file ? (
-                <Box sx={{ height: "35px" }}>
-                  <LinearProgress
-                    variant="determinate"
-                    value={uploadProgress}
-                  />
-                </Box>
-              ) : (
-                <Button
-                  fullWidth
-                  component="label"
-                  startIcon={<CloudUploadIcon />}
-                  sx={{ py: 2 }}
-                >
-                  upload image
-                  <input type="file" hidden onChange={handleSelectFile} />
-                </Button>
-              )}
-            </Box>
+            <UploadImage
+              file={file}
+              handleSelectFile={handleSelectFile}
+              uploadProgress={uploadProgress}
+            />
+            {error && (
+              <Alert severity="warning" sx={{ my: 2 }}>
+                {errorMessage}
+              </Alert>
+            )}
           </Box>
         </div>
       </Page>
@@ -154,61 +145,76 @@ export default function ImagesPage() {
     return (
       <Page>
         <PageHeader title="Images" />
-        <Box className="flex flex-row flex-wrap" sx={{ px: 3 }}>
-          {images.map((image) => (
-            <Box
-              key={image.id}
-              className="img-container relative flex flex-center"
-            >
-              <img
-                alt={image.alt}
-                className="img-tile"
-                src={image.url}
-                onClick={() => {
-                  handlePreviewOpen();
-                  setSelImage(image);
-                }}
-              />
-              <ImageDetails info={image} />
-              <MoreOptionsBtn
-                image={image}
-                setAnchorEl={setAnchorEl}
-                setSelImage={setSelImage}
-              />
-              <MoreOptionsMenu
-                anchorEl={anchorEl}
-                handleClose={handleCloseMenu}
-                open={menuOpen}
-              >
-                <Option>
-                  <ListItemButton>Download</ListItemButton>
-                </Option>
-                <Option>
-                  <ListItemButton href={selImage?.url} target="_blank">
-                    Open in new tab
-                  </ListItemButton>
-                </Option>
-                <Option>
-                  <ListItemButton onClick={() => deleteImage(selImage)}>
-                    Delete
-                  </ListItemButton>
-                </Option>
-              </MoreOptionsMenu>
+        <Box sx={{ px: 3 }}>
+          <Box
+            className="flex flex-align-center flex-space-between flex-wrap"
+            sx={{ py: 1 }}
+            width="450px"
+          >
+            <Box>
+              <SearchField onChange={handleSearchTerm} value={searchTerm} />
             </Box>
-          ))}
-          <Box className="img-upload-container flex flex-center">
-            {/* <UploadFile
-              acceptedExtensions={["PNG", "jpeg"]}
-              acceptedTypes={["image/png", "image/jpeg"]}
-              addRef={addImageRef}
+            <UploadImage
               file={file}
-              label="upload image"
-              setFile={setFile}
-              storagePath={`users/${user.id}/images/${file?.name}`}
-              errorMessage="Please upload an image file (.jpeg or .png)"
-            /> */}
+              handleSelectFile={handleSelectFile}
+              uploadProgress={uploadProgress}
+            />
+          </Box>
+          {filtered.length === 0 && (
+            <Box sx={{ p: 2 }}>
+              No images with name containing &quot;{searchTerm}&quot;
+            </Box>
+          )}
+          {error && (
+            <Alert severity="warning" sx={{ my: 2 }}>
+              {errorMessage}
+            </Alert>
+          )}
+          <Box className="flex flex-row flex-wrap">
+            {filtered.map((image) => (
+              <Box
+                key={image.id}
+                className="img-container relative flex flex-center"
+              >
+                <img
+                  alt={image.alt}
+                  className="img-tile"
+                  src={image.url}
+                  onClick={() => {
+                    handlePreviewOpen();
+                    setSelImage(image);
+                  }}
+                />
+                <ImageDetails info={image} />
+                <MoreOptionsBtn
+                  image={image}
+                  setAnchorEl={setAnchorEl}
+                  setSelImage={setSelImage}
+                />
+                <MoreOptionsMenu
+                  anchorEl={anchorEl}
+                  handleClose={handleCloseMenu}
+                  open={menuOpen}
+                >
+                  <Option>
+                    <ListItemButton>Download</ListItemButton>
+                  </Option>
+                  <Option>
+                    <ListItemButton href={selImage?.url} target="_blank">
+                      Open in new tab
+                    </ListItemButton>
+                  </Option>
+                  <Option>
+                    <ListItemButton onClick={() => deleteImage(selImage)}>
+                      Delete
+                    </ListItemButton>
+                  </Option>
+                </MoreOptionsMenu>
+              </Box>
+            ))}
           </Box>
         </Box>
+
         <br />
         <br />
         <ImagePreviewBox
@@ -260,4 +266,29 @@ function MoreOptionsMenu({ open, anchorEl, handleClose, children }) {
 
 function Option({ children }) {
   return <ListItem disablePadding>{children}</ListItem>;
+}
+
+function UploadImage({ file, uploadProgress, handleSelectFile }) {
+  if (!file) {
+    return (
+      <Box sx={{ width: "170px" }}>
+        <Button
+          component="label"
+          startIcon={<CloudUploadIcon />}
+          sx={{ px: 2 }}
+        >
+          upload image
+          <input type="file" hidden onChange={handleSelectFile} />
+        </Button>
+      </Box>
+    );
+  }
+
+  if (file) {
+    return (
+      <Box sx={{ width: "130px", px: "20px" }}>
+        <LinearProgress variant="determinate" value={uploadProgress} />
+      </Box>
+    );
+  }
 }
