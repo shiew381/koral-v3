@@ -1,4 +1,5 @@
-import { Box, Button, CircularProgress } from "@mui/material";
+import { Box, Button, CircularProgress, IconButton } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 export function SubmitBtn({ disabled, fullWidth, onClick, submitting, label }) {
   return (
@@ -27,4 +28,18 @@ export function BtnContainer({ children, left, center, right, split }) {
   if (split) placement = "flex-space-between";
 
   return <Box className={`flex flex-row ${placement}`}>{children}</Box>;
+}
+
+export function MoreOptionsBtn({ setSelImage, image, setAnchorEl }) {
+  return (
+    <IconButton
+      sx={{ position: "absolute", bottom: 10, right: 5 }}
+      onClick={(e) => {
+        setAnchorEl(e.currentTarget);
+        setSelImage(image);
+      }}
+    >
+      <MoreVertIcon />
+    </IconButton>
+  );
 }

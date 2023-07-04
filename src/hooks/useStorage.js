@@ -7,7 +7,7 @@ export function useStorage(
   setFile,
   storagePath,
   setUploadProgress,
-  addRef
+  handleUploadSuccess
 ) {
   useEffect(() => {
     if (!file) return;
@@ -32,7 +32,7 @@ export function useStorage(
       // Handle successful uploads on complete
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          addRef(downloadURL);
+          handleUploadSuccess(downloadURL);
         });
         setFile(null);
         setUploadProgress(null);

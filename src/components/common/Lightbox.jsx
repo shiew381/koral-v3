@@ -48,3 +48,26 @@ export function LightboxHeader({ title, center }) {
     </Typography>
   );
 }
+
+export function ImagePreviewBox({ image, open, onClose }) {
+  if (!image) return null;
+  return (
+    <Modal
+      slots={{ backdrop: Backdrop }}
+      slotProps={{
+        backdrop: {
+          timeout: 500,
+        },
+      }}
+      closeAfterTransition
+      open={open}
+      onClose={onClose}
+    >
+      <Fade in={open}>
+        <Box className="img-preview-box" sx={{ minWidth: 400 }}>
+          <img style={{ maxWidth: "100%" }} src={image.url} alt={image.alt} />
+        </Box>
+      </Fade>
+    </Modal>
+  );
+}

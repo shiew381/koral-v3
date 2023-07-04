@@ -16,7 +16,7 @@ export default function HomePage() {
   const [signupOpen, setSignupOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
 
   const navigate = useNavigate();
   const navigateToCourses = () => navigate("/classroom/courses");
@@ -39,12 +39,14 @@ export default function HomePage() {
 
   return (
     <Box height="100vh" className="flex flex-center">
-      <Box style={{ maxWidth: "20px" }}></Box>
-      <Box className="flex flex-center flex-wrap">
+      <Box
+        className="flex flex-center flex-wrap flex-space-between"
+        width="750px"
+      >
         <img src={imgURL} alt="app logo" width="300px" />
-        {currentUser ? (
+        {user ? (
           <ContinueToCoursesPanel
-            currentUser={currentUser}
+            user={user}
             navigateToCourses={navigateToCourses}
           />
         ) : (
@@ -126,16 +128,16 @@ function LoginPanel({ navigateToCourses, openResetPwd, openSignup }) {
   );
 }
 
-function ContinueToCoursesPanel({ currentUser, navigateToCourses }) {
+function ContinueToCoursesPanel({ user, navigateToCourses }) {
   const { logout } = useAuth();
 
   return (
     <Box width="350px" textAlign="center">
       <Typography display="block" variant="subtitle 1">
-        You&aposre logged in as
+        You&apos;re logged in as
       </Typography>
       <Typography variant="h6" color="primary" sx={{ mb: 5 }}>
-        {currentUser.email}
+        {user.email}
       </Typography>
       <Button
         fullWidth

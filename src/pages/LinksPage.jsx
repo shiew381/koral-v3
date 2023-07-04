@@ -26,7 +26,7 @@ import {
   PageHeader,
 } from "../components/common/Pages.jsx";
 import { useAuth } from "../contexts/AuthContext";
-// import { AddLinkForm } from "../forms/AddLink.jsx";
+import { AddLinkForm } from "../components/forms/AddLinkForm";
 
 export default function LinksPage() {
   const [fetching, setFetching] = useState(true);
@@ -35,7 +35,7 @@ export default function LinksPage() {
   const [selLink, setSelLink] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { currentUser } = useAuth();
+  const { user } = useAuth();
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -52,12 +52,15 @@ export default function LinksPage() {
   }
 
   useEffect(
-    () => fetchUserLinks(currentUser, setLinks, setFetching),
+    () => {
+      if (!user) return;
+      fetchUserLinks(user, setLinks, setFetching);
+    },
     //eslint-disable-next-line
-    []
+    [user]
   );
 
-  if (!currentUser) {
+  if (!user) {
     return null;
   }
 
@@ -73,6 +76,7 @@ export default function LinksPage() {
     return (
       <Page>
         <PageHeader title="Links" />
+        <pre>{JSON.stringify(user)}</pre>
         <div className="flex flex-center" style={{ height: "50vh" }}>
           <BuildFirstItem
             handleOpen={handleOpen}
@@ -80,7 +84,7 @@ export default function LinksPage() {
             message="Welcome to your links! Embed content from other websites here."
           />
         </div>
-        {/* <AddLinkForm open={open} handleClose={handleClose} user={user} /> */}
+        <AddLinkForm open={open} handleClose={handleClose} user={user} />
       </Page>
     );
   }
@@ -106,9 +110,9 @@ export default function LinksPage() {
             />
             <Divider />
             <AddLinkBtn onClick={handleOpen} />
-            {/* <AddLinkForm open={open} handleClose={handleClose} user={user} /> */}
+            <AddLinkForm open={open} handleClose={handleClose} user={user} />
           </Box>
-          <Box className="flex-col flex-align-center flex-grow relative">
+          <Box className="flexflex-col flex-align-center flex-grow relative">
             <LinkEmbed link={selLink} />
             <LinkDetails link={selLink} />
           </Box>

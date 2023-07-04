@@ -27,8 +27,8 @@ export function addCourse(handleClose, setSubmitting, values) {
     });
 }
 
-export function addFileRef(user, file, url, colName) {
-  const ref = collection(db, "users", user.id, colName);
+export function addPointerToFile(user, file, url, colName) {
+  const ref = collection(db, "users", user.uid, colName);
   const data = {
     type: file.type,
     name: file.name,
@@ -46,7 +46,7 @@ export function addUser({ userCredentials, values }) {
 }
 
 export function addUserLink(user, values, setSubmitting, handleClose) {
-  const ref = collection(db, "users", user.id, "links");
+  const ref = collection(db, "users", user.uid, "links");
   setSubmitting(true);
   addDoc(ref, { ...values, created: serverTimestamp() })
     .then(() => {
@@ -57,7 +57,7 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
 }
 
 export function addUserQSet(user, values, setSubmitting, handleClose) {
-  const ref = collection(db, "users", user.id, "questionSets");
+  const ref = collection(db, "users", user.uid, "questionSets");
   setSubmitting(true);
   addDoc(ref, { ...values, questions: [], created: serverTimestamp() })
     .then(() => {
@@ -68,12 +68,12 @@ export function addUserQSet(user, values, setSubmitting, handleClose) {
 }
 
 export function deleteFirestoreRef(user, colName, docID) {
-  deleteDoc(doc(db, "users", user.id, colName, docID));
+  deleteDoc(doc(db, "users", user.uid, colName, docID));
 }
 
 export function fetchCourses(user, setCourses, setFetching) {
   const colRef = collection(db, "courses");
-  const q = query(colRef, where("instructorIDs", "array-contains", user.id));
+  const q = query(colRef, where("instructorIDs", "array-contains", user.uid));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -92,7 +92,7 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
     return 0;
   }
 
-  const ref = collection(db, "users", user.id, "documents");
+  const ref = collection(db, "users", user.uid, "documents");
   const q = query(ref);
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
@@ -110,7 +110,7 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
 }
 
 export function fetchUserImages(user, setImages, setFetching) {
-  const ref = collection(db, "users", user.id, "images");
+  const ref = collection(db, "users", user.uid, "images");
   const q = query(ref, orderBy("uploaded", "desc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
@@ -144,7 +144,7 @@ export function fetchUserLinks(user, setLinks, setFetching) {
 }
 
 export function fetchUserQSets(user, setQSets, setFetching) {
-  const ref = collection(db, "users", user.id, "questionSets");
+  const ref = collection(db, "users", user.uid, "questionSets");
   const q = query(ref);
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({

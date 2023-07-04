@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { auth, db } from "../config/firebaseConfig.js";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "../config/firebaseConfig.js";
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -16,9 +15,8 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
 
   function signup(email, password) {
     return createUserWithEmailAndPassword(auth, email, password);
@@ -38,28 +36,13 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      if (!user) setLoading(false);
-
-      const userRef = doc(db, "users", user?.uid);
-      getDoc(userRef)
-        .then((docSnap) =>
-          setUser({
-            id: user.uid,
-            email: user.email,
-            firstName: docSnap.data().firstName,
-            lastName: docSnap.data().lastName,
-            permissions: docSnap.data().permissions,
-          })
-        )
-        .then(() => setLoading(false));
+      setUser(user);
     });
     return unsubscribe;
   }, []);
 
   const value = {
     user,
-    currentUser,
     login,
     logout,
     signup,
@@ -68,7 +51,8 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading ? children : null}
+      {children}
+      {/* {!loading ? children : null} */}
     </AuthContext.Provider>
   );
 }
