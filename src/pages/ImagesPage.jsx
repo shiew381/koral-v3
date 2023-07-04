@@ -16,17 +16,15 @@ import {
   Box,
   Button,
   LinearProgress,
-  List,
-  ListItem,
   ListItemButton,
-  Popover,
   Typography,
 } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { LoadingIndicator, Page, PageHeader } from "../components/common/Pages";
 import { ImagePreviewBox } from "../components/common/Lightbox";
 import { MoreOptionsBtn } from "../components/common/Buttons";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { SearchField } from "../components/common/InputFields";
+import { MoreOptionsMenu, MenuOption } from "../components/common/Menus";
 
 export default function ImagesPage() {
   const { user } = useAuth();
@@ -39,10 +37,10 @@ export default function ImagesPage() {
   const filtered = filterByTerm(images, searchTerm);
 
   const [file, setFile] = useState(null);
-  const filePath = `users/${user?.uid}/images/${file?.name}`;
   const [uploadProgress, setUploadProgress] = useState(null);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const filePath = `users/${user?.uid}/images/${file?.name}`;
 
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
@@ -148,12 +146,10 @@ export default function ImagesPage() {
         <Box sx={{ px: 3 }}>
           <Box
             className="flex flex-align-center flex-space-between flex-wrap"
-            sx={{ py: 1 }}
+            sx={{ pb: 2 }}
             width="450px"
           >
-            <Box>
-              <SearchField onChange={handleSearchTerm} value={searchTerm} />
-            </Box>
+            <SearchField onChange={handleSearchTerm} value={searchTerm} />
             <UploadImage
               file={file}
               handleSelectFile={handleSelectFile}
@@ -174,7 +170,7 @@ export default function ImagesPage() {
             {filtered.map((image) => (
               <Box
                 key={image.id}
-                className="img-container relative flex flex-center"
+                className="img-container flex flex-center relative"
               >
                 <img
                   alt={image.alt}
@@ -186,29 +182,32 @@ export default function ImagesPage() {
                   }}
                 />
                 <ImageDetails info={image} />
-                <MoreOptionsBtn
-                  image={image}
-                  setAnchorEl={setAnchorEl}
-                  setSelImage={setSelImage}
-                />
+                <Box sx={{ position: "absolute", bottom: 10, right: 5 }}>
+                  <MoreOptionsBtn
+                    item={image}
+                    setAnchorEl={setAnchorEl}
+                    setSelItem={setSelImage}
+                  />
+                </Box>
+
                 <MoreOptionsMenu
                   anchorEl={anchorEl}
                   handleClose={handleCloseMenu}
                   open={menuOpen}
                 >
-                  <Option>
+                  <MenuOption>
                     <ListItemButton>Download</ListItemButton>
-                  </Option>
-                  <Option>
+                  </MenuOption>
+                  <MenuOption>
                     <ListItemButton href={selImage?.url} target="_blank">
                       Open in new tab
                     </ListItemButton>
-                  </Option>
-                  <Option>
+                  </MenuOption>
+                  <MenuOption>
                     <ListItemButton onClick={() => deleteImage(selImage)}>
                       Delete
                     </ListItemButton>
-                  </Option>
+                  </MenuOption>
                 </MoreOptionsMenu>
               </Box>
             ))}
@@ -238,34 +237,6 @@ function ImageDetails({ info }) {
       </Typography>
     </div>
   );
-}
-
-function MoreOptionsMenu({ open, anchorEl, handleClose, children }) {
-  const anchorPlacement = {
-    vertical: "center",
-    horizontal: "center",
-  };
-
-  const originPlacement = {
-    vertical: "top",
-    horizontal: "left",
-  };
-
-  return (
-    <Popover
-      open={open}
-      anchorEl={anchorEl}
-      onClose={handleClose}
-      anchorOrigin={anchorPlacement}
-      transformOrigin={originPlacement}
-    >
-      <List disablePadding>{children}</List>
-    </Popover>
-  );
-}
-
-function Option({ children }) {
-  return <ListItem disablePadding>{children}</ListItem>;
 }
 
 function UploadImage({ file, uploadProgress, handleSelectFile }) {

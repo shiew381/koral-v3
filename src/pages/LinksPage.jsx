@@ -92,9 +92,12 @@ export default function LinksPage() {
     return (
       <Page>
         <PageHeader title="Links" />
-        <Box className="flex flex-row">
+        <Box className="flex flex-row" sx={{ px: 2 }}>
           <Box className="flex-col" sx={{ width: "300px", mx: "15px" }}>
-            <Box className="flex flex-space-between" sx={{ mb: 2 }}>
+            <Box
+              className="flex flex-align-center flex-space-between"
+              sx={{ py: 1 }}
+            >
               <SearchField onChange={handleSearchTerm} value={searchTerm} />
               <IconButton onClick={toggleOrder}>
                 <SwapVertIcon style={{ color: "gray" }} />

@@ -11,6 +11,7 @@ import "./css/App.css";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "./theme.js";
+import DocumentsPage from "./pages/DocumentsPage.jsx";
 
 export default function App() {
   const [open, setOpen] = useState(false);
@@ -34,7 +35,7 @@ export default function App() {
             <NavMenu open={open} />
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="documents" element={<CoursesPage />} />
+              <Route path="content/documents" element={<DocumentsPage />} />
               <Route path="content/images" element={<ImagesPage />} />
               <Route path="content/links" element={<LinksPage />} />
             </Routes>

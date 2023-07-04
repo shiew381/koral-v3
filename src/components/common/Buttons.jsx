@@ -30,13 +30,12 @@ export function BtnContainer({ children, left, center, right, split }) {
   return <Box className={`flex flex-row ${placement}`}>{children}</Box>;
 }
 
-export function MoreOptionsBtn({ setSelImage, image, setAnchorEl }) {
+export function MoreOptionsBtn({ setSelItem, item, setAnchorEl }) {
   return (
     <IconButton
-      sx={{ position: "absolute", bottom: 10, right: 5 }}
       onClick={(e) => {
         setAnchorEl(e.currentTarget);
-        setSelImage(image);
+        setSelItem(item);
       }}
     >
       <MoreVertIcon />
