@@ -1,7 +1,7 @@
 import { db } from "../config/firebaseConfig.js";
-
 import {
   addDoc,
+  arrayUnion,
   deleteDoc,
   collection,
   doc,
@@ -13,6 +13,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { generateRandomCode } from "./commonUtils.js";
 
 export function addCourse(handleClose, setSubmitting, values) {
   const ref = collection(db, "courses");
@@ -26,6 +27,40 @@ export function addCourse(handleClose, setSubmitting, values) {
       console.log(error);
       setTimeout(() => setSubmitting(false), 500);
     });
+}
+
+export function addQuestion(
+  values,
+  qSet,
+  user,
+  setSubmitting,
+  setSelQuestion,
+  handleClose
+) {
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+
+  console.log(user.uid);
+  console.log(qSet.id);
+
+  const newID = generateRandomCode(8);
+
+  const tidiedValues = {
+    id: newID,
+    created: new Date(),
+    ...values,
+  };
+
+  console.log(tidiedValues);
+
+  setSubmitting(true);
+  updateDoc(ref, {
+    questions: arrayUnion(tidiedValues),
+  })
+    .then(() => {
+      setSelQuestion(tidiedValues);
+      setTimeout(() => handleClose(), 800);
+    })
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
 export function addPointerToFile(user, file, url, colName) {
@@ -66,6 +101,48 @@ export function addUserQSet(user, values, setSubmitting, handleClose) {
       handleClose();
     })
     .catch((error) => console.log(error));
+}
+
+export function autoSaveQuestion(
+  values,
+  selQuestion,
+  qSet,
+  user,
+  setSelQuestion
+) {
+  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const updatedQuestions = qSet.questions.map((question) =>
+    question.id === selQuestion.id ? values : question
+  );
+
+  updateDoc(ref, {
+    questions: updatedQuestions,
+  }).then(() => setSelQuestion(values));
+}
+
+export function autoAddQueston(
+  values,
+  newID,
+  qSet,
+  user,
+  setEdit,
+  setSelQuestion
+) {
+  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const tidiedValues = {
+    id: newID,
+    created: new Date(),
+    ...values,
+  };
+
+  updateDoc(ref, {
+    questions: arrayUnion(tidiedValues),
+  }).then(() => {
+    setSelQuestion(tidiedValues);
+    setEdit(true);
+  });
+
+  return tidiedValues.id;
 }
 
 export function deleteFirestoreRef(user, colName, docID) {
@@ -162,6 +239,19 @@ export function fetchUserQSets(user, setQSets, setFetching) {
   return unsubscribe;
 }
 
+export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
+  const ref = doc(db, "users", user.uid, "question-sets", qSetID);
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    console.log("Current data: ", doc.data());
+    setQSet({
+      id: doc.id,
+      ...doc.data(),
+    });
+    setFetching(false);
+  });
+  return unsubscribe;
+}
+
 export function updateAdaptiveParams(
   user,
   docID,
@@ -174,6 +264,38 @@ export function updateAdaptiveParams(
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
     .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function updateQuestion(
+  values,
+  selQuestion,
+  qSet,
+  user,
+  setSubmitting,
+  setSelQuestion,
+  handleClose
+) {
+  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+
+  const tidiedValues = {
+    id: selQuestion.id,
+    ...values,
+    updated: new Date(),
+  };
+
+  const updatedQuestions = qSet.questions.map((question) =>
+    question.id === selQuestion.id ? tidiedValues : question
+  );
+
+  setSubmitting(true);
+  updateDoc(ref, {
+    questions: updatedQuestions,
+  })
+    .then(() => {
+      setSelQuestion(tidiedValues);
+      setTimeout(() => handleClose(), 800);
+    })
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 

@@ -25,6 +25,7 @@ import { ImagePreviewBox } from "../components/common/Lightbox";
 import { MoreOptionsBtn } from "../components/common/Buttons";
 import { SearchField } from "../components/common/InputFields";
 import { MoreOptionsMenu, MenuOption } from "../components/common/Menus";
+import "../css/ImagesPage.css";
 
 export default function ImagesPage() {
   const { user } = useAuth();

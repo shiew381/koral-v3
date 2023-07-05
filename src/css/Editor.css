@@ -1,0 +1,349 @@
+.editor-container {
+  position: relative;
+  padding: 5px;
+  margin-top: 5px;
+  background-color: rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  outline: none;
+}
+
+.editor-container:focus-within {
+  border-style: none;
+  border-bottom: solid #5fa1b5 2px;
+  .editorLabel {
+    color: #fd8835 !important;
+  }
+}
+
+.editor-content-area {
+  padding: 5px;
+  padding-top: 20px;
+  outline: none;
+  display: block;
+}
+
+.editor-label {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.6);
+  position: absolute;
+  top: 5px;
+}
+
+.eq-field {
+  min-width: 14px;
+  min-height: 16px;
+  padding: 2px;
+  line-height: 16px;
+  outline: 1px dotted gray;
+}
+
+.eq-field > sup {
+  position: relative;
+  bottom: 4px;
+}
+
+.eq-field > sub {
+  position: relative;
+  bottom: -6px;
+}
+
+.eq-field:focus {
+  background-color: rgb(220, 240, 247);
+}
+
+.eq-fraction {
+  display: inline-block;
+  margin-left: 3px;
+  margin-right: 3px;
+  position: relative;
+}
+
+.eq-fraction-divider {
+  border: 0.5px solid rgb(105, 105, 105);
+}
+
+.eq-numerator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
+  margin-bottom: 4px;
+}
+
+.eq-denominator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px;
+  margin-top: 4px;
+}
+
+.eq-parentheses {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.eq-parentheses-decoration {
+  position: relative;
+  bottom: 2px;
+}
+
+.eq-parentheses-arg {
+  display: flex;
+  align-items: center;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.eq-sqrt {
+  display: flex;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
+.eq-sqrt-main {
+  display: inline-block;
+  padding-top: 3px;
+  padding-left: 3px;
+  padding-right: 3px;
+  border-top: 1px solid;
+}
+
+.eq-sqrt-arg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* adapted from: http://jsfiddle.net/ufges2av/1/ */
+.eq-sqrt-tail-1 {
+  align-self: flex-end;
+  background: linear-gradient(
+    to bottom left,
+    transparent calc(50% - 1px),
+    black,
+    transparent calc(50% + 1px)
+  );
+  height: 12px;
+  width: 5px;
+}
+
+.eq-sqrt-tail-2 {
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 0.5px),
+    black,
+    transparent calc(50% + 0.5px)
+  );
+  width: 6px;
+}
+
+.eq-symbol {
+  font-family: Computer Modern;
+}
+
+.eq-btn-denominator {
+  border-radius: 2px;
+  display: inline-block;
+  min-height: 12px;
+  min-width: 12px;
+  outline: 1px dotted gray;
+  vertical-align: bottom;
+}
+
+.eq-btn-fraction-divider {
+  color: gray;
+  margin-top: -8px;
+  margin-bottom: -8px;
+}
+
+.eq-btn-numerator {
+  border-radius: 2px;
+  display: inline-block;
+  min-height: 12px;
+  min-width: 12px;
+  outline: 1px dotted gray;
+  vertical-align: top;
+}
+
+.eq-btn-sqrt {
+  display: flex;
+  max-height: 20px;
+}
+
+.eq-btn-sqrt-arg {
+  border-radius: 2px;
+  display: inline-block;
+  min-height: 12px;
+  min-width: 12px;
+  outline: 1px dotted gray;
+}
+
+.eq-btn-sqrt-main {
+  display: inline-block;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 3px;
+  padding-right: 3px;
+  border-top: 1px solid gray;
+}
+
+.eq-btn-sqrt-tail-1 {
+  align-self: flex-end;
+  background: linear-gradient(
+    to bottom left,
+    transparent calc(50% - 1px),
+    gray,
+    transparent calc(50% + 1px)
+  );
+  height: 12px;
+  width: 5px;
+}
+
+.eq-btn-sqrt-tail-2 {
+  background: linear-gradient(
+    to bottom right,
+    transparent calc(50% - 0.5px),
+    gray,
+    transparent calc(50% + 0.5px)
+  );
+  width: 6px;
+}
+
+.eq-btn-parentheses-decoration {
+  color: gray;
+  transform: scale(1, 1.3);
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.eq-btn-parentheses-arg {
+  display: inilne-block;
+  min-height: 12px;
+  min-width: 12px;
+  outline: 1px dotted gray;
+}
+
+.eq-btn-vector {
+  display: inline-block;
+  position: relative;
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+.eq-btn-vector-decoration {
+  color: gray;
+  display: block;
+  font-size: 18px;
+  line-height: 8px;
+  text-align: center;
+  transform: scale(100%, 1);
+}
+
+.eq-btn-vector-arg {
+  border-radius: 2px;
+  display: inline-block;
+  min-height: 12px;
+  min-width: 12px;
+  outline: 1px dotted gray;
+}
+
+.eq-symbols-container {
+  border-top: 2px solid #5fa1b5;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.eq-vector {
+  display: inline-block;
+  bottom: 4px;
+  margin-left: 3px;
+  margin-right: 3px;
+  position: relative;
+}
+
+.eq-vector-decoration {
+  display: block;
+  text-align: center;
+  line-height: 10px;
+  transform: scale(120%, 1);
+}
+
+.eq-vector-arg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equation-container {
+  bottom: 2px;
+  position: relative;
+  vertical-align: middle;
+}
+
+span.equation-container {
+  display: inline-block;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
+div.equation-container {
+  display: flex;
+  justify-content: center;
+}
+
+.number-field {
+  align-items: center;
+  display: flex;
+  font-family: Computer Modern, Minion, Utopia, serif;
+  justify-content: center;
+  padding: 5px;
+  text-align: center;
+}
+
+.equation {
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  display: flex;
+  font-family: Computer Modern, Minion, Utopia, serif;
+
+  justify-content: center;
+  min-width: 30px;
+  min-height: 30px;
+  margin-left: 3px;
+  margin-right: 3px;
+  padding: 5px;
+  text-align: center;
+}
+
+.equation > sup {
+  position: relative;
+  bottom: 4px;
+}
+
+.equation > sub {
+  position: relative;
+  bottom: -6px;
+}
+
+.editor-img {
+  display: block;
+  margin: auto;
+}
+
+.editor-img-container {
+  padding-bottom: 14px;
+  padding-top: 14px;
+  position: relative;
+}
+
+.img-resize-handle {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.1);
+}
