@@ -49,17 +49,17 @@ export default function DocumentsPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const filePath = `users/${user?.uid}/documents/${file?.name}`;
 
-  // const pdflink = selDocument?.url;
-
   function deleteDocument(doc) {
     const storagePath = `users/${user.uid}/documents/${doc?.name}`;
     const storageRef = ref(storage, storagePath);
 
-    console.log(doc);
-
     deleteObject(storageRef)
       .then(() => deleteFirestoreRef(user, "documents", doc.id))
       .catch((error) => console.log(error));
+
+    if (doc.id === selDocument.id) {
+      setSelDocument(null);
+    }
   }
 
   function handleSearchTerm(e) {
@@ -164,7 +164,6 @@ export default function DocumentsPage() {
                 <SwapVertIcon style={{ color: "gray" }} />
               </IconButton>
             </Box>
-
             <Divider />
             <DocList
               deleteDocument={deleteDocument}
@@ -252,7 +251,12 @@ function DocList({
               </ListItemButton>
             </MenuOption>
             <MenuOption>
-              <ListItemButton onClick={() => deleteDocument(selItem)}>
+              <ListItemButton
+                onClick={() => {
+                  deleteDocument(selItem);
+                  handleCloseMenu();
+                }}
+              >
                 Delete
               </ListItemButton>
             </MenuOption>
@@ -282,7 +286,7 @@ function UploadDocument({ file, uploadProgress, handleSelectFile }) {
 
   if (file) {
     return (
-      <Box sx={{ width: "80%", py: "20px", margin: "auto" }}>
+      <Box sx={{ width: "80%", maxWidth: "300px", py: "20px", margin: "auto" }}>
         <LinearProgress variant="determinate" value={uploadProgress} />
       </Box>
     );

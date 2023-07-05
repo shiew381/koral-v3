@@ -1,5 +1,4 @@
 import { TextField, InputAdornment } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import SearchIcon from "@mui/icons-material/Search";
 
 export function AnswerChoiceField({ onChange, value }) {
@@ -266,7 +265,7 @@ export function SearchField({ onChange, value }) {
   );
 }
 
-export function SkillsField({ onChange, value, index }) {
+export function SkillField({ onChange, value, index }) {
   return (
     <TextField
       fullWidth
@@ -276,13 +275,6 @@ export function SkillsField({ onChange, value, index }) {
       value={value}
       variant="outlined"
       sx={{ mb: 1 }}
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="start">
-            <CheckCircleOutlineIcon color={value ? "primary" : "disabled"} />
-          </InputAdornment>
-        ),
-      }}
     />
   );
 }

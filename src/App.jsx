@@ -2,9 +2,11 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { useState } from "react";
 
 import HomePage from "./pages/HomePage.jsx";
-import CoursesPage from "./pages/CoursesPage.jsx";
+// import CoursesPage from "./pages/CoursesPage.jsx";
 import LinksPage from "./pages/LinksPage.jsx";
 import ImagesPage from "./pages/ImagesPage.jsx";
+import QuestionSetsPage from "./pages/QuestionSetsPage.jsx";
+import QuestionSetPage from "./pages/QuestionSetPage.jsx";
 import { NavBar } from "./components/navigation/NavBar.jsx";
 import { NavMenu } from "./components/navigation/NavMenu";
 import "./css/App.css";
@@ -38,6 +40,14 @@ export default function App() {
               <Route path="content/documents" element={<DocumentsPage />} />
               <Route path="content/images" element={<ImagesPage />} />
               <Route path="content/links" element={<LinksPage />} />
+              <Route
+                path="content/question-sets"
+                element={<QuestionSetsPage />}
+              />
+              <Route
+                path="content/question-sets/:title/:questionSetID"
+                element={<QuestionSetPage />}
+              />
             </Routes>
           </div>
         </ThemeProvider>
