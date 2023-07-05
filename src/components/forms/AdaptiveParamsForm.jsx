@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Lightbox, LightboxHeader } from "../common/Lightbox";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import {
+  Alert,
   Box,
   Button,
   Stack,
@@ -35,26 +36,35 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
   const initialRule = "unassigned";
   const [activeStep, setActiveStep] = useState(0);
 
-  const [step, setStep] = useState(1);
   const [skills, setSkills] = useState([initialSkillValues]);
   const [skillAssignments, setSkillAssignments] = useState(initialAssignments);
   const [rule, setRule] = useState(initialRule);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleRule = (e) => setRule(e.target.value);
+  function handleRule(e) {
+    setRule(e.target.value);
+  }
 
-  function resetForm() {
-    setStep(1);
-    setSkills([initialSkillValues]);
-    setSkillAssignments(initialAssignments);
-    setRule(initialRule);
-    setActiveStep(0);
+  function handleSubmit() {
+    const updatedSkills = mergeSkillsWithIDs(skills, skillAssignments, qSet);
+
+    const values = {
+      completionRule: rule,
+      adaptiveParams: {
+        skills: updatedSkills,
+      },
+    };
+    updateAdaptiveParams(user, qSet.id, values, setSubmitting, handleClose);
   }
 
   function handleText(e, ind) {
     const updated = copyArray(skills);
     updated[ind].name = e.target.value;
     setSkills(updated);
+    setError(false);
+    setErrorMessage("");
   }
 
   function handleCompletionValue(e, ind) {
@@ -80,29 +90,29 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
   }
 
   function goForward() {
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  }
+    const skillNames = skills.map((el) => el.name);
+    const noSkillsDefined = skillNames.join("").length === 0;
 
-  //   const goBack = () => setStep(step - 1);
-  //   const goForward = () => {
-  //     if (step === 1) setSkills(skills.filter((skill) => skill.name !== ""));
-  //     setStep(step + 1);
-  //   };
+    if (noSkillsDefined) {
+      setError(true);
+      setErrorMessage("Must define at least one learning objective");
+    } else {
+      setError(false);
+      setErrorMessage("");
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      setSkills(skills.filter((el) => el.name));
+    }
+  }
 
   function addSkill() {
     setSkills([...skills, initialSkillValues]);
   }
 
-  function handleSubmit() {
-    const updatedSkills = mergeSkillsWithIDs(skills, skillAssignments, qSet);
-
-    const values = {
-      completionRule: rule,
-      adaptiveParams: {
-        skills: updatedSkills,
-      },
-    };
-    updateAdaptiveParams(user, qSet.id, values, setSubmitting, handleClose);
+  function resetForm() {
+    setSkills([initialSkillValues]);
+    setSkillAssignments(initialAssignments);
+    setRule(initialRule);
+    setActiveStep(0);
   }
 
   useEffect(
@@ -129,6 +139,8 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
 
       <DefineSkills
         addSkill={addSkill}
+        error={error}
+        errorMessage={errorMessage}
         deleteSkill={deleteSkill}
         handleText={handleText}
         skills={skills}
@@ -177,10 +189,8 @@ function BackButton({ step, onClick }) {
   );
 }
 
-function NextButton({ step, onClick, skills }) {
-  const skillNames = skills.map((el) => el.name);
-  const noSkillsDefined = skillNames.join("").length === 0;
-  const disabled = noSkillsDefined || step === 2;
+function NextButton({ step, onClick }) {
+  const disabled = step === 2;
 
   return (
     <Button disabled={disabled} onClick={onClick}>
@@ -189,7 +199,15 @@ function NextButton({ step, onClick, skills }) {
   );
 }
 
-function DefineSkills({ step, skills, addSkill, handleText, deleteSkill }) {
+function DefineSkills({
+  addSkill,
+  deleteSkill,
+  error,
+  errorMessage,
+  handleText,
+  step,
+  skills,
+}) {
   if (step !== 0) return null;
 
   return (
@@ -209,9 +227,10 @@ function DefineSkills({ step, skills, addSkill, handleText, deleteSkill }) {
           </IconButton>
         </Stack>
       ))}
+      {error && <Alert severity="error">{errorMessage}</Alert>}
       <BtnContainer center>
         <Button startIcon={<AddIcon />} fullWidth onClick={addSkill}>
-          ADD A SKILL
+          ADD LEARNING OBJECTIVE
         </Button>
       </BtnContainer>
     </Box>

@@ -58,7 +58,7 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
 }
 
 export function addUserQSet(user, values, setSubmitting, handleClose) {
-  const ref = collection(db, "users", user.uid, "questionSets");
+  const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
   addDoc(ref, { ...values, questions: [], created: serverTimestamp() })
     .then(() => {
@@ -146,12 +146,13 @@ export function fetchUserLinks(user, setLinks, setFetching) {
 }
 
 export function fetchUserQSets(user, setQSets, setFetching) {
-  const ref = collection(db, "users", user.uid, "questionSets");
+  const ref = collection(db, "users", user.uid, "question-sets");
   const q = query(ref);
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       title: doc.data().title,
+      mode: doc.data().mode,
       created: doc.data().created?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
@@ -168,10 +169,28 @@ export function updateAdaptiveParams(
   setSubmitting,
   handleClose
 ) {
-  const docRef = doc(db, "users", user.id, "question_sets", docID);
+  const docRef = doc(db, "users", user.uid, "question-sets", docID);
   setSubmitting(true);
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function updateUserQSet(
+  user,
+  qSet,
+  updatedValues,
+  setSubmitting,
+  successAction
+) {
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+
+  setSubmitting && setSubmitting(true);
+  updateDoc(ref, updatedValues)
+    .then(() => successAction && setTimeout(() => successAction(), 250))
+    .catch((error) => console.log(error))
+    .finally(
+      () => setSubmitting && setTimeout(() => setSubmitting(false), 200)
+    );
 }

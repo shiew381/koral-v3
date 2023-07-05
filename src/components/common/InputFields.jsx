@@ -1,5 +1,4 @@
 import { TextField, InputAdornment } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import SearchIcon from "@mui/icons-material/Search";
 
 export function AnswerChoiceField({ onChange, value }) {

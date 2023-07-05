@@ -12,6 +12,12 @@ export function AddQSetForm({ user, open, handleClose }) {
     title,
   };
 
+  function handleKeyUp(e) {
+    if (e.code === "Enter") {
+      handleSubmit();
+    }
+  }
+
   function handleTitle(e) {
     setTitle(e.target.value);
   }
@@ -27,7 +33,7 @@ export function AddQSetForm({ user, open, handleClose }) {
   useEffect(resetForm, [open]);
 
   return (
-    <Lightbox open={open} onClose={handleClose}>
+    <Lightbox open={open} onClose={handleClose} handleKeyUp={handleKeyUp}>
       <LightboxHeader title="Question Set" />
       <TitleField onChange={handleTitle} value={title} />
       <BtnContainer right>

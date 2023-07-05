@@ -59,9 +59,10 @@ export function SignUpForm({ open, handleClose }) {
   }
 
   function handleKeyUp(e) {
-    if (e.code !== "Enter") return;
     if (!allFulfilled) return;
-    createUserAccount();
+    if (e.code === "Enter") {
+      createUserAccount();
+    }
   }
 
   function resetForm() {

@@ -6,25 +6,19 @@ import { formatDate } from "../utils/dateUtils";
 import {
   fetchUserQSets,
   deleteFirestoreRef,
+  updateUserQSet,
 } from "../utils/firestoreClient.js";
 import {
   Box,
   Button,
   Card,
-  CardActions,
   CardContent,
   Divider,
-  IconButton,
-  List,
-  ListItem,
   ListItemButton,
-  ListItemText,
-  Stack,
   Switch,
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
 import {
   LoadingIndicator,
   Page,
@@ -34,7 +28,7 @@ import { SearchField } from "../components/common/InputFields";
 
 import { BuildFirstItem } from "../components/common/CallsToAction.jsx";
 import { AddQSetForm } from "../components/forms/AddQSetForm";
-import { MoreOptionsBtn } from "../components/common/Buttons";
+import { BtnContainer, MoreOptionsBtn } from "../components/common/Buttons";
 import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 import AdaptiveParamsForm from "../components/forms/AdaptiveParamsForm";
 
@@ -47,6 +41,11 @@ export default function QuestionSetsPage() {
   const [adaptiveFormOpen, setAdaptiveFormOpen] = useState(false);
   const [selQSet, setSelQSet] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const filtered = filterByTerm(qSets, searchTerm);
+
+  function deleteQSet(doc) {
+    deleteFirestoreRef(user, "question-sets", doc.id);
+  }
 
   function handleOpen() {
     setOpen(true);
@@ -64,20 +63,14 @@ export default function QuestionSetsPage() {
     setAdaptiveFormOpen(false);
   }
 
-  const filtered = filterByTerm(qSets, searchTerm);
-
-  function deleteQSet(doc) {
-    deleteFirestoreRef(user, "questionSets", doc.id);
-  }
-
   function handleSearchTerm(e) {
     setSearchTerm(e.target.value.toLowerCase());
   }
 
-  function toggleOrder() {
-    const updated = [...qSets].reverse();
-    setQSets(updated);
-  }
+  // function toggleOrder() {
+  //   const updated = [...qSets].reverse();
+  //   setQSets(updated);
+  // }
 
   useEffect(
     () => {
@@ -120,31 +113,15 @@ export default function QuestionSetsPage() {
     return (
       <Page>
         <PageHeader title="Question Sets" />
-        <Box className="flex flex-row" sx={{ px: 2 }}>
-          <Box className="flex-col" sx={{ width: "300px", mx: "15px" }}>
-            <Box
-              className="flex flex-align-center flex-space-between "
-              sx={{ py: 1 }}
-            >
-              <SearchField onChange={handleSearchTerm} value={searchTerm} />
-              <IconButton onClick={toggleOrder}>
-                <SwapVertIcon style={{ color: "gray" }} />
-              </IconButton>
-            </Box>
-            <Divider />
-            <QSetList
-              deleteQSet={deleteQSet}
-              qSets={filtered}
-              searchTerm={searchTerm}
-              selQSet={selQSet}
-              setSelQSet={setSelQSet}
-            />
-            <Divider />
+        <Box sx={{ px: 3 }}>
+          <Box
+            className="flex flex-align-center flex-space-between flex-wrap"
+            sx={{ pb: 2 }}
+            width="450px"
+          >
+            <SearchField onChange={handleSearchTerm} value={searchTerm} />
             <AddQSetBtn onClick={handleOpen} />
             <AddQSetForm open={open} handleClose={handleClose} user={user} />
-          </Box>
-          <Box className="flex-col flex-align-center flex-grow relative">
-            <QSetDetails openAdaptiveForm={openAdaptiveForm} qSet={selQSet} />
             <AdaptiveParamsForm
               qSet={selQSet}
               open={adaptiveFormOpen}
@@ -152,118 +129,111 @@ export default function QuestionSetsPage() {
               user={user}
             />
           </Box>
+          {filtered.length === 0 && (
+            <Box sx={{ p: 2 }}>
+              No question sets with name containing &quot;{searchTerm}&quot;
+            </Box>
+          )}
+          <Box className="flex flex-row flex-wrap">
+            {filtered.length > 0 &&
+              filtered.map((qSet) => (
+                <QSetCard
+                  deleteQSet={deleteQSet}
+                  key={qSet.id}
+                  openAdaptiveForm={openAdaptiveForm}
+                  setSelQSet={setSelQSet}
+                  qSet={qSet}
+                  user={user}
+                />
+              ))}
+          </Box>
         </Box>
       </Page>
     );
   }
 }
 
-function QSetList({ deleteQSet, qSets, searchTerm, selQSet, setSelQSet }) {
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selItem, setSelItem] = useState(null);
-  const menuOpen = Boolean(anchorEl);
-
-  function handleCloseMenu() {
-    setAnchorEl(null);
-  }
-
-  if (qSets?.length === 0) {
-    <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
-      <ListItem component="div" disablePadding sx={{ bgcolor: "none", p: 2 }}>
-        <ListItemText>
-          No documents with name containing &quot;{searchTerm}&quot;
-        </ListItemText>
-      </ListItem>
-    </List>;
-  }
-
-  return (
-    <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
-      {qSets.map((qSet) => (
-        <ListItem
-          component="div"
-          disablePadding
-          key={qSet.id}
-          sx={{
-            bgcolor: selQSet?.id === qSet.id ? "whitesmoke" : "none",
-          }}
-        >
-          <ListItemButton onClick={() => setSelQSet(qSet)}>
-            {qSet?.title}
-          </ListItemButton>
-          <MoreOptionsBtn
-            item={qSet}
-            setAnchorEl={setAnchorEl}
-            setSelItem={setSelItem}
-          />
-          <MoreOptionsMenu
-            anchorEl={anchorEl}
-            handleClose={handleCloseMenu}
-            open={menuOpen}
-          >
-            <MenuOption>
-              <ListItemButton
-                onClick={() => {
-                  deleteQSet(selItem);
-                  handleCloseMenu();
-                }}
-              >
-                Delete
-              </ListItemButton>
-            </MenuOption>
-          </MoreOptionsMenu>
-        </ListItem>
-      ))}
-    </List>
-  );
-}
-
 function AddQSetBtn({ onClick }) {
   return (
-    <Button fullWidth onClick={onClick} startIcon={<AddIcon />}>
+    <Button onClick={onClick} startIcon={<AddIcon />}>
       Add QUESTION SET
     </Button>
   );
 }
 
-function QSetDetails({ openAdaptiveForm, qSet }) {
+function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
   const navigate = useNavigate();
   const [adaptiveModeOn, setAdaptiveModeOn] = useState(false);
-
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selItem, setSelItem] = useState(null);
+  const menuOpen = Boolean(anchorEl);
   const numQuestions = qSet.questions?.length || 0;
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
 
   function redirectToQSetEditor() {
     const qSetTitle = qSet.title.replace(/\s/g, "-");
     navigate(`/content/question-sets/${qSetTitle}/${qSet.id}`);
   }
 
+  function toggleMode() {
+    setAdaptiveModeOn(!adaptiveModeOn);
+  }
+
   function toggleAdaptive(e) {
     console.log(e);
     setAdaptiveModeOn(!adaptiveModeOn);
-    // const fieldValue = event.target.checked ? "adaptive" : "normal";
-    // const toggleMode = () => setAdaptiveModeOn(!adaptiveModeOn);
-    // const updatedValues = {
-    //   mode: event.target.checked ? "adaptive" : "normal",
-    // };
-    // updateUserQSet(user, qSet, updatedValues, toggleMode);
+    const updatedValues = {
+      mode: e.target.checked ? "adaptive" : "normal",
+    };
+
+    updateUserQSet(user, qSet, updatedValues, null, toggleMode);
   }
+
+  useEffect(
+    () => {
+      setAdaptiveModeOn(qSet.mode === "adaptive");
+    },
+
+    //eslint-disable-next-line
+    [qSet]
+  );
 
   if (!qSet) return null;
 
   return (
-    <Card sx={{ maxWidth: "500px" }}>
+    <Card sx={{ minWidth: "450px", mb: 2, mr: 2 }} className="relative">
       <CardContent>
+        <Box style={{ position: "absolute", top: "10px", right: "8px" }}>
+          <MoreOptionsBtn
+            item={qSet}
+            setAnchorEl={setAnchorEl}
+            setSelItem={setSelItem}
+          />
+        </Box>
+
+        <MoreOptionsMenu
+          anchorEl={anchorEl}
+          handleClose={handleCloseMenu}
+          open={menuOpen}
+        >
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                deleteQSet(selItem);
+                handleCloseMenu();
+              }}
+            >
+              Delete
+            </ListItemButton>
+          </MenuOption>
+        </MoreOptionsMenu>
         <Typography variant="h6">{qSet.title}</Typography>
-        <Typography display="inline" variant="subtitle1">
-          added {formatDate(qSet.created)}
-        </Typography>
-        <Typography display="inline" sx={{ mx: 3 }}>
-          |
-        </Typography>
-        <Typography display="inline">{numQuestions} questions</Typography>
-        <br />
-        <Box className="flex flex-align-center flex-space-between">
-          <Box sx={{ minWidth: "200px" }}>
+        <Divider sx={{ my: 1 }} />
+        <Box sx={{ p: 1 }}>
+          <Box className="flex flex-align-center">
             <Typography
               display="inline"
               color={adaptiveModeOn ? "inherit" : "text.secondary"}
@@ -275,33 +245,36 @@ function QSetDetails({ openAdaptiveForm, qSet }) {
               value={adaptiveModeOn}
               onChange={toggleAdaptive}
             />
+            <Button
+              sx={{ ml: 4 }}
+              disabled={!adaptiveModeOn}
+              onClick={() => {
+                setSelQSet(qSet);
+                openAdaptiveForm();
+              }}
+            >
+              SET PARAMETERS
+            </Button>
           </Box>
-          <Button disabled={!adaptiveModeOn} onClick={openAdaptiveForm}>
-            Edit Adaptive Parameters
-          </Button>
-        </Box>
-        <Typography>Not deployed in any courses yet</Typography>
-        <Box className="flex flex-justify-end"></Box>
-      </CardContent>
+          <Typography display="inline" variant="subtitle1">
+            added {formatDate(qSet.created)}
+          </Typography>
 
-      <CardActions>
-        <Button onClick={redirectToQSetEditor} variant="contained">
-          EDIT
-        </Button>
-      </CardActions>
+          <Typography display="inline" sx={{ mx: 3 }}>
+            |
+          </Typography>
+          <Typography display="inline">{numQuestions} questions</Typography>
+
+          <Typography sx={{ mt: 1 }}>Not deployed to any course yet</Typography>
+        </Box>
+      </CardContent>
+      <Box sx={{ p: 2 }}>
+        <BtnContainer right>
+          <Button onClick={redirectToQSetEditor} variant="contained">
+            BUILD / PREVIEW
+          </Button>
+        </BtnContainer>
+      </Box>
     </Card>
   );
-
-  // return (
-  //   <Box width="95%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
-  //     <Typography variant="h6">{qSet.title}</Typography>
-  //     <Box>
-  //       <Button>Preview</Button>
-  //       <VertDivider />
-  //       <Button onClick={redirectToBuild}>Build Questions</Button>
-  //     </Box>
-
-  //     <Typography>{numQuestions} questions</Typography>
-  //   </Box>
-  // );
 }
