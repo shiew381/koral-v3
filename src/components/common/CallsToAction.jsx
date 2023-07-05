@@ -1,4 +1,4 @@
-import { Box, Fab, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { BtnContainer } from "./Buttons";
 import AddIcon from "@mui/icons-material/Add";
 import { UploadFile } from "./UploadFile";
@@ -11,10 +11,9 @@ export function BuildFirstItem({ handleOpen, item, message }) {
       </Typography>
       <br />
       <BtnContainer center>
-        <Fab color="primary" onClick={handleOpen} variant="extended">
-          <AddIcon />
+        <Button onClick={handleOpen} size="large" startIcon={<AddIcon />}>
           New {item}
-        </Fab>
+        </Button>
       </BtnContainer>
     </Box>
   );

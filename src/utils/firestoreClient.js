@@ -10,6 +10,7 @@ import {
   query,
   setDoc,
   serverTimestamp,
+  updateDoc,
   where,
 } from "firebase/firestore";
 
@@ -158,4 +159,19 @@ export function fetchUserQSets(user, setQSets, setFetching) {
     setFetching(false);
   });
   return unsubscribe;
+}
+
+export function updateAdaptiveParams(
+  user,
+  docID,
+  values,
+  setSubmitting,
+  handleClose
+) {
+  const docRef = doc(db, "users", user.id, "question_sets", docID);
+  setSubmitting(true);
+  updateDoc(docRef, values)
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
 }

@@ -10,3 +10,7 @@ export function generateRandomCode(length) {
   }
   return randomCode;
 }
+
+export function copyArray(arr) {
+  return JSON.parse(JSON.stringify(arr));
+}

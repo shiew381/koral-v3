@@ -61,6 +61,8 @@
   width: 80vw;
   background-color: whitesmoke;
   border-radius: 10px;
+  padding-left: 40px;
+  padding-right: 40px;
   padding-top: 90px;
   padding-bottom: 70px;
   display: flex;
