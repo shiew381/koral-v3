@@ -163,6 +163,16 @@ export function fetchCourses(user, setCourses, setLoading) {
   return unsubscribe;
 }
 
+export function fetchCourse(courseID, setCourse, setLoading) {
+  //TODO: restrict access to instructor
+  const ref = doc(db, "courses", courseID);
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    setCourse({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
 export function fetchUserDocuments(user, setDocuments, setFetching) {
   function compareNames(a, b) {
     if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
@@ -225,7 +235,6 @@ export function fetchUserLinks(user, setLinks, setFetching) {
 export function fetchUserInfo(user, setUserInfo) {
   const ref = doc(db, "users", user.uid);
   const unsubscribe = onSnapshot(ref, (doc) => {
-    console.log("Current data: ", doc.data());
     setUserInfo({
       id: doc.id,
       ...doc.data(),
