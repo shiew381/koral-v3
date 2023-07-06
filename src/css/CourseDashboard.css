@@ -1,0 +1,32 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+
+  padding-top: 70px;
+  min-height: calc(100vh - 70px);
+}
+
+.tabs-vertical {
+  display: block;
+  min-width: 200px;
+  height: 30vh;
+}
+
+.tabs-horizontal {
+  display: none;
+  margin-bottom: 30px;
+}
+
+@media only screen and (max-width: 800px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+  .tabs-vertical {
+    display: none;
+  }
+  .tabs-horizontal {
+    display: flex;
+    flex-direction: row;
+  }
+}
