@@ -14,3 +14,9 @@ export function generateRandomCode(length) {
 export function copyArray(arr) {
   return JSON.parse(JSON.stringify(arr));
 }
+
+export function formatNames(names) {
+  if (!Array.isArray(names)) return null;
+
+  if (names.length < 3) return names.join(", ");
+}

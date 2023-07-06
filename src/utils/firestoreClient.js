@@ -149,7 +149,7 @@ export function deleteFirestoreRef(user, colName, docID) {
   deleteDoc(doc(db, "users", user.uid, colName, docID));
 }
 
-export function fetchCourses(user, setCourses, setFetching) {
+export function fetchCourses(user, setCourses, setLoading) {
   const colRef = collection(db, "courses");
   const q = query(colRef, where("instructorIDs", "array-contains", user.uid));
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -158,7 +158,7 @@ export function fetchCourses(user, setCourses, setFetching) {
       ...doc.data(),
     }));
     setCourses(fetchedItems);
-    setFetching(false);
+    setLoading(false);
   });
   return unsubscribe;
 }
@@ -218,6 +218,18 @@ export function fetchUserLinks(user, setLinks, setFetching) {
     }));
     setLinks(fetchedItems);
     setFetching(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchUserInfo(user, setUserInfo) {
+  const ref = doc(db, "users", user.uid);
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    console.log("Current data: ", doc.data());
+    setUserInfo({
+      id: doc.id,
+      ...doc.data(),
+    });
   });
   return unsubscribe;
 }

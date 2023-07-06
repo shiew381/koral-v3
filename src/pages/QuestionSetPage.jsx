@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -19,7 +19,8 @@ import { QuestionBuilder } from "../components/forms/QnBuilder";
 
 export default function QuestionSetPage() {
   const { user } = useAuth();
-  const location = useLocation();
+  const { qSetID } = useParams();
+
   const [loading, setLoading] = useState(true);
 
   const [mode, setMode] = useState("build");
@@ -30,9 +31,6 @@ export default function QuestionSetPage() {
   const questions = qSet?.questions || [];
 
   const [openBuilder, setOpenBuilder] = useState(false);
-
-  const pathArr = location.pathname.split("/");
-  const qSetID = pathArr.pop();
 
   function handleCloseBuilder() {
     setOpenBuilder(false);
