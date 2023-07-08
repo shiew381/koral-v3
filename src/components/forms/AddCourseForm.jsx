@@ -57,7 +57,7 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
       instructors: [{ id: user.uid, email: userInfo.email }],
       instructorIDs: [user.uid],
       instructorNames_searchable: displayName.toLowerCase().split(" "),
-      created: serverTimestamp(),
+      dateCreated: serverTimestamp(),
       availableTo: availableTo,
     })
       .then(() => {

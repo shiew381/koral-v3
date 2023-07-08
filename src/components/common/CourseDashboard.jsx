@@ -73,7 +73,7 @@ export function CourseSummary({ course }) {
               <Typography>created</Typography>
             </td>
             <td style={{ paddingLeft: "20px" }}>
-              <Typography>{formatDate(course.created.toDate())}</Typography>
+              <Typography>{formatDate(course.dateCreated)}</Typography>
             </td>
           </tr>
         </tbody>

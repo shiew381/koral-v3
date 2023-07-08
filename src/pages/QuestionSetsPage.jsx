@@ -257,7 +257,7 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
             </Button>
           </Box>
           <Typography display="inline" variant="subtitle1">
-            added {formatDate(qSet.created)}
+            added {formatDate(qSet.dateCreated)}
           </Typography>
 
           <Typography display="inline" sx={{ mx: 3 }}>
