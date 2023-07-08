@@ -9,12 +9,15 @@ import {
 import {
   Box,
   Button,
-  Card,
-  CardContent,
   Tabs,
   Tab,
   Typography,
-  CardActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  IconButton,
 } from "@mui/material";
 import GroupIcon from "@mui/icons-material/Group";
 import {
@@ -27,6 +30,10 @@ import AddIcon from "@mui/icons-material/Add";
 import "../css/CourseDashboard.css";
 import { formatDate, formatTime } from "../utils/dateUtils";
 import { ResourceForm } from "../components/forms/ResourceForm";
+import ImageIcon from "@mui/icons-material/Image";
+import ArticleIcon from "@mui/icons-material/Article";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 export default function InstructorDashboard() {
   const { user } = useAuth();
@@ -93,8 +100,8 @@ export default function InstructorDashboard() {
       <StudentView course={course} />
 
       {tabIndex === 0 && <CourseInfo course={course} />}
-      {tabIndex === 2 && <Announcements />}
-      {tabIndex === 1 && <Grades />}
+      {tabIndex === 1 && <Announcements />}
+      {tabIndex === 2 && <Grades />}
       {tabIndex === 3 && (
         <Assignments course={course} handleOpen={handleAsgmtOpen} />
       )}
@@ -137,6 +144,7 @@ function Grades() {
 function Assignments({ course, handleOpen }) {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const listWidth = "600px";
 
   useEffect(
     () => fetchAssignments(course.id, setAssignments, setLoading),
@@ -157,35 +165,50 @@ function Assignments({ course, handleOpen }) {
       className="flex flex-col flex-align-center flex-grow"
       style={{ padding: "10px" }}
     >
-      <Box>
+      <Box sx={{ width: listWidth }}>
         <Button onClick={handleOpen} startIcon={<AddIcon />}>
           Add Assignment
         </Button>
       </Box>
-      {assignments.map((asgmt) => (
-        <Card key={asgmt.id} sx={{ width: "500px", mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6">{asgmt.title}</Typography>
-            <Typography color="text.secondary">{asgmt.type}</Typography>
-            {asgmt.hasDateOpen && (
-              <Typography>
-                Open:{" "}
-                {formatDate(asgmt.dateOpen) + " " + formatTime(asgmt.dateOpen)}
-              </Typography>
-            )}
-            {asgmt.hasDateDue && (
-              <Typography>
-                Due:{" "}
-                {formatDate(asgmt.dateDue) + " " + formatTime(asgmt.dateDue)}
-              </Typography>
-            )}
-          </CardContent>
-          <CardActions>
-            <Button size="small">Edit</Button>
-            <Button size="small">Delete</Button>
-          </CardActions>
-        </Card>
-      ))}
+
+      <List sx={{ width: listWidth }}>
+        {assignments.map((asgmt) => (
+          <>
+            <Divider />
+            <ListItem
+              key={asgmt.id}
+              secondaryAction={
+                <IconButton edge="end">
+                  <MoreVertIcon />
+                </IconButton>
+              }
+            >
+              <ListItemIcon>
+                <AssignmentIcon type={asgmt.type} />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography variant="h6">{asgmt.title}</Typography>}
+                secondary={
+                  <>
+                    <Typography>
+                      Open:{" "}
+                      {formatDate(asgmt.dateOpen) +
+                        " " +
+                        formatTime(asgmt.dateOpen)}
+                    </Typography>
+                    <Typography>
+                      Due:{" "}
+                      {formatDate(asgmt.dateDue) +
+                        " " +
+                        formatTime(asgmt.dateDue)}
+                    </Typography>
+                  </>
+                }
+              />
+            </ListItem>
+          </>
+        ))}
+      </List>
     </div>
   );
 }
@@ -193,6 +216,7 @@ function Assignments({ course, handleOpen }) {
 function Resources({ course, handleOpen }) {
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const listWidth = "600px";
 
   useEffect(
     () => fetchResources(course.id, setResources, setLoading),
@@ -213,41 +237,62 @@ function Resources({ course, handleOpen }) {
       className="flex flex-col flex-align-center flex-grow"
       style={{ padding: "10px" }}
     >
-      <Box>
+      <Box sx={{ width: listWidth }}>
         <Button onClick={handleOpen} startIcon={<AddIcon />}>
           Add Resource
         </Button>
       </Box>
-      {resources.map((resource) => (
-        <Card key={resource.id} sx={{ width: "500px", mb: 2 }}>
-          <CardContent>
-            <Typography variant="h6">{resource.title}</Typography>
-            <Typography color="text.secondary">{resource.type}</Typography>
-            {resource.hasDateOpen && (
-              <Typography>
-                Open:{" "}
-                {formatDate(resource.dateOpen) +
-                  " " +
-                  formatTime(resource.dateOpen)}
-              </Typography>
-            )}
-            {resource.hasDateDue && (
-              <Typography>
-                Due:{" "}
-                {formatDate(resource.dateDue) +
-                  " " +
-                  formatTime(resource.dateDue)}
-              </Typography>
-            )}
-          </CardContent>
-          <CardActions>
-            <Button size="small">Edit</Button>
-            <Button size="small">Delete</Button>
-          </CardActions>
-        </Card>
-      ))}
+      <List sx={{ width: listWidth }}>
+        {resources.map((el) => (
+          <>
+            <Divider />
+            <ListItem
+              key={el.id}
+              secondaryAction={
+                <IconButton edge="end">
+                  <MoreVertIcon />
+                </IconButton>
+              }
+            >
+              <ListItemIcon>
+                <ResourceIcon type={el.type} />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography variant="h6">{el.title}</Typography>}
+                secondary={
+                  <Typography>Added: {formatDate(el.dateCreated)}</Typography>
+                }
+              />
+            </ListItem>
+          </>
+        ))}
+      </List>
     </div>
   );
+}
+
+function AssignmentIcon({ type }) {
+  switch (type) {
+    case "question set": {
+      return <AppRegistrationIcon />;
+    }
+    default:
+      return null;
+  }
+}
+
+function ResourceIcon({ type }) {
+  switch (type) {
+    case "document": {
+      return <ArticleIcon />;
+    }
+    case "image": {
+      return <ImageIcon />;
+    }
+
+    default:
+      return null;
+  }
 }
 
 function StudentView({ course }) {

@@ -124,7 +124,7 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
 export function addUserQSet(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
-  addDoc(ref, { ...values, questions: [], created: serverTimestamp() })
+  addDoc(ref, { ...values, questions: [], dateCreated: serverTimestamp() })
     .then(() => {
       setSubmitting(false);
       handleClose();
@@ -139,7 +139,7 @@ export function autoSaveQuestion(
   user,
   setSelQuestion
 ) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
   const updatedQuestions = qSet.questions.map((question) =>
     question.id === selQuestion.id ? values : question
   );
@@ -157,7 +157,7 @@ export function autoAddQueston(
   setEdit,
   setSelQuestion
 ) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
   const tidiedValues = {
     id: newID,
     dateCreated: new Date(),
@@ -174,8 +174,14 @@ export function autoAddQueston(
   return tidiedValues.id;
 }
 
-export function deleteFirestoreRef(user, colName, docID) {
-  deleteDoc(doc(db, "users", user.uid, colName, docID));
+export function deleteCourseResource(course, resource) {
+  const ref = doc(db, "courses", course.id, "resources", resource.id);
+  deleteDoc(ref);
+}
+
+export function deleteUserContent(user, colName, docID) {
+  const ref = doc(db, "users", user.uid, colName, docID);
+  deleteDoc(ref);
 }
 
 export function fetchAssignments(courseID, setAssignments, setLoading) {
@@ -230,6 +236,7 @@ export function fetchResources(courseID, setResources, setLoading) {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
+      dateCreated: doc.data().dateCreated.toDate(),
     }));
     setResources(fetchedItems);
     setLoading(false);
@@ -417,7 +424,7 @@ export function updateQuestion(
   setSelQuestion,
   handleClose
 ) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
 
   const tidiedValues = {
     id: selQuestion.id,

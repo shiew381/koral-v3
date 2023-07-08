@@ -5,7 +5,7 @@ import { ref, deleteObject } from "firebase/storage";
 import { storage } from "../config/firebaseConfig.js";
 import {
   addPointerToFile,
-  deleteFirestoreRef,
+  deleteUserAsset,
   fetchUserImages,
 } from "../utils/firestoreClient.js";
 import { getFileExtension } from "../utils/fileUtils";
@@ -85,7 +85,7 @@ export default function ImagesPage() {
   function deleteImage(image) {
     const storageRef = ref(storage, `users/${user.uid}/images/${image?.name}`);
     deleteObject(storageRef)
-      .then(() => deleteFirestoreRef(user, "images", image.id))
+      .then(() => deleteUserAsset(user, "images", image.id))
       .then(() => handleCloseMenu())
       .catch((error) => console.log(error));
   }
