@@ -5,7 +5,7 @@ import { filterByTerm } from "../utils/filterUtils";
 import { formatDate } from "../utils/dateUtils";
 import {
   fetchUserQSets,
-  deleteUserAsset,
+  deleteUserContent,
   updateUserQSet,
 } from "../utils/firestoreClient.js";
 import {
@@ -44,7 +44,7 @@ export default function QuestionSetsPage() {
   const filtered = filterByTerm(qSets, searchTerm);
 
   function deleteQSet(doc) {
-    deleteUserAsset(user, "question-sets", doc.id);
+    deleteUserContent(user, "question-sets", doc.id);
   }
 
   function handleOpen() {

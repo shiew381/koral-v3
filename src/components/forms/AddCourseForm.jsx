@@ -19,6 +19,7 @@ import {
   CourseDescriptionField,
   CourseTitleField,
 } from "../common/InputFields.jsx";
+import { generateRandomCode } from "../../utils/commonUtils.js";
 
 export function AddCourseForm({ user, userInfo, open, handleClose }) {
   const [title, setTitle] = useState("");
@@ -48,17 +49,29 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
   useEffect(resetForm, [open]);
 
   function addCourse() {
-    const displayName = userInfo.firstName + " " + userInfo.lastName || null;
+    const firstName = userInfo?.firstName || "";
+    const lastName = userInfo?.lastName || "";
+    const firstNameNormalized = firstName.trim().toLowerCase();
+    const lastNameNormalized = lastName.trim().toLowerCase();
+
     const ref = collection(db, "courses");
     setSubmitting(true);
     addDoc(ref, {
       title: title,
+      courseCode: generateRandomCode(6),
       description: description,
-      instructors: [{ id: user.uid, email: userInfo.email }],
+      instructors: [
+        {
+          id: user.uid,
+          email: userInfo.email,
+          firstName: firstName,
+          lastName: lastName,
+        },
+      ],
       instructorIDs: [user.uid],
-      instructorNames_searchable: displayName.toLowerCase().split(" "),
-      dateCreated: serverTimestamp(),
+      instructorNames_searchable: [firstNameNormalized, lastNameNormalized],
       availableTo: availableTo,
+      dateCreated: serverTimestamp(),
     })
       .then(() => {
         setTimeout(() => setSubmitting(false), 500);

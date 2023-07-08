@@ -80,7 +80,12 @@ export default function InstructorDashboard() {
   return (
     <div className="dashboard-container">
       <div className="tabs-vertical">
-        <Tabs onChange={selectTab} orientation="vertical" value={tabIndex}>
+        <Tabs
+          onChange={selectTab}
+          orientation="vertical"
+          sx={{ borderRight: 1, borderColor: "divider" }}
+          value={tabIndex}
+        >
           <Tab label="Course Info" />
           <Tab label="Announcements" />
           <Tab label="Grades" />
@@ -190,18 +195,8 @@ function Assignments({ course, handleOpen }) {
                 primary={<Typography variant="h6">{asgmt.title}</Typography>}
                 secondary={
                   <>
-                    <Typography>
-                      Open:{" "}
-                      {formatDate(asgmt.dateOpen) +
-                        " " +
-                        formatTime(asgmt.dateOpen)}
-                    </Typography>
-                    <Typography>
-                      Due:{" "}
-                      {formatDate(asgmt.dateDue) +
-                        " " +
-                        formatTime(asgmt.dateDue)}
-                    </Typography>
+                    <Typography>Open: {timeAndDate(asgmt.dateOpen)}</Typography>
+                    <Typography>Due: {timeAndDate(asgmt.dateOpen)}</Typography>
                   </>
                 }
               />
@@ -308,4 +303,8 @@ function StudentView({ course }) {
       </Button>
     </Box>
   );
+}
+
+function timeAndDate(dateObj) {
+  return formatDate(dateObj) + " " + formatTime(dateObj);
 }

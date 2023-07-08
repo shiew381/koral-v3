@@ -3,19 +3,32 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Button,
+  Card,
   Divider,
+  Link,
   List,
   ListItemButton,
   ListItemText,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
 import { getSubmissions } from "../utils/questionSetUtils";
-import { fetchUserQSet } from "../utils/firestoreClient";
+import { deleteQuestion, fetchUserQSet } from "../utils/firestoreClient";
+import { VertDivider } from "../components/common/Dividers";
 import { useAuth } from "../contexts/AuthContext";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { Page, PageHeader, LoadingIndicator } from "../components/common/Pages";
-import AddIcon from "@mui/icons-material/Add";
-import { QuestionBuilder } from "../components/forms/QnBuilder";
+import {
+  AttemptsForm,
+  PointsForm,
+  QuestionBuilder,
+} from "../components/forms/QnBuilder";
+import MultipleChoicePreview from "../components/question-sets/QnPrevMultipleChoice";
+import ShortAnswerPreview from "../components/question-sets/QnPrevShortAnswer";
+import "../css/QuestionSetPage.css";
 
 export default function QuestionSetPage() {
   const { user } = useAuth();
@@ -25,6 +38,8 @@ export default function QuestionSetPage() {
 
   const [mode, setMode] = useState("build");
   const [edit, setEdit] = useState(false);
+  const [openAttempts, setOpenAttempts] = useState(false);
+  const [openPoints, setOpenPoints] = useState(false);
 
   const [qSet, setQSet] = useState(null);
   const [selQuestion, setSelQuestion] = useState(null);
@@ -32,14 +47,49 @@ export default function QuestionSetPage() {
 
   const [openBuilder, setOpenBuilder] = useState(false);
 
+  const qIndex = questions.findIndex((el) =>
+    selQuestion ? el.id === selQuestion.id : 0
+  );
+
+  function handleAddQuestion() {
+    setOpenBuilder(true);
+    setEdit(false);
+  }
+
+  function handleCloseAttempts() {
+    setOpenAttempts(false);
+  }
+
   function handleCloseBuilder() {
     setOpenBuilder(false);
     setEdit(false);
   }
 
-  function handleAddQuestion() {
+  function handleClosePoints() {
+    setOpenPoints(false);
+  }
+
+  function handleDeleteQuestion() {
+    deleteQuestion(selQuestion, qIndex, qSet, user, setSelQuestion);
+  }
+
+  function handleEditQuestion() {
     setOpenBuilder(true);
-    setEdit(false);
+    setEdit(true);
+  }
+
+  function handleOpenAttempts() {
+    setOpenAttempts(true);
+  }
+
+  function handleOpenPoints() {
+    setOpenPoints(true);
+  }
+
+  function handleMode(e, value) {
+    if (value) {
+      setMode(value);
+    }
   }
 
   useEffect(
@@ -65,6 +115,7 @@ export default function QuestionSetPage() {
       <Box sx={{ px: 2 }}>
         <PageHeader title={qSet?.title} />
         <Divider />
+        <div className="title-preview-spacer"></div>
         <PreviewContainer>
           <GetStarted
             handleAddQuestion={handleAddQuestion}
@@ -78,10 +129,38 @@ export default function QuestionSetPage() {
             selQuestion={selQuestion}
             setSelQuestion={setSelQuestion}
           />
+
+          <RightPanel selQuestion={selQuestion}>
+            {questions.length > 0 && (
+              <ToggleButtonGroup
+                color="primary"
+                exclusive
+                onChange={handleMode}
+                size="small"
+                sx={{ position: "absolute", top: -47, right: 0 }}
+                value={mode}
+              >
+                <ToggleButton value="build">Build</ToggleButton>
+                <ToggleButton value="preview">Preview</ToggleButton>
+              </ToggleButtonGroup>
+            )}
+            <QuestionCard
+              handleOpenPoints={handleOpenPoints}
+              handleOpenAttempts={handleOpenAttempts}
+              handleEditQuestion={handleEditQuestion}
+              mode={mode}
+              qSet={qSet}
+              question={selQuestion}
+              userCred={user}
+            />
+            <br />
+            <Box align="center">
+              <Button onClick={handleDeleteQuestion}>Delete Question</Button>
+            </Box>
+          </RightPanel>
         </PreviewContainer>
       </Box>
 
-      <pre>{JSON.stringify(qSet, null, 2)}</pre>
       <QuestionBuilder
         edit={edit}
         handleClose={handleCloseBuilder}
@@ -89,6 +168,22 @@ export default function QuestionSetPage() {
         qSet={qSet}
         selQuestion={edit ? selQuestion : null}
         setEdit={setEdit}
+        setSelQuestion={setSelQuestion}
+        user={user}
+      />
+      <PointsForm
+        handleClose={handleClosePoints}
+        open={openPoints}
+        qSet={qSet}
+        selQuestion={selQuestion}
+        setSelQuestion={setSelQuestion}
+        user={user}
+      />
+      <AttemptsForm
+        handleClose={handleCloseAttempts}
+        open={openAttempts}
+        qSet={qSet}
+        selQuestion={selQuestion}
         setSelQuestion={setSelQuestion}
         user={user}
       />
@@ -200,7 +295,7 @@ function QuestionsList({
 }
 
 function QuestionListItem({ qSet, question, index, selected, handleClick }) {
-  const btnColor = selected ? "rgba(253,136,53,0.1)" : "transparent";
+  const btnColor = selected ? "rgba(0,180,235,0.1)" : "transparent";
 
   const submissions = getSubmissions(qSet, question) || [];
   const lastSubmission = submissions?.at(-1) || null;
@@ -220,4 +315,107 @@ function QuestionListItem({ qSet, question, index, selected, handleClick }) {
       />
     </ListItemButton>
   );
+}
+
+function QuestionCard({
+  handleEditQuestion,
+  handleOpenPoints,
+  handleOpenAttempts,
+  mode,
+  qSet,
+  question,
+  userCred,
+}) {
+  if (!question) {
+    return <div style={{ height: "200px", backgroundColor: "red" }}>hello</div>;
+  }
+
+  if (question) {
+    const { type } = question;
+
+    const cardStyle = {
+      bgcolor: "rgba(255,255,255,0.2)",
+      display: "flex",
+      flexDirection: "column",
+    };
+
+    return (
+      <Card sx={cardStyle} className="question-card">
+        {mode === "build" && (
+          <Box className="question-card-actions">
+            <Points question={question} handleClick={handleOpenPoints} />
+            <VertDivider hidden={!question.attemptsPossible} />
+            <Attempts question={question} handleClick={handleOpenAttempts} />
+            <VertDivider />
+            <Button
+              onClick={handleEditQuestion}
+              startIcon={<EditIcon />}
+              sx={{ p: 1, mr: 1 }}
+            >
+              EDIT
+            </Button>
+          </Box>
+        )}
+
+        {type === "multiple choice" && (
+          <MultipleChoicePreview
+            mode={mode}
+            qSet={qSet}
+            question={question}
+            userCred={userCred}
+          />
+        )}
+        {type === "short answer" && (
+          <ShortAnswerPreview
+            mode={mode}
+            question={question}
+            qSet={qSet}
+            userCred={userCred}
+          />
+        )}
+      </Card>
+    );
+  }
+}
+
+function Points({ question, handleClick }) {
+  if (!question) return;
+
+  const pointsPossible = question.pointsPossible;
+  const label = pointsPossible === 1 ? "point" : "points";
+
+  return (
+    <Link onClick={handleClick} underline="hover" style={{ cursor: "pointer" }}>
+      {pointsPossible + " " + label}
+    </Link>
+  );
+}
+
+function Attempts({ question, handleClick }) {
+  if (!question) return;
+
+  const attemptsPossible = question.attemptsPossible;
+  const label = attemptsPossible === 1 ? "attempt" : "attempts";
+
+  if (!attemptsPossible) return null;
+
+  return (
+    <Link onClick={handleClick} underline="hover" style={{ cursor: "pointer" }}>
+      {attemptsPossible + " " + label}
+    </Link>
+  );
+}
+
+function RightPanel({ children, selQuestion }) {
+  if (!selQuestion) {
+    return (
+      <Box className="right-panel">
+        <Box className="flex flex-center" sx={{ minHeight: "300px" }}>
+          Please select a question from the list.
+        </Box>
+      </Box>
+    );
+  } else {
+    return <Box className="right-panel">{children}</Box>;
+  }
 }

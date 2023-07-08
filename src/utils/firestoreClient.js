@@ -30,20 +30,6 @@ export function addAssignment(course, values, handleClose, setSubmitting) {
     });
 }
 
-export function addResource(course, values, handleClose, setSubmitting) {
-  const ref = collection(db, "courses", course.id, "resources");
-  setSubmitting(true);
-  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 500);
-      setTimeout(() => handleClose(), 500);
-    })
-    .catch((error) => {
-      console.log(error);
-      setTimeout(() => setSubmitting(false), 500);
-    });
-}
-
 export function addCourse(handleClose, setSubmitting, values) {
   const ref = collection(db, "courses");
   setSubmitting(true);
@@ -68,9 +54,6 @@ export function addQuestion(
 ) {
   const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
 
-  console.log(user.uid);
-  console.log(qSet.id);
-
   const newID = generateRandomCode(8);
 
   const tidiedValues = {
@@ -78,8 +61,6 @@ export function addQuestion(
     created: new Date(),
     ...values,
   };
-
-  console.log(tidiedValues);
 
   setSubmitting(true);
   updateDoc(ref, {
@@ -104,6 +85,20 @@ export function addPointerToFile(user, file, url, colName) {
   addDoc(ref, data)
     .then(() => console.log("upload successful"))
     .catch((error) => console.log(error));
+}
+
+export function addResource(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "resources");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 500);
+      setTimeout(() => handleClose(), 500);
+    })
+    .catch((error) => {
+      console.log(error);
+      setTimeout(() => setSubmitting(false), 500);
+    });
 }
 
 export function addUser({ userCredentials, values }) {
@@ -177,6 +172,34 @@ export function autoAddQueston(
 export function deleteCourseResource(course, resource) {
   const ref = doc(db, "courses", course.id, "resources", resource.id);
   deleteDoc(ref);
+}
+
+export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
+  const questions = qSet.questions;
+  const updatedQuestions = questions.filter((el) => question.id !== el.id);
+
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+  updateDoc(ref, {
+    questions: updatedQuestions,
+  }).then(() => {
+    if (updatedQuestions.length === 0) {
+      setSelQuestion(null);
+    } else if (qIndex === 0) {
+      setSelQuestion(updatedQuestions[0]);
+    } else if (updatedQuestions.length === qIndex) {
+      setSelQuestion(updatedQuestions[qIndex - 1]);
+    } else {
+      setSelQuestion(updatedQuestions[qIndex]);
+    }
+  });
+}
+
+export function deleteQuestionSubmissions(selQuestion, qSet, user) {
+  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+
+  updateDoc(ref, {
+    [`submissionHistory.${selQuestion.id}`]: [],
+  });
 }
 
 export function deleteUserContent(user, colName, docID) {
@@ -334,7 +357,6 @@ export function fetchUserQSets(user, setQSets, setFetching) {
 export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
   const ref = doc(db, "users", user.uid, "question-sets", qSetID);
   const unsubscribe = onSnapshot(ref, (doc) => {
-    console.log("Current data: ", doc.data());
     setQSet({
       id: doc.id,
       ...doc.data(),
@@ -398,6 +420,42 @@ export function getUserQSets(user, setQSets, setSelItem) {
     setQSets(fetchedItems);
     setSelItem(fetchedItems[0]);
   });
+}
+
+export function saveQuestionResponse(
+  currentResponse,
+  grade,
+  submissions,
+  question,
+  qSet,
+  userCred
+) {
+  const newSubmission = { response: currentResponse, submitted: new Date() };
+
+  const ref = doc(db, "users", userCred.uid, "assets", qSet.id);
+
+  function appendResponse() {
+    updateDoc(ref, {
+      [`submissionHistory.${question.id}`]: [...submissions, newSubmission],
+    });
+  }
+
+  function overwriteResponse() {
+    updateDoc(ref, {
+      [`submissionHistory.${question.id}`]: [newSubmission],
+    });
+  }
+
+  if (grade) {
+    newSubmission.answeredCorrectly = grade.answeredCorrectly;
+    newSubmission.pointsAwarded = grade.pointsAwarded;
+  }
+
+  if (question.type === "free response") {
+    overwriteResponse();
+  } else {
+    appendResponse();
+  }
 }
 
 export function updateAdaptiveParams(
