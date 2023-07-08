@@ -32,7 +32,7 @@ import { MoreOptionsBtn } from "../components/common/Buttons";
 import { MoreOptionsMenu, MenuOption } from "../components/common/Menus";
 import { ref, deleteObject } from "firebase/storage";
 import { storage } from "../config/firebaseConfig.js";
-import { deleteFirestoreRef } from "../utils/firestoreClient.js";
+import { deleteUserAsset } from "../utils/firestoreClient.js";
 
 export default function DocumentsPage() {
   const { user } = useAuth();
@@ -54,7 +54,7 @@ export default function DocumentsPage() {
     const storageRef = ref(storage, storagePath);
 
     deleteObject(storageRef)
-      .then(() => deleteFirestoreRef(user, "documents", doc.id))
+      .then(() => deleteUserAsset(user, "documents", doc.id))
       .catch((error) => console.log(error));
 
     if (doc.id === selDocument.id) {

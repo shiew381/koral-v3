@@ -1,35 +1,73 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchCourse } from "../utils/firestoreClient";
-import { Box, Button, Tabs, Tab } from "@mui/material";
+import {
+  fetchAssignments,
+  fetchCourse,
+  fetchResources,
+} from "../utils/firestoreClient";
+import {
+  Box,
+  Button,
+  Tabs,
+  Tab,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+  IconButton,
+} from "@mui/material";
 import GroupIcon from "@mui/icons-material/Group";
 import {
   CourseImage,
   CourseSummary,
-  CourseTabs,
 } from "../components/common/CourseDashboard";
 import { Page, LoadingIndicator } from "../components/common/Pages";
+import { AssignmentForm } from "../components/forms/AssignmentForm";
+import AddIcon from "@mui/icons-material/Add";
 import "../css/CourseDashboard.css";
+import { formatDate, formatTime } from "../utils/dateUtils";
+import { ResourceForm } from "../components/forms/ResourceForm";
+import ImageIcon from "@mui/icons-material/Image";
+import ArticleIcon from "@mui/icons-material/Article";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 export default function InstructorDashboard() {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const { title, courseID } = useParams();
+  const { courseID } = useParams();
   const [loading, setLoading] = useState(true);
 
   const [course, setCourse] = useState(null);
   const [tabIndex, setTabIndex] = useState(0);
+  const [asgmtOpen, setAsgmtOpen] = useState(false);
+  const [resourceOpen, setResourceOpen] = useState(false);
 
-  const selectTab = (e, newIndex) => setTabIndex(newIndex);
+  function selectTab(e, newIndex) {
+    setTabIndex(newIndex);
+  }
 
-  const courseTitle = title.replace(/\s/g, "-");
+  function handleAsgmtOpen() {
+    setAsgmtOpen(true);
+  }
 
-  function navigateToStudentDashboard() {
-    navigate(`/classroom/courses/${courseTitle}/${courseID}/student/dashboard`);
+  function handleAsgmtClose() {
+    setAsgmtOpen(false);
+  }
+
+  function handleResourceOpen() {
+    setResourceOpen(true);
+  }
+
+  function handleResourceClose() {
+    setResourceOpen(false);
   }
 
   useEffect(() => fetchCourse(courseID, setCourse, setLoading), [courseID]);
+
+  // useEffect()
 
   if (loading) {
     return (
@@ -47,6 +85,7 @@ export default function InstructorDashboard() {
           <Tab label="Announcements" />
           <Tab label="Grades" />
           <Tab label="Assignments" />
+          <Tab label="Resources" />
         </Tabs>
       </div>
       <div className="tabs-horizontal">
@@ -55,61 +94,213 @@ export default function InstructorDashboard() {
           <Tab label="Announcements" />
           <Tab label="Grades" />
           <Tab label="Assignments" />
+          <Tab label="Resources" />
         </Tabs>
       </div>
+      <StudentView course={course} />
 
-      <CourseInfo course={course} tabIndex={tabIndex} />
-      <Grades tabIndex={tabIndex} />
-      <Announcements tabIndex={tabIndex} />
-      <Assignments tabIndex={tabIndex} />
-      <Resources tabIndex={tabIndex} />
+      {tabIndex === 0 && <CourseInfo course={course} />}
+      {tabIndex === 1 && <Announcements />}
+      {tabIndex === 2 && <Grades />}
+      {tabIndex === 3 && (
+        <Assignments course={course} handleOpen={handleAsgmtOpen} />
+      )}
+      {tabIndex == 4 && (
+        <Resources course={course} handleOpen={handleResourceOpen} />
+      )}
+      <ResourceForm
+        course={course}
+        handleClose={handleResourceClose}
+        open={resourceOpen}
+        user={user}
+      />
+      <AssignmentForm
+        course={course}
+        handleClose={handleAsgmtClose}
+        open={asgmtOpen}
+        user={user}
+      />
     </div>
   );
 }
 
-function CourseInfo({ course, tabIndex }) {
-  if (tabIndex === 0) {
-    return (
-      <Box className="flex flex-grow flex-center" sx={{ pt: "20vh" }}>
-        <CourseImage />
-        <CourseSummary course={course} />
-      </Box>
-    );
-  } else {
-    return null;
-  }
+function CourseInfo({ course }) {
+  return (
+    <Box className="flex flex-grow flex-center">
+      <CourseImage />
+      <CourseSummary course={course} />
+    </Box>
+  );
 }
 
-function Announcements({ tabIndex }) {
-  if (tabIndex !== 1) return null;
+function Announcements() {
   return "Announcements";
 }
 
-function Grades({ tabIndex }) {
-  if (tabIndex === 2) {
-    return "Grades";
-  } else {
-    return null;
+function Grades() {
+  return "Grades";
+}
+
+function Assignments({ course, handleOpen }) {
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const listWidth = "600px";
+
+  useEffect(
+    () => fetchAssignments(course.id, setAssignments, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <div className="flex flex-col flex-center flex-grow">
+        <LoadingIndicator />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-col flex-align-center flex-grow"
+      style={{ padding: "10px" }}
+    >
+      <Box sx={{ width: listWidth }}>
+        <Button onClick={handleOpen} startIcon={<AddIcon />}>
+          Add Assignment
+        </Button>
+      </Box>
+
+      <List sx={{ width: listWidth }}>
+        {assignments.map((asgmt) => (
+          <>
+            <Divider />
+            <ListItem
+              key={asgmt.id}
+              secondaryAction={
+                <IconButton edge="end">
+                  <MoreVertIcon />
+                </IconButton>
+              }
+            >
+              <ListItemIcon>
+                <AssignmentIcon type={asgmt.type} />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography variant="h6">{asgmt.title}</Typography>}
+                secondary={
+                  <>
+                    <Typography>
+                      Open:{" "}
+                      {formatDate(asgmt.dateOpen) +
+                        " " +
+                        formatTime(asgmt.dateOpen)}
+                    </Typography>
+                    <Typography>
+                      Due:{" "}
+                      {formatDate(asgmt.dateDue) +
+                        " " +
+                        formatTime(asgmt.dateDue)}
+                    </Typography>
+                  </>
+                }
+              />
+            </ListItem>
+          </>
+        ))}
+      </List>
+    </div>
+  );
+}
+
+function Resources({ course, handleOpen }) {
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const listWidth = "600px";
+
+  useEffect(
+    () => fetchResources(course.id, setResources, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <div className="flex flex-col flex-center flex-grow">
+        <LoadingIndicator />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="flex flex-col flex-align-center flex-grow"
+      style={{ padding: "10px" }}
+    >
+      <Box sx={{ width: listWidth }}>
+        <Button onClick={handleOpen} startIcon={<AddIcon />}>
+          Add Resource
+        </Button>
+      </Box>
+      <List sx={{ width: listWidth }}>
+        {resources.map((el) => (
+          <>
+            <Divider />
+            <ListItem
+              key={el.id}
+              secondaryAction={
+                <IconButton edge="end">
+                  <MoreVertIcon />
+                </IconButton>
+              }
+            >
+              <ListItemIcon>
+                <ResourceIcon type={el.type} />
+              </ListItemIcon>
+              <ListItemText
+                primary={<Typography variant="h6">{el.title}</Typography>}
+                secondary={
+                  <Typography>Added: {formatDate(el.dateCreated)}</Typography>
+                }
+              />
+            </ListItem>
+          </>
+        ))}
+      </List>
+    </div>
+  );
+}
+
+function AssignmentIcon({ type }) {
+  switch (type) {
+    case "question set": {
+      return <AppRegistrationIcon />;
+    }
+    default:
+      return null;
   }
 }
 
-function Assignments({ tabIndex }) {
-  if (tabIndex === 3) {
-    return "Assignments";
-  } else {
-    return null;
+function ResourceIcon({ type }) {
+  switch (type) {
+    case "document": {
+      return <ArticleIcon />;
+    }
+    case "image": {
+      return <ImageIcon />;
+    }
+
+    default:
+      return null;
   }
 }
 
-function Resources({ tabIndex }) {
-  if (tabIndex === 4) {
-    return "Resources";
-  } else {
-    return null;
+function StudentView({ course }) {
+  const { title, courseID } = course;
+  const navigate = useNavigate();
+  function navigateToStudentDashboard() {
+    navigate(`/classroom/courses/${title}/${courseID}/student/dashboard`);
   }
-}
-
-function StudentView() {
   return (
     <Box sx={{ position: "absolute", top: 0, right: 0 }}>
       <Button onClick={navigateToStudentDashboard} startIcon={<GroupIcon />}>

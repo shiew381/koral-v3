@@ -5,6 +5,7 @@ import {
   deleteDoc,
   collection,
   doc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -15,10 +16,38 @@ import {
 } from "firebase/firestore";
 import { generateRandomCode } from "./commonUtils.js";
 
+export function addAssignment(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "assignments");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 500);
+      setTimeout(() => handleClose(), 500);
+    })
+    .catch((error) => {
+      console.log(error);
+      setTimeout(() => setSubmitting(false), 500);
+    });
+}
+
+export function addResource(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "resources");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 500);
+      setTimeout(() => handleClose(), 500);
+    })
+    .catch((error) => {
+      console.log(error);
+      setTimeout(() => setSubmitting(false), 500);
+    });
+}
+
 export function addCourse(handleClose, setSubmitting, values) {
   const ref = collection(db, "courses");
   setSubmitting(true);
-  addDoc(ref, values)
+  addDoc(ref, { dateCreated: serverTimestamp(), ...values })
     .then(() => {
       setTimeout(() => setSubmitting(false), 500);
       setTimeout(() => handleClose(), 500);
@@ -84,7 +113,7 @@ export function addUser({ userCredentials, values }) {
 export function addUserLink(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "links");
   setSubmitting(true);
-  addDoc(ref, { ...values, created: serverTimestamp() })
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
     .then(() => {
       setSubmitting(false);
       handleClose();
@@ -95,7 +124,7 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
 export function addUserQSet(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
-  addDoc(ref, { ...values, questions: [], created: serverTimestamp() })
+  addDoc(ref, { ...values, questions: [], dateCreated: serverTimestamp() })
     .then(() => {
       setSubmitting(false);
       handleClose();
@@ -110,7 +139,7 @@ export function autoSaveQuestion(
   user,
   setSelQuestion
 ) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
   const updatedQuestions = qSet.questions.map((question) =>
     question.id === selQuestion.id ? values : question
   );
@@ -128,10 +157,10 @@ export function autoAddQueston(
   setEdit,
   setSelQuestion
 ) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
   const tidiedValues = {
     id: newID,
-    created: new Date(),
+    dateCreated: new Date(),
     ...values,
   };
 
@@ -145,8 +174,31 @@ export function autoAddQueston(
   return tidiedValues.id;
 }
 
-export function deleteFirestoreRef(user, colName, docID) {
-  deleteDoc(doc(db, "users", user.uid, colName, docID));
+export function deleteCourseResource(course, resource) {
+  const ref = doc(db, "courses", course.id, "resources", resource.id);
+  deleteDoc(ref);
+}
+
+export function deleteUserContent(user, colName, docID) {
+  const ref = doc(db, "users", user.uid, colName, docID);
+  deleteDoc(ref);
+}
+
+export function fetchAssignments(courseID, setAssignments, setLoading) {
+  const ref = collection(db, "courses", courseID, "assignments");
+  const q = query(ref);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      dateCreated: doc.data().dateCreated.toDate(),
+      dateDue: doc.data().dateDue.toDate(),
+      dateOpen: doc.data().dateOpen.toDate(),
+    }));
+    setAssignments(fetchedItems);
+    setLoading(false);
+  });
+  return unsubscribe;
 }
 
 export function fetchCourses(user, setCourses, setLoading) {
@@ -167,7 +219,26 @@ export function fetchCourse(courseID, setCourse, setLoading) {
   //TODO: restrict access to instructor
   const ref = doc(db, "courses", courseID);
   const unsubscribe = onSnapshot(ref, (doc) => {
-    setCourse({ id: doc.id, ...doc.data() });
+    setCourse({
+      id: doc.id,
+      ...doc.data(),
+      dateCreated: doc.data().dateCreated.toDate(),
+    });
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchResources(courseID, setResources, setLoading) {
+  const ref = collection(db, "courses", courseID, "resources");
+  const q = query(ref);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      dateCreated: doc.data().dateCreated.toDate(),
+    }));
+    setResources(fetchedItems);
     setLoading(false);
   });
   return unsubscribe;
@@ -223,7 +294,7 @@ export function fetchUserLinks(user, setLinks, setFetching) {
       id: doc.id,
       title: doc.data().title,
       url: doc.data().url,
-      created: doc.data().created?.toDate(),
+      dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
     setLinks(fetchedItems);
@@ -251,7 +322,7 @@ export function fetchUserQSets(user, setQSets, setFetching) {
       id: doc.id,
       title: doc.data().title,
       mode: doc.data().mode,
-      created: doc.data().created?.toDate(),
+      dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
     setQSets(fetchedItems);
@@ -271,6 +342,62 @@ export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
     setFetching(false);
   });
   return unsubscribe;
+}
+
+export function getUserDocuments(user, setDocuments, setSelItem) {
+  const ref = collection(db, "users", user.uid, "documents");
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setDocuments(fetchedItems);
+    setSelItem(fetchedItems[0]);
+  });
+}
+
+export function getUserLinks(user, setLinks, setSelItem) {
+  const ref = collection(db, "users", user.uid, "links");
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setLinks(fetchedItems);
+    setSelItem(fetchedItems[0]);
+  });
+}
+
+export function getUserImages(user, setImages, setSelItem) {
+  const ref = collection(db, "users", user.uid, "images");
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setImages(fetchedItems);
+    setSelItem(fetchedItems[0]);
+  });
+}
+
+export function getUserQSets(user, setQSets, setSelItem) {
+  const ref = collection(db, "users", user.uid, "question-sets");
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      title: doc.data().title,
+    }));
+    setQSets(fetchedItems);
+    setSelItem(fetchedItems[0]);
+  });
 }
 
 export function updateAdaptiveParams(
@@ -297,7 +424,7 @@ export function updateQuestion(
   setSelQuestion,
   handleClose
 ) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
 
   const tidiedValues = {
     id: selQuestion.id,

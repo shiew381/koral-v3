@@ -818,7 +818,7 @@ export function Editor({
   useStorage(
     file,
     setFile,
-    `users/${user?.uid}/assets/${qSet.id}/${selQuestion?.id || tempID}/${
+    `users/${user?.uid}/question-sets/${qSet.id}/${selQuestion?.id || tempID}/${
       file?.name
     }`,
     setUploadProgress,

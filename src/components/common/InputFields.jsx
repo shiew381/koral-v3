@@ -1,5 +1,7 @@
 import { TextField, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 
 export function AnswerChoiceField({ onChange, value }) {
   return (
@@ -84,6 +86,30 @@ export function CourseTitleField({ onChange, value }) {
       sx={{ mb: 1 }}
       value={value}
       variant="filled"
+    />
+  );
+}
+
+export function DueDatePicker({ disabled, onChange, value }) {
+  return (
+    <DatePicker
+      disabled={disabled}
+      label="due date"
+      onChange={onChange}
+      sx={{ maxWidth: "200px", mb: 2, mr: 1 }}
+      value={value}
+    />
+  );
+}
+
+export function DueTimePicker({ disabled, onChange, value }) {
+  return (
+    <TimePicker
+      disabled={disabled}
+      label="due time"
+      onChange={onChange}
+      sx={{ maxWidth: "200px" }}
+      value={value}
     />
   );
 }
@@ -213,6 +239,30 @@ export function FreeResponseExampleField({ onChange, value }) {
       sx={{ my: 1 }}
       value={value}
       variant="filled"
+    />
+  );
+}
+
+export function OpenDatePicker({ disabled, onChange, value }) {
+  return (
+    <DatePicker
+      disabled={disabled}
+      label="open date"
+      onChange={onChange}
+      sx={{ maxWidth: "200px", mb: 2, mr: 1 }}
+      value={value}
+    />
+  );
+}
+
+export function OpenTimePicker({ disabled, onChange, value }) {
+  return (
+    <TimePicker
+      disabled={disabled}
+      label="open time"
+      onChange={onChange}
+      sx={{ maxWidth: "200px" }}
+      value={value}
     />
   );
 }
