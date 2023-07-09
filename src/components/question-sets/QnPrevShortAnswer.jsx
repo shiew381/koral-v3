@@ -3,6 +3,8 @@ import {
   deleteQuestionSubmissions,
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
+import { gradeResponse } from "../../utils/grading";
+import { getSubmissions } from "../../utils/questionSetUtils";
 import {
   Box,
   CardContent,
@@ -14,14 +16,14 @@ import {
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { NumberField } from "../common/NumberField";
 import { ShortTextField } from "../common/InputFields";
+import { VertDivider } from "../common/Dividers";
 import {
   AttemptCounter,
   CorrectIndicator,
   PromptPreview,
 } from "./QnPrevSharedCpnts";
-import { VertDivider } from "../common/Dividers";
-import { gradeResponse } from "../../utils/grading";
-import { getSubmissions } from "../../utils/questionSetUtils";
+import parse from "html-react-parser";
+
 // import styles from "@/styles/QuestionSet.module.css";
 
 export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
@@ -240,16 +242,6 @@ function ShortAnswerNumber({
     return currentResponse?.number !== lastResponse?.number;
   }
 
-  useEffect(
-    () => {
-      if (!build && submissions?.length > 0) {
-        numberRef.current.innerHTML = lastResponse.number;
-      }
-    },
-    //eslint-disable-next-line
-    [question.id, build]
-  );
-
   function handleSubmit() {
     setSubmitting(true);
     numberRef.current?.normalize();
@@ -270,16 +262,28 @@ function ShortAnswerNumber({
     setSubmitting(false);
   }
 
+  useEffect(
+    () => {
+      if (!build && submissions?.length > 0) {
+        numberRef.current.innerHTML = lastResponse.number;
+      }
+    },
+    //eslint-disable-next-line
+    [question.id, build]
+  );
+
+  //TODO: replace textfield with parsed correct answer - number
   if (build) {
     return (
-      <div className="responase-area">
+      <div className="response-area">
         <div className="response-field-container">
-          <TextField
+          {parse(question.correctAnswer?.number || "")}
+          {/* <TextField
             disabled
             fullWidth
             label="correct answer"
             value={question.correctAnswer?.number || ""}
-          />
+          /> */}
         </div>
       </div>
     );

@@ -284,6 +284,18 @@ export function OpenTimePicker({ disabled, onChange, value }) {
   );
 }
 
+export function PercentToleranceField({ onChange, value }) {
+  return (
+    <TextField
+      onChange={onChange}
+      label="Percent tolerance"
+      type="number"
+      value={value}
+      variant="filled"
+    />
+  );
+}
+
 export function PointsField({ onChange, value }) {
   return (
     <TextField

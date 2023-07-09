@@ -18,7 +18,6 @@ import {
   Link,
   Radio,
   Stack,
-  Typography,
 } from "@mui/material";
 import { gradeResponse } from "../../utils/grading";
 import { VertDivider } from "../common/Dividers";
@@ -116,7 +115,7 @@ export default function MultipleChoicePreview({
             <Box className="answer-choice-row" key={`choice-${ind}`}>
               {numCorrect <= 1 && <Radio checked={el.isCorrect} disabled />}
               {numCorrect > 1 && <Checkbox checked={el.isCorrect} disabled />}
-              <Typography>{parse(el.text)}</Typography>
+              {parse(el.text)}
             </Box>
           ))}
         </div>
@@ -150,7 +149,7 @@ export default function MultipleChoicePreview({
                   disabled={attemptsExhausted}
                 />
               )}
-              <Typography>{parse(el.text)}</Typography>
+              {parse(el.text)}
             </Box>
           ))}
         </div>

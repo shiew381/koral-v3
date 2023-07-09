@@ -224,7 +224,7 @@ function NumberToolbar({ disabled, numberRef, setCurrentResponse }) {
   }
 
   return (
-    <div style={{ position: "absolute", top: "-85px" }}>
+    <div>
       <div>
         <EquationTab handleTab={handleTab} tab={tab} value="templates" />
         <EquationTab handleTab={handleTab} tab={tab} value="symbols" />
