@@ -299,7 +299,7 @@ div.equation-container {
   display: flex;
   font-family: Computer Modern, Minion, Utopia, serif;
   justify-content: center;
-  padding: 5px;
+  padding-top: 20px;
   text-align: center;
 }
 

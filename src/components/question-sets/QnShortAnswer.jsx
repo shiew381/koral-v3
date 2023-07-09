@@ -21,7 +21,7 @@ import {
   AttemptCounter,
   CorrectIndicator,
   PromptPreview,
-} from "./QnPrevSharedCpnts";
+} from "./QnSharedCpnts";
 import parse from "html-react-parser";
 
 // import styles from "@/styles/QuestionSet.module.css";
@@ -53,7 +53,7 @@ export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
     return null;
   }
 
-  if (mode === "build") {
+  if (mode === "preview") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
@@ -68,7 +68,7 @@ export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
     );
   }
 
-  if (mode === "preview") {
+  if (mode === "test") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
@@ -163,14 +163,9 @@ function ShortAnswerText({
 
   if (build) {
     return (
-      <div className="response-area">
-        <div className="response-field-container">
-          <TextField
-            disabled
-            fullWidth
-            label="correct answer"
-            value={question.correctAnswer?.text || ""}
-          />
+      <div className="correct-answer-area">
+        <div className="correct-answer-field-container">
+          {parse(question.correctAnswer?.text || "")}
         </div>
       </div>
     );
@@ -272,18 +267,11 @@ function ShortAnswerNumber({
     [question.id, build]
   );
 
-  //TODO: replace textfield with parsed correct answer - number
   if (build) {
     return (
-      <div className="response-area">
-        <div className="response-field-container">
+      <div className="correct-answer-area">
+        <div className="correct-answer-field-container">
           {parse(question.correctAnswer?.number || "")}
-          {/* <TextField
-            disabled
-            fullWidth
-            label="correct answer"
-            value={question.correctAnswer?.number || ""}
-          /> */}
         </div>
       </div>
     );

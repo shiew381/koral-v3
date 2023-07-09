@@ -33,16 +33,36 @@
   position: relative;
 }
 
+.correct-answer-area,
 .response-area {
-  display: flex;
   align-items: center;
-  justify-content: center;
+  display: flex;
   flex-grow: 1;
+  justify-content: center;
+}
+
+.correct-answer-field-container {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.42);
+  display: flex;
+  position: relative;
+  justify-content: center;
+  margin: 10px;
+
+  padding-top: 15px;
+  padding-bottom: 15px;
+  width: 150px;
 }
 
 .response-field-container {
   width: 250px;
   position: relative;
+}
+
+.correct-answer-field-container .eq-field {
+  outline: none;
 }
 
 .right-panel {

@@ -8,7 +8,7 @@ import {
   AttemptCounter,
   PromptPreview,
   CorrectIndicator,
-} from "./QnPrevSharedCpnts";
+} from "./QnSharedCpnts";
 import {
   Alert,
   Box,
@@ -25,12 +25,7 @@ import parse from "html-react-parser";
 import { getSubmissions } from "../../utils/questionSetUtils";
 // import styles from "@/styles/QuestionSet.module.css";
 
-export default function MultipleChoicePreview({
-  mode,
-  qSet,
-  question,
-  userCred,
-}) {
+export default function MultipleChoice({ mode, qSet, question, userCred }) {
   const answerChoices = question?.answerChoices || [];
   const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
   const submissions = getSubmissions(qSet, question) || [];
@@ -102,7 +97,7 @@ export default function MultipleChoicePreview({
     [question.id]
   );
 
-  if (mode === "build") {
+  if (mode === "preview") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
@@ -123,7 +118,7 @@ export default function MultipleChoicePreview({
     );
   }
 
-  if (mode === "preview") {
+  if (mode === "test") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />

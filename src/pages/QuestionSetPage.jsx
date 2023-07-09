@@ -26,8 +26,8 @@ import {
   PointsForm,
   QuestionBuilder,
 } from "../components/forms/QnBuilder";
-import MultipleChoicePreview from "../components/question-sets/QnPrevMultipleChoice";
-import ShortAnswerPreview from "../components/question-sets/QnPrevShortAnswer";
+import MultipleChoice from "../components/question-sets/QnMultipleChoice";
+import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import "../css/QuestionSetPage.css";
 
 export default function QuestionSetPage() {
@@ -36,7 +36,7 @@ export default function QuestionSetPage() {
 
   const [loading, setLoading] = useState(true);
 
-  const [mode, setMode] = useState("build");
+  const [mode, setMode] = useState("preview");
   const [edit, setEdit] = useState(false);
   const [openAttempts, setOpenAttempts] = useState(false);
   const [openPoints, setOpenPoints] = useState(false);
@@ -140,8 +140,8 @@ export default function QuestionSetPage() {
                 sx={{ position: "absolute", top: -47, right: 0 }}
                 value={mode}
               >
-                <ToggleButton value="build">Build</ToggleButton>
                 <ToggleButton value="preview">Preview</ToggleButton>
+                <ToggleButton value="test">Test</ToggleButton>
               </ToggleButtonGroup>
             )}
             <QuestionCard
@@ -341,7 +341,7 @@ function QuestionCard({
 
     return (
       <Card sx={cardStyle} className="question-card">
-        {mode === "build" && (
+        {mode === "preview" && (
           <Box className="question-card-actions">
             <Points question={question} handleClick={handleOpenPoints} />
             <VertDivider hidden={!question.attemptsPossible} />
@@ -358,7 +358,7 @@ function QuestionCard({
         )}
 
         {type === "multiple choice" && (
-          <MultipleChoicePreview
+          <MultipleChoice
             mode={mode}
             qSet={qSet}
             question={question}
@@ -366,7 +366,7 @@ function QuestionCard({
           />
         )}
         {type === "short answer" && (
-          <ShortAnswerPreview
+          <ShortAnswer
             mode={mode}
             question={question}
             qSet={qSet}
