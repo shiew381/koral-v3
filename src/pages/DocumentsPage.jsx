@@ -328,7 +328,7 @@ function DocDetails({ doc }) {
     <Box width="95%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
       <Typography variant="h6">{doc.name}</Typography>
       <Typography display="inline" variant="subtitle1">
-        uploaded: {formatDate(doc.uploaded)}
+        uploaded: {formatDate(doc.dateUploaded)}
       </Typography>
       <VertDivider />
       <Typography display="inline" variant="subtitle1">

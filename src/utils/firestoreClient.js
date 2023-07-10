@@ -79,7 +79,7 @@ export function addPointerToFile(user, file, url, colName) {
     type: file.type,
     name: file.name,
     size: file.size,
-    uploaded: serverTimestamp(),
+    dateUploaded: serverTimestamp(),
     url: url,
   };
   addDoc(ref, data)
@@ -295,7 +295,7 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
       id: doc.id,
       name: doc.data().name,
       url: doc.data().url,
-      uploaded: doc.data().uploaded?.toDate(),
+      dateUploaded: doc.data().dateUploaded?.toDate(),
       size: doc.data().size,
       searchHandle: doc.data().name.toLowerCase(),
     }));
@@ -307,13 +307,13 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
 
 export function fetchUserImages(user, setImages, setFetching) {
   const ref = collection(db, "users", user.uid, "images");
-  const q = query(ref, orderBy("uploaded", "desc"));
+  const q = query(ref, orderBy("dateUploaded", "desc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       name: doc.data().name,
       url: doc.data().url,
-      uploaded: doc.data().uploaded?.toDate(),
+      dateUploaded: doc.data().dateUploaded?.toDate(),
       size: doc.data().size,
       searchHandle: doc.data().name.toLowerCase(),
     }));

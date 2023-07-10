@@ -234,7 +234,7 @@ function ImageDetails({ info }) {
         {info.name}
       </Typography>
       <Typography sx={{ px: 2, pb: 1 }} variant="subtitle2">
-        uploaded {formatDate(info.uploaded)}
+        uploaded {formatDate(info.dateUploaded)}
       </Typography>
     </div>
   );
