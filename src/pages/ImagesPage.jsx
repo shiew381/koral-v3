@@ -5,7 +5,7 @@ import { ref, deleteObject } from "firebase/storage";
 import { storage } from "../config/firebaseConfig.js";
 import {
   addPointerToFile,
-  deleteUserAsset,
+  deleteUserContent,
   fetchUserImages,
 } from "../utils/firestoreClient.js";
 import { getFileExtension } from "../utils/fileUtils";
@@ -85,7 +85,7 @@ export default function ImagesPage() {
   function deleteImage(image) {
     const storageRef = ref(storage, `users/${user.uid}/images/${image?.name}`);
     deleteObject(storageRef)
-      .then(() => deleteUserAsset(user, "images", image.id))
+      .then(() => deleteUserContent(user, "images", image.id))
       .then(() => handleCloseMenu())
       .catch((error) => console.log(error));
   }
@@ -234,7 +234,7 @@ function ImageDetails({ info }) {
         {info.name}
       </Typography>
       <Typography sx={{ px: 2, pb: 1 }} variant="subtitle2">
-        uploaded {formatDate(info.uploaded)}
+        uploaded {formatDate(info.dateUploaded)}
       </Typography>
     </div>
   );

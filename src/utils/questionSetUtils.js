@@ -4,6 +4,8 @@ export function cleanEditorHTML(elem) {
   resizeHandles.forEach((handle) => handle.remove());
   const eqElems = elem.querySelectorAll(".eq-field");
   eqElems.forEach((elem) => (elem.contentEditable = "false"));
+  const equations = elem.querySelectorAll(".equation");
+  equations.forEach((elem) => (elem.contentEditable = "false"));
   return elem.innerHTML;
 }
 

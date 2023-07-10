@@ -81,13 +81,17 @@ export function BtnGroupFontStyle({ disabled, handleFormat }) {
 
   return (
     <ToggleButtonGroup disabled={disabled} size="small">
-      <ToggleButton className="editor-btn" onClick={bold}>
+      <ToggleButton className="editor-btn" onClick={bold} value="bold">
         <FormatBoldIcon />
       </ToggleButton>
-      <ToggleButton className="editor-btn" onClick={italicize}>
+      <ToggleButton className="editor-btn" onClick={italicize} value="italic">
         <FormatItalicIcon />
       </ToggleButton>
-      <ToggleButton className="editor-btn" onClick={underline}>
+      <ToggleButton
+        className="editor-btn"
+        onClick={underline}
+        value="underline"
+      >
         <FormatUnderlinedIcon />
       </ToggleButton>
     </ToggleButtonGroup>
@@ -104,10 +108,18 @@ export function BtnGroupScript({ disabled, handleFormat }) {
   }
   return (
     <ToggleButtonGroup disabled={disabled} size="small">
-      <ToggleButton className="editor-btn" onClick={superscript}>
+      <ToggleButton
+        className="editor-btn"
+        onClick={superscript}
+        value="superscript"
+      >
         <SuperscriptIcon />
       </ToggleButton>
-      <ToggleButton className="editor-btn" onClick={subscript}>
+      <ToggleButton
+        className="editor-btn"
+        onClick={subscript}
+        value="subscript"
+      >
         <SubscriptIcon />
       </ToggleButton>
     </ToggleButtonGroup>
@@ -117,7 +129,7 @@ export function BtnGroupScript({ disabled, handleFormat }) {
 export function BtnGroupList({ disabled, insertList }) {
   return (
     <ToggleButtonGroup disabled={disabled} size="small">
-      <ToggleButton className="editor-btn" onClick={insertList}>
+      <ToggleButton className="editor-btn" onClick={insertList} value="list">
         <FormatListBulletedIcon />
       </ToggleButton>
     </ToggleButtonGroup>
@@ -155,7 +167,11 @@ export function BtnGroupImage({
 export function BtnGroupEquation({ disabled, insertEquation }) {
   return (
     <ToggleButtonGroup disabled={disabled} size="small">
-      <ToggleButton className="editor-btn" onClick={insertEquation}>
+      <ToggleButton
+        className="editor-btn"
+        onClick={insertEquation}
+        value="equation"
+      >
         <FunctionsIcon />
       </ToggleButton>
     </ToggleButtonGroup>

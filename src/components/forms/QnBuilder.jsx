@@ -11,6 +11,7 @@ import { AttemptsField, PointsField } from "../common/InputFields";
 import { Lightbox, LightboxHeader } from "../common/Lightbox";
 import { addQuestion, updateQuestion } from "../../utils/firestoreClient";
 import { MultipleChoice } from "./QnBuilderMultipleChoice";
+import { ShortAnswer } from "./QnBuilderShortAnswer";
 // import { MultipleChoice } from "./QnBuilderMultipleChoice.";
 // import { ShortAnswer } from "./QnBuilderShortAnswer";
 // import { FreeResponse } from "./QnBuilderFreeResponse";
@@ -61,7 +62,11 @@ export function QuestionBuilder({
   );
 
   return (
-    <Lightbox open={open} onClose={handleClose}>
+    <Lightbox
+      open={open}
+      onClose={handleClose}
+      customStyle={{ maxWidth: "600px" }}
+    >
       <LightboxHeader title={edit ? "Edit Question" : "Add Question"} />
       <FormControl>
         <InputLabel>Type</InputLabel>
@@ -79,6 +84,19 @@ export function QuestionBuilder({
       </FormControl>
       {type === "multiple choice" && (
         <MultipleChoice
+          edit={edit}
+          handleAddQuestion={handleAddQuestion}
+          handleUpdateQuestion={handleUpdateQuestion}
+          qSet={qSet}
+          selQuestion={selQuestion}
+          setEdit={setEdit}
+          setSelQuestion={setSelQuestion}
+          submitting={submitting}
+          user={user}
+        />
+      )}
+      {type === "short answer" && (
+        <ShortAnswer
           edit={edit}
           handleAddQuestion={handleAddQuestion}
           handleUpdateQuestion={handleUpdateQuestion}

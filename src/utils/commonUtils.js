@@ -15,8 +15,18 @@ export function copyArray(arr) {
   return JSON.parse(JSON.stringify(arr));
 }
 
-export function formatNames(names) {
-  if (!Array.isArray(names)) return null;
+export function formatInstructorNames(instructors) {
+  if (!Array.isArray(instructors)) return null;
 
-  if (names.length < 3) return names.join(", ");
+  const instructorNames = instructors.map(
+    (instructor) => instructor.firstName + " " + instructor.lastName
+  );
+
+  return instructorNames.join(", ");
+}
+
+export function compareBases(a, b) {
+  if (a.base.toLowerCase() < b.base.toLowerCase()) return -1;
+  if (a.base.toLowerCase() > b.base.toLowerCase()) return 1;
+  return 0;
 }

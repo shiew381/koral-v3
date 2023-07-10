@@ -16,6 +16,7 @@ import LinksPage from "./pages/LinksPage.jsx";
 import QuestionSetsPage from "./pages/QuestionSetsPage.jsx";
 import QuestionSetPage from "./pages/QuestionSetPage.jsx";
 import "./css/App.css";
+import { StudentDashboard } from "./pages/StudentDashboard.jsx";
 
 export default function App() {
   const [open, setOpen] = useState(false);
@@ -43,6 +44,10 @@ export default function App() {
                 <Route
                   path="classroom/courses/:title/:courseID/instructor/dashboard"
                   element={<InstructorDashboard />}
+                />
+                <Route
+                  path="classroom/courses/:title/:courseID/student/dashboard"
+                  element={<StudentDashboard />}
                 />
                 <Route path="classroom/courses" element={<CoursesPage />} />
                 <Route path="content/documents" element={<DocumentsPage />} />

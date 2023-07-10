@@ -17,6 +17,23 @@ export function AnswerChoiceField({ onChange, value }) {
   );
 }
 
+export function AttemptsField({ onChange, value }) {
+  return (
+    <TextField
+      helperText="choose a number between 1 - 20"
+      fullWidth
+      InputProps={{
+        inputProps: { min: 1, max: 20, step: 1 },
+      }}
+      onChange={onChange}
+      sx={{ mb: 1 }}
+      type="number"
+      value={value}
+      variant="outlined"
+    />
+  );
+}
+
 export function CharacterLimitField({ onChange, value }) {
   return (
     <TextField
@@ -267,13 +284,29 @@ export function OpenTimePicker({ disabled, onChange, value }) {
   );
 }
 
+export function PercentToleranceField({ onChange, value }) {
+  return (
+    <TextField
+      onChange={onChange}
+      label="Percent tolerance"
+      type="number"
+      value={value}
+      variant="filled"
+    />
+  );
+}
+
 export function PointsField({ onChange, value }) {
   return (
     <TextField
-      inputProps={{ min: 0 }}
-      sx={{ width: "80px" }}
+      label="Points"
+      helperText="choose a number between 1 - 100"
+      fullWidth
+      InputProps={{
+        inputProps: { min: 1, max: 100, step: 1 },
+      }}
       onChange={onChange}
-      label="points"
+      sx={{ mb: 1 }}
       type="number"
       value={value}
       variant="outlined"
@@ -281,17 +314,22 @@ export function PointsField({ onChange, value }) {
   );
 }
 
-export function AttemptsField({ onChange, value }) {
+export function CourseSearchField({ onChange, value, handleKeyUp }) {
   return (
     <TextField
-      inputProps={{ min: 0, style: { textAlign: "center", paddingRight: 10 } }}
-      sx={{ width: "80px" }}
       onChange={onChange}
-      label="attempts"
-      type="number"
+      onKeyUp={handleKeyUp}
+      label="Search"
+      placeholder="course title or instructor name"
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <SearchIcon />
+          </InputAdornment>
+        ),
+      }}
       value={value}
       variant="outlined"
-      align="center"
     />
   );
 }
@@ -311,6 +349,20 @@ export function SearchField({ onChange, value }) {
       size="small"
       value={value}
       variant="outlined"
+    />
+  );
+}
+
+export function ShortTextField({ onChange, value, disabled }) {
+  return (
+    <TextField
+      autoComplete="off"
+      fullWidth
+      placeholder="type answer here"
+      onChange={onChange}
+      value={value}
+      variant="filled"
+      disabled={disabled}
     />
   );
 }

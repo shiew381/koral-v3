@@ -30,21 +30,7 @@ export function addAssignment(course, values, handleClose, setSubmitting) {
     });
 }
 
-export function addResource(course, values, handleClose, setSubmitting) {
-  const ref = collection(db, "courses", course.id, "resources");
-  setSubmitting(true);
-  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 500);
-      setTimeout(() => handleClose(), 500);
-    })
-    .catch((error) => {
-      console.log(error);
-      setTimeout(() => setSubmitting(false), 500);
-    });
-}
-
-export function addCourse(handleClose, setSubmitting, values) {
+export function addCourse(values, handleClose, setSubmitting) {
   const ref = collection(db, "courses");
   setSubmitting(true);
   addDoc(ref, { dateCreated: serverTimestamp(), ...values })
@@ -68,9 +54,6 @@ export function addQuestion(
 ) {
   const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
 
-  console.log(user.uid);
-  console.log(qSet.id);
-
   const newID = generateRandomCode(8);
 
   const tidiedValues = {
@@ -78,8 +61,6 @@ export function addQuestion(
     created: new Date(),
     ...values,
   };
-
-  console.log(tidiedValues);
 
   setSubmitting(true);
   updateDoc(ref, {
@@ -98,12 +79,26 @@ export function addPointerToFile(user, file, url, colName) {
     type: file.type,
     name: file.name,
     size: file.size,
-    uploaded: serverTimestamp(),
+    dateUploaded: serverTimestamp(),
     url: url,
   };
   addDoc(ref, data)
     .then(() => console.log("upload successful"))
     .catch((error) => console.log(error));
+}
+
+export function addResource(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "resources");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 500);
+      setTimeout(() => handleClose(), 500);
+    })
+    .catch((error) => {
+      console.log(error);
+      setTimeout(() => setSubmitting(false), 500);
+    });
 }
 
 export function addUser({ userCredentials, values }) {
@@ -179,6 +174,34 @@ export function deleteCourseResource(course, resource) {
   deleteDoc(ref);
 }
 
+export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
+  const questions = qSet.questions;
+  const updatedQuestions = questions.filter((el) => question.id !== el.id);
+
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+  updateDoc(ref, {
+    questions: updatedQuestions,
+  }).then(() => {
+    if (updatedQuestions.length === 0) {
+      setSelQuestion(null);
+    } else if (qIndex === 0) {
+      setSelQuestion(updatedQuestions[0]);
+    } else if (updatedQuestions.length === qIndex) {
+      setSelQuestion(updatedQuestions[qIndex - 1]);
+    } else {
+      setSelQuestion(updatedQuestions[qIndex]);
+    }
+  });
+}
+
+export function deleteQuestionSubmissions(selQuestion, qSet, user) {
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+
+  updateDoc(ref, {
+    [`submissionHistory.${selQuestion.id}`]: [],
+  });
+}
+
 export function deleteUserContent(user, colName, docID) {
   const ref = doc(db, "users", user.uid, colName, docID);
   deleteDoc(ref);
@@ -201,7 +224,7 @@ export function fetchAssignments(courseID, setAssignments, setLoading) {
   return unsubscribe;
 }
 
-export function fetchCourses(user, setCourses, setLoading) {
+export function fetchInstructorCourses(user, setInstructorCourses, setLoading) {
   const colRef = collection(db, "courses");
   const q = query(colRef, where("instructorIDs", "array-contains", user.uid));
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -209,7 +232,21 @@ export function fetchCourses(user, setCourses, setLoading) {
       id: doc.id,
       ...doc.data(),
     }));
-    setCourses(fetchedItems);
+    setInstructorCourses(fetchedItems);
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchStudentCourses(user, setStudentCourses, setLoading) {
+  const colRef = collection(db, "courses");
+  const q = query(colRef, where("studentIDs", "array-contains", user.uid));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setStudentCourses(fetchedItems);
     setLoading(false);
   });
   return unsubscribe;
@@ -258,7 +295,7 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
       id: doc.id,
       name: doc.data().name,
       url: doc.data().url,
-      uploaded: doc.data().uploaded?.toDate(),
+      dateUploaded: doc.data().dateUploaded?.toDate(),
       size: doc.data().size,
       searchHandle: doc.data().name.toLowerCase(),
     }));
@@ -270,13 +307,13 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
 
 export function fetchUserImages(user, setImages, setFetching) {
   const ref = collection(db, "users", user.uid, "images");
-  const q = query(ref, orderBy("uploaded", "desc"));
+  const q = query(ref, orderBy("dateUploaded", "desc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       name: doc.data().name,
       url: doc.data().url,
-      uploaded: doc.data().uploaded?.toDate(),
+      dateUploaded: doc.data().dateUploaded?.toDate(),
       size: doc.data().size,
       searchHandle: doc.data().name.toLowerCase(),
     }));
@@ -334,7 +371,6 @@ export function fetchUserQSets(user, setQSets, setFetching) {
 export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
   const ref = doc(db, "users", user.uid, "question-sets", qSetID);
   const unsubscribe = onSnapshot(ref, (doc) => {
-    console.log("Current data: ", doc.data());
     setQSet({
       id: doc.id,
       ...doc.data(),
@@ -400,6 +436,42 @@ export function getUserQSets(user, setQSets, setSelItem) {
   });
 }
 
+export function saveQuestionResponse(
+  currentResponse,
+  grade,
+  submissions,
+  question,
+  qSet,
+  user
+) {
+  const newSubmission = { response: currentResponse, submitted: new Date() };
+
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+
+  function appendResponse() {
+    updateDoc(ref, {
+      [`submissionHistory.${question.id}`]: [...submissions, newSubmission],
+    });
+  }
+
+  function overwriteResponse() {
+    updateDoc(ref, {
+      [`submissionHistory.${question.id}`]: [newSubmission],
+    });
+  }
+
+  if (grade) {
+    newSubmission.answeredCorrectly = grade.answeredCorrectly;
+    newSubmission.pointsAwarded = grade.pointsAwarded;
+  }
+
+  if (question.type === "free response") {
+    overwriteResponse();
+  } else {
+    appendResponse();
+  }
+}
+
 export function updateAdaptiveParams(
   user,
   docID,
@@ -411,6 +483,31 @@ export function updateAdaptiveParams(
   setSubmitting(true);
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function addStudentToCourse(
+  course,
+  studentInfo,
+  handleClose,
+  setSubmitting
+) {
+  setSubmitting(true);
+  const ref1 = doc(db, "courses", course.id);
+  const ref2 = doc(db, "courses", course.id, "students", studentInfo.id);
+
+  setDoc(ref2, { ...studentInfo, dateJoined: serverTimestamp() }).catch(
+    (error) => console.log(error)
+  );
+
+  updateDoc(ref1, {
+    studentIDs: arrayUnion(studentInfo.id),
+  })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 400);
+      setTimeout(() => handleClose(), 500);
+    })
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }

@@ -1,6 +1,6 @@
 import { Tabs } from "@mui/material";
-import { Box, Divider, Stack, Typography } from "@mui/material";
-import { formatNames } from "../../utils/commonUtils";
+import { Divider, Stack, Typography } from "@mui/material";
+import { formatInstructorNames } from "../../utils/commonUtils";
 import { formatDate } from "../../utils/dateUtils";
 
 export function CourseImage() {
@@ -53,7 +53,9 @@ export function CourseSummary({ course }) {
               </Typography>
             </td>
             <td style={{ paddingLeft: "20px" }}>
-              <Typography>{formatNames(course.instructorNames)}</Typography>
+              <Typography>
+                {formatInstructorNames(course.instructors)}
+              </Typography>
             </td>
           </tr>
           <tr>
@@ -64,7 +66,7 @@ export function CourseSummary({ course }) {
               <Typography>
                 {course.availableTo === "invited"
                   ? "invited students"
-                  : `${import.meta.env.REACT_APP_COMMUNITY_NAME}`}
+                  : `${import.meta.env.VITE_COMMUNITY_NAME}`}
               </Typography>
             </td>
           </tr>
@@ -80,8 +82,4 @@ export function CourseSummary({ course }) {
       </table>
     </Stack>
   );
-}
-
-export function LowerContainer({ children }) {
-  <Box className="flex flex-row">{children}</Box>;
 }
