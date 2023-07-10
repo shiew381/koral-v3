@@ -25,7 +25,6 @@ import {
   PageHeader,
 } from "../components/common/Pages.jsx";
 import { SearchField } from "../components/common/InputFields";
-
 import { BuildFirstItem } from "../components/common/CallsToAction.jsx";
 import { AddQSetForm } from "../components/forms/AddQSetForm";
 import { BtnContainer, MoreOptionsBtn } from "../components/common/Buttons";
@@ -173,7 +172,7 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
     setAnchorEl(null);
   }
 
-  function redirectToQSetEditor() {
+  function redirectToQSet() {
     const qSetTitle = qSet.title.replace(/\s/g, "-");
     navigate(`/content/question-sets/${qSetTitle}/${qSet.id}`);
   }
@@ -270,8 +269,8 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
       </CardContent>
       <Box sx={{ p: 2 }}>
         <BtnContainer right>
-          <Button onClick={redirectToQSetEditor} variant="contained">
-            BUILD / PREVIEW
+          <Button onClick={redirectToQSet} variant="contained">
+            PREVIEW / TEST
           </Button>
         </BtnContainer>
       </Box>

@@ -195,7 +195,7 @@ export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
 }
 
 export function deleteQuestionSubmissions(selQuestion, qSet, user) {
-  const ref = doc(db, "users", user.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
 
   updateDoc(ref, {
     [`submissionHistory.${selQuestion.id}`]: [],
@@ -428,11 +428,11 @@ export function saveQuestionResponse(
   submissions,
   question,
   qSet,
-  userCred
+  user
 ) {
   const newSubmission = { response: currentResponse, submitted: new Date() };
 
-  const ref = doc(db, "users", userCred.uid, "assets", qSet.id);
+  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
 
   function appendResponse() {
     updateDoc(ref, {

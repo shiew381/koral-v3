@@ -314,6 +314,26 @@ export function PointsField({ onChange, value }) {
   );
 }
 
+export function CourseSearchField({ onChange, value, handleKeyUp }) {
+  return (
+    <TextField
+      onChange={onChange}
+      onKeyUp={handleKeyUp}
+      label="Search"
+      placeholder="course title or instructor name"
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <SearchIcon />
+          </InputAdornment>
+        ),
+      }}
+      value={value}
+      variant="outlined"
+    />
+  );
+}
+
 export function SearchField({ onChange, value }) {
   return (
     <TextField

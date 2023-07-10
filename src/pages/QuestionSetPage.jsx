@@ -151,7 +151,7 @@ export default function QuestionSetPage() {
               mode={mode}
               qSet={qSet}
               question={selQuestion}
-              userCred={user}
+              user={user}
             />
             <br />
             <Box align="center">
@@ -324,7 +324,7 @@ function QuestionCard({
   mode,
   qSet,
   question,
-  userCred,
+  user,
 }) {
   if (!question) {
     return <div style={{ height: "200px", backgroundColor: "red" }}>hello</div>;
@@ -362,7 +362,7 @@ function QuestionCard({
             mode={mode}
             qSet={qSet}
             question={question}
-            userCred={userCred}
+            user={user}
           />
         )}
         {type === "short answer" && (
@@ -370,7 +370,7 @@ function QuestionCard({
             mode={mode}
             question={question}
             qSet={qSet}
-            userCred={userCred}
+            user={user}
           />
         )}
       </Card>

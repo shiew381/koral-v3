@@ -25,7 +25,7 @@ import parse from "html-react-parser";
 import { getSubmissions } from "../../utils/questionSetUtils";
 // import styles from "@/styles/QuestionSet.module.css";
 
-export default function MultipleChoice({ mode, qSet, question, userCred }) {
+export default function MultipleChoice({ mode, qSet, question, user }) {
   const answerChoices = question?.answerChoices || [];
   const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
   const submissions = getSubmissions(qSet, question) || [];
@@ -39,13 +39,14 @@ export default function MultipleChoice({ mode, qSet, question, userCred }) {
 
   function handleSubmit() {
     const grade = gradeResponse(question, currentResponse);
+
     saveQuestionResponse(
       currentResponse,
       grade,
       submissions,
       question,
       qSet,
-      userCred,
+      user,
       setSubmitting
     );
   }
@@ -84,7 +85,7 @@ export default function MultipleChoice({ mode, qSet, question, userCred }) {
   }
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, userCred);
+    deleteQuestionSubmissions(question, qSet, user);
     setCurrentResponse([]);
   }
 
