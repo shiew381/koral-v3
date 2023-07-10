@@ -8,6 +8,8 @@ export function AddQSetForm({ user, open, handleClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [title, setTitle] = useState("");
 
+  const disabled = !title || submitting;
+
   const values = {
     title,
   };
@@ -40,7 +42,7 @@ export function AddQSetForm({ user, open, handleClose }) {
         <SubmitBtn
           label="ADD"
           onClick={handleSubmit}
-          disabled={submitting}
+          disabled={disabled}
           submitting={submitting}
         />
       </BtnContainer>
