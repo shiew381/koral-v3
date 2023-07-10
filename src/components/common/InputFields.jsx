@@ -34,20 +34,6 @@ export function AttemptsField({ onChange, value }) {
   );
 }
 
-export function CharacterLimitField({ onChange, value }) {
-  return (
-    <TextField
-      inputProps={{ min: 0 }}
-      onChange={onChange}
-      label="character limit"
-      sx={{ mt: 2 }}
-      type="number"
-      value={value}
-      variant="outlined"
-    />
-  );
-}
-
 export function CompletionValueField({ onChange, value, questionCount }) {
   return (
     <TextField
@@ -78,17 +64,22 @@ export function CourseDescriptionField({ onChange, value }) {
   );
 }
 
-export function ConfirmPasswordField({ onChange, value }) {
+export function CourseSearchField({ onChange, value, handleKeyUp }) {
   return (
     <TextField
-      autoComplete="off"
-      fullWidth
-      label="confirm password"
       onChange={onChange}
-      sx={{ mb: 1 }}
-      type="password"
+      onKeyUp={handleKeyUp}
+      label="Search"
+      placeholder="course title or instructor name"
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <SearchIcon />
+          </InputAdornment>
+        ),
+      }}
       value={value}
-      variant="filled"
+      variant="outlined"
     />
   );
 }
@@ -101,6 +92,21 @@ export function CourseTitleField({ onChange, value }) {
       label="course title"
       onChange={onChange}
       sx={{ mb: 1 }}
+      value={value}
+      variant="filled"
+    />
+  );
+}
+
+export function ConfirmPasswordField({ onChange, value }) {
+  return (
+    <TextField
+      autoComplete="off"
+      fullWidth
+      label="confirm password"
+      onChange={onChange}
+      sx={{ mb: 1 }}
+      type="password"
       value={value}
       variant="filled"
     />
@@ -217,20 +223,6 @@ export function PromptField({ onChange, value }) {
   );
 }
 
-export function TitleField({ onChange, value }) {
-  return (
-    <TextField
-      autoComplete="off"
-      fullWidth
-      label="title"
-      onChange={onChange}
-      sx={{ mb: 1 }}
-      value={value}
-      variant="filled"
-    />
-  );
-}
-
 export function ShortAnswerTextField({ onChange, value }) {
   return (
     <TextField
@@ -238,22 +230,6 @@ export function ShortAnswerTextField({ onChange, value }) {
       fullWidth
       label="text"
       onChange={onChange}
-      value={value}
-      variant="filled"
-    />
-  );
-}
-
-export function FreeResponseExampleField({ onChange, value }) {
-  return (
-    <TextField
-      autoComplete="off"
-      fullWidth
-      label="example response"
-      multiline
-      onChange={onChange}
-      rows={4}
-      sx={{ my: 1 }}
       value={value}
       variant="filled"
     />
@@ -308,26 +284,6 @@ export function PointsField({ onChange, value }) {
       onChange={onChange}
       sx={{ mb: 1 }}
       type="number"
-      value={value}
-      variant="outlined"
-    />
-  );
-}
-
-export function CourseSearchField({ onChange, value, handleKeyUp }) {
-  return (
-    <TextField
-      onChange={onChange}
-      onKeyUp={handleKeyUp}
-      label="Search"
-      placeholder="course title or instructor name"
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="end">
-            <SearchIcon />
-          </InputAdornment>
-        ),
-      }}
       value={value}
       variant="outlined"
     />
@@ -391,6 +347,20 @@ export function TagField({ onChange, value }) {
       label="new tag"
       value={value}
       variant="outlined"
+    />
+  );
+}
+
+export function TitleField({ onChange, value }) {
+  return (
+    <TextField
+      autoComplete="off"
+      fullWidth
+      label="title"
+      onChange={onChange}
+      sx={{ mb: 1 }}
+      value={value}
+      variant="filled"
     />
   );
 }

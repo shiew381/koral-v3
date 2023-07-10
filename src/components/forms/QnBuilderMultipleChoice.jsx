@@ -3,10 +3,10 @@ import { autoAddQueston, autoSaveQuestion } from "../../utils/firestoreClient";
 import { generateRandomCode } from "../../utils/commonUtils";
 import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
+import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { Box, Button, Checkbox, IconButton, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import AddIcon from "@mui/icons-material/Add";
-import { BtnContainer, SubmitBtn } from "../common/Buttons";
 
 export function MultipleChoice({
   edit,

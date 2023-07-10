@@ -29,6 +29,7 @@ import {
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import "../css/QuestionSetPage.css";
+import FreeResponse from "../components/question-sets/QnFreeResponse";
 
 export default function QuestionSetPage() {
   const { user } = useAuth();
@@ -130,7 +131,7 @@ export default function QuestionSetPage() {
             setSelQuestion={setSelQuestion}
           />
 
-          <RightPanel selQuestion={selQuestion}>
+          <RightPanel selQuestion={selQuestion} questions={questions}>
             {questions.length > 0 && (
               <ToggleButtonGroup
                 color="primary"
@@ -154,9 +155,11 @@ export default function QuestionSetPage() {
               user={user}
             />
             <br />
-            <Box align="center">
-              <Button onClick={handleDeleteQuestion}>Delete Question</Button>
-            </Box>
+            {selQuestion && (
+              <Box align="center">
+                <Button onClick={handleDeleteQuestion}>Delete Question</Button>
+              </Box>
+            )}
           </RightPanel>
         </PreviewContainer>
       </Box>
@@ -327,7 +330,7 @@ function QuestionCard({
   user,
 }) {
   if (!question) {
-    return <div style={{ height: "200px", backgroundColor: "red" }}>hello</div>;
+    return null;
   }
 
   if (question) {
@@ -344,9 +347,9 @@ function QuestionCard({
         {mode === "preview" && (
           <Box className="question-card-actions">
             <Points question={question} handleClick={handleOpenPoints} />
-            <VertDivider hidden={!question.attemptsPossible} />
+            <VertDivider question={question} />
             <Attempts question={question} handleClick={handleOpenAttempts} />
-            <VertDivider />
+            <VertDivider show />
             <Button
               onClick={handleEditQuestion}
               startIcon={<EditIcon />}
@@ -367,6 +370,14 @@ function QuestionCard({
         )}
         {type === "short answer" && (
           <ShortAnswer
+            mode={mode}
+            question={question}
+            qSet={qSet}
+            user={user}
+          />
+        )}
+        {type == "free response" && (
+          <FreeResponse
             mode={mode}
             question={question}
             qSet={qSet}
@@ -406,8 +417,12 @@ function Attempts({ question, handleClick }) {
   );
 }
 
-function RightPanel({ children, selQuestion }) {
-  if (!selQuestion) {
+function RightPanel({ children, questions, selQuestion }) {
+  if (questions.length === 0) {
+    return null;
+  }
+
+  if (questions.length > 0 && !selQuestion) {
     return (
       <Box className="right-panel">
         <Box className="flex flex-center" sx={{ minHeight: "300px" }}>
@@ -415,7 +430,7 @@ function RightPanel({ children, selQuestion }) {
         </Box>
       </Box>
     );
-  } else {
-    return <Box className="right-panel">{children}</Box>;
   }
+
+  return <Box className="right-panel">{children}</Box>;
 }

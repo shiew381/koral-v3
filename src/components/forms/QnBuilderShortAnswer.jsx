@@ -20,7 +20,6 @@ import { cleanEditorHTML } from "../../utils/questionSetUtils";
 export function ShortAnswer({
   edit,
   handleAddQuestion,
-
   qSet,
   selQuestion,
   setEdit,

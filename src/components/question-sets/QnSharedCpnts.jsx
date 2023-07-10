@@ -24,6 +24,17 @@ export function PromptPreview({ question }) {
   return <div className="prompt">{parse(question.prompt)}</div>;
 }
 
+export function ExampleResponsePreview({ question }) {
+  if (!question?.exampleResponse) {
+    return (
+      <div style={{ color: "gray" }}>
+        {"(error rendering example response)"}
+      </div>
+    );
+  }
+  return <div className="prompt">{parse(question.exampleResponse)}</div>;
+}
+
 export function CorrectIndicator({ lastSubmission }) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
   if (!lastSubmission) {
