@@ -30,7 +30,7 @@ export function addAssignment(course, values, handleClose, setSubmitting) {
     });
 }
 
-export function addCourse(handleClose, setSubmitting, values) {
+export function addCourse(values, handleClose, setSubmitting) {
   const ref = collection(db, "courses");
   setSubmitting(true);
   addDoc(ref, { dateCreated: serverTimestamp(), ...values })
@@ -224,7 +224,7 @@ export function fetchAssignments(courseID, setAssignments, setLoading) {
   return unsubscribe;
 }
 
-export function fetchCourses(user, setCourses, setLoading) {
+export function fetchInstructorCourses(user, setInstructorCourses, setLoading) {
   const colRef = collection(db, "courses");
   const q = query(colRef, where("instructorIDs", "array-contains", user.uid));
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -232,7 +232,21 @@ export function fetchCourses(user, setCourses, setLoading) {
       id: doc.id,
       ...doc.data(),
     }));
-    setCourses(fetchedItems);
+    setInstructorCourses(fetchedItems);
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchStudentCourses(user, setStudentCourses, setLoading) {
+  const colRef = collection(db, "courses");
+  const q = query(colRef, where("studentIDs", "array-contains", user.uid));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setStudentCourses(fetchedItems);
     setLoading(false);
   });
   return unsubscribe;
@@ -469,6 +483,31 @@ export function updateAdaptiveParams(
   setSubmitting(true);
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function addStudentToCourse(
+  course,
+  studentInfo,
+  handleClose,
+  setSubmitting
+) {
+  setSubmitting(true);
+  const ref1 = doc(db, "courses", course.id);
+  const ref2 = doc(db, "courses", course.id, "students", studentInfo.id);
+
+  setDoc(ref2, { ...studentInfo, dateJoined: serverTimestamp() }).catch(
+    (error) => console.log(error)
+  );
+
+  updateDoc(ref1, {
+    studentIDs: arrayUnion(studentInfo.id),
+  })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 400);
+      setTimeout(() => handleClose(), 500);
+    })
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }

@@ -16,7 +16,11 @@ import {
   PageHeader,
 } from "../components/common/Pages.jsx";
 import { AddCourseForm } from "../components/forms/AddCourseForm.jsx";
-import { fetchCourses, fetchUserInfo } from "../utils/firestoreClient.js";
+import {
+  fetchInstructorCourses,
+  fetchStudentCourses,
+  fetchUserInfo,
+} from "../utils/firestoreClient.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 export default function CoursesPage() {
@@ -25,9 +29,11 @@ export default function CoursesPage() {
   // user is the auth credentials returned from firebase auth, userInfo are extra details about the user from firestore
   const { user } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
-  const [courses, setCourses] = useState([]);
+  const [instructorCourses, setInstructorCourses] = useState([]);
+  const [studentCourses, setStudentCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const allCourses = [...instructorCourses];
 
   function handleOpen() {
     setOpen(true);
@@ -37,13 +43,6 @@ export default function CoursesPage() {
     setOpen(false);
   }
 
-  // function redirectToCourse(course) {
-  //   const courseTitle = course.title.replace(/\s/g, "-");
-  //   navigate(
-  //     `/classroom/courses/${courseTitle}/${course.id}/instructor/dashboard`
-  //   );
-  // }
-
   useEffect(() => {
     if (!user) return;
     fetchUserInfo(user, setUserInfo);
@@ -51,7 +50,12 @@ export default function CoursesPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetchCourses(user, setCourses, setLoading);
+    fetchInstructorCourses(user, setInstructorCourses, setLoading);
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchStudentCourses(user, setStudentCourses, setLoading);
   }, [user]);
 
   if (loading || !userInfo) {
@@ -65,10 +69,10 @@ export default function CoursesPage() {
   return (
     <Page>
       <PageHeader title="Courses" />
-      {courses.length === 0 && <NoCoursesYet handleOpen={handleOpen} />}
-      {courses.length > 0 && (
+      {allCourses.length === 0 && <NoCoursesYet handleOpen={handleOpen} />}
+      {instructorCourses.length > 0 && (
         <Box className="flex flex-wrap flex-center" sx={{ px: 2 }}>
-          {courses.map((course) => (
+          {instructorCourses.map((course) => (
             <InstructorCourseCard
               course={course}
               key={course.id}
@@ -76,6 +80,18 @@ export default function CoursesPage() {
                 const courseTitle = course.title.replace(/\s/g, "-");
                 navigate(
                   `/classroom/courses/${courseTitle}/${course.id}/instructor/dashboard`
+                );
+              }}
+            />
+          ))}
+          {studentCourses.map((course) => (
+            <StudentCourseCard
+              course={course}
+              key={course.id}
+              onClick={() => {
+                const courseTitle = course.title.replace(/\s/g, "-");
+                navigate(
+                  `/classroom/courses/${courseTitle}/${course.id}/student/dashboard`
                 );
               }}
             />
@@ -109,7 +125,29 @@ function NoCoursesYet({ handleOpen }) {
 
 function InstructorCourseCard({ course, onClick }) {
   return (
-    <Card sx={{ width: 300, height: 300, m: 2 }}>
+    <Card className="relative" sx={{ width: 300, height: 300, m: 2 }}>
+      <CardActionArea onClick={onClick}>
+        <CardMedia
+          component="img"
+          height="190"
+          image={import.meta.env.VITE_COURSE_CARD_IMG}
+          alt="pond lotus flower"
+        />
+        <CardContent sx={{ height: 210 }}>
+          <Typography variant="h6">{course.title}</Typography>
+          <Typography>{course.description}</Typography>
+        </CardContent>
+      </CardActionArea>
+      <Box className="instructor-label-container">
+        <Typography className="instructor-label">instructor</Typography>
+      </Box>
+    </Card>
+  );
+}
+
+function StudentCourseCard({ course, onClick }) {
+  return (
+    <Card className="relative" sx={{ width: 300, height: 300, m: 2 }}>
       <CardActionArea onClick={onClick}>
         <CardMedia
           component="img"

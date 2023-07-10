@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { db } from "../../config/firebaseConfig.js";
-import {
-  addDoc,
-  getDocs,
-  collection,
-  query,
-  serverTimestamp,
-  where,
-} from "firebase/firestore";
+import { getDocs, collection, query, where } from "firebase/firestore";
 import {
   Box,
   Button,
@@ -35,8 +28,14 @@ import {
 } from "../../utils/commonUtils.js";
 import AddIcon from "@mui/icons-material/Add";
 import LockIcon from "@mui/icons-material/Lock";
+import { addCourse, addStudentToCourse } from "../../utils/firestoreClient.js";
 
 export function AddCourseForm({ user, userInfo, open, handleClose }) {
+  const firstName = userInfo?.firstName || "";
+  const lastName = userInfo?.lastName || "";
+  const firstNameNormalized = firstName.trim().toLowerCase();
+  const lastNameNormalized = lastName.trim().toLowerCase();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [step, setStep] = useState(1);
@@ -47,7 +46,6 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
   const [noSearchResults, setNoSearchResults] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [searching, setSearching] = useState(false);
-  // const [courseCode, setCourseCode] = useState("");
 
   const handleRole = (e) => setRole(e.target.value);
   const handleAvailableTo = (e) => setAvailableTo(e.target.value);
@@ -73,28 +71,8 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
     }
   }
 
-  function resetForm() {
-    setStep(1);
-    setRole("student");
-    setTitle("");
-    setSearchTerm("");
-    setDescription("");
-    setFoundCourses([]);
-    setNoSearchResults(false);
-    setSubmitting(false);
-  }
-
-  useEffect(resetForm, [open]);
-
-  function addCourse() {
-    const firstName = userInfo?.firstName || "";
-    const lastName = userInfo?.lastName || "";
-    const firstNameNormalized = firstName.trim().toLowerCase();
-    const lastNameNormalized = lastName.trim().toLowerCase();
-
-    const ref = collection(db, "courses");
-    setSubmitting(true);
-    addDoc(ref, {
+  function createNewCourse() {
+    const values = {
       title: title,
       courseCode: generateRandomCode(6),
       description: description,
@@ -109,16 +87,20 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
       instructorIDs: [user.uid],
       instructorNames_searchable: [firstNameNormalized, lastNameNormalized],
       availableTo: availableTo,
-      dateCreated: serverTimestamp(),
-    })
-      .then(() => {
-        setTimeout(() => setSubmitting(false), 500);
-        setTimeout(() => handleClose(), 500);
-      })
-      .catch((error) => {
-        console.log(error);
-        setTimeout(() => setSubmitting(false), 500);
-      });
+    };
+
+    addCourse(values, handleClose, setSubmitting);
+  }
+
+  function registerStudent(course) {
+    const studentInfo = {
+      id: user.uid,
+      email: userInfo.email,
+      firstName: firstName,
+      lastName: lastName,
+    };
+
+    addStudentToCourse(course, studentInfo, handleClose, setSubmitting);
   }
 
   async function findCourse() {
@@ -143,10 +125,12 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
       )
     );
 
+    setSearching(true);
+
+    console.log(searchTerm);
+
     const querySnapshot1 = await getDocs(q1);
     const querySnapshot2 = await getDocs(q2);
-
-    setSearching(true);
 
     querySnapshot1.forEach((doc) =>
       fetchedItems.push({
@@ -164,13 +148,15 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
 
     const foundCourseIDs = fetchedItems.map((item) => item.id);
 
+    console.log(foundCourseIDs);
+
     if (foundCourseIDs.length === 0) {
       setNoSearchResults(true);
       setFoundCourses([]);
       setSearching(false);
       return;
     }
-
+    console.log("reached here");
     const uniqueCourseIDs = new Set(foundCourseIDs);
 
     uniqueCourseIDs.forEach((courseID) => {
@@ -178,9 +164,27 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
       uniqueCourses.push(course);
     });
 
+    console.log(uniqueCourses);
+
     setFoundCourses(uniqueCourses);
     setSearching(false);
   }
+
+  function resetForm() {
+    console.log("resetting");
+    setStep(1);
+    setRole("student");
+    setTitle("");
+    setSearchTerm("");
+    setDescription("");
+    setFoundCourses([]);
+    setNoSearchResults(false);
+    setSubmitting(false);
+  }
+
+  useEffect(() => {
+    resetForm;
+  }, [open]);
 
   return (
     <Lightbox open={open} onClose={handleClose}>
@@ -218,12 +222,21 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
               handleKeyUp={handleEnter}
             />
           </FormControl>
-          {noSearchResults && <span>no courses found</span>}
+          {noSearchResults && (
+            <Box className="flex flex-center" sx={{ pt: "40px" }}>
+              no courses found
+            </Box>
+          )}
 
-          {foundCourses.length > 1 && (
+          {foundCourses.length > 0 && (
             <List sx={{ mt: "10px" }}>
               {foundCourses.map((course) => (
-                <FoundCourse key={course.id} course={course} />
+                <FoundCourse
+                  key={course.id}
+                  course={course}
+                  registerStudent={registerStudent}
+                  user={user}
+                />
               ))}
             </List>
           )}
@@ -266,7 +279,7 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
             <Button onClick={handleBack}>BACK</Button>
             <SubmitBtn
               label="ADD COURSE"
-              onClick={addCourse}
+              onClick={createNewCourse}
               disabled={submitting}
               submitting={submitting}
             />
@@ -277,21 +290,27 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
   );
 }
 
-function FoundCourse({ course }) {
+function FoundCourse({ course, registerStudent, user }) {
   const [courseCode, setCourseCode] = useState("");
 
   function handleCourseCode(e) {
     setCourseCode(e.target.value);
   }
 
-  if (course.availableTo !== "invited") {
-    return null;
+  if (course.instructorIDs.includes(user.uid)) {
+    return (
+      <ListItem>
+        <ListItemText
+          primary={course.title}
+          secondary="You're the instructor"
+        />
+      </ListItem>
+    );
   }
 
   return (
     <>
       <ListItem
-        key={course.id}
         secondaryAction={
           course.availableTo === "invited" &&
           courseCode !== course.courseCode ? (
@@ -299,7 +318,12 @@ function FoundCourse({ course }) {
               ADD COURSE
             </Button>
           ) : (
-            <Button startIcon={<AddIcon />}>ADD COURSE</Button>
+            <Button
+              onClick={() => registerStudent(course)}
+              startIcon={<AddIcon />}
+            >
+              ADD COURSE
+            </Button>
           )
         }
       >
