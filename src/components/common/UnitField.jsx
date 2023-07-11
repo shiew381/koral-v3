@@ -3,7 +3,6 @@ import {
   EditorLabel,
   EquationTab,
   FractionTemplateBtn,
-  SqrtTemplateBtn,
   Symbols,
 } from "./EditorCpnts";
 import { Box } from "@mui/material";
@@ -14,9 +13,8 @@ import {
   handleArrowRight,
   insertChar,
   insertFraction,
-  insertSqrt,
 } from "../../utils/editorUtils";
-import { transcendentals } from "../../lists/transcendentals";
+import { unitFieldSymbols } from "../../lists/unitField";
 import "../../css/Editor.css";
 
 export function UnitField({
@@ -245,14 +243,10 @@ function UnitToolbar({ disabled, unitRef, setCurrentResponse }) {
               setCurrentResponse({ unit: unitRef.current.innerHTML });
             }}
           />
-          <SqrtTemplateBtn caption="square root" onClick={insertSqrt} />
         </div>
       )}
       {tab === "symbols" && (
-        <Symbols
-          chars={[...transcendentals, { symbol: "°", caption: "degrees" }]}
-          insertChar={insertChar}
-        />
+        <Symbols chars={unitFieldSymbols} insertChar={insertChar} />
       )}
     </div>
   );
