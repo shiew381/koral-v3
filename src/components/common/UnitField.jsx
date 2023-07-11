@@ -19,7 +19,12 @@ import {
 import { transcendentals } from "../../lists/transcendentals";
 import "../../css/Editor.css";
 
-export function UnitField({ numberRef, id, setCurrentResponse }) {
+export function UnitField({
+  id,
+  currentResponse,
+  setCurrentResponse,
+  unitRef,
+}) {
   //TODO: currentResponse does not update when inserting symbols...need to handle button press
   const [editorActive, setEditorActive] = useState(false);
 
@@ -35,7 +40,10 @@ export function UnitField({ numberRef, id, setCurrentResponse }) {
   }
 
   function handleKeyUp() {
-    setCurrentResponse({ number: numberRef.current?.innerHTML });
+    setCurrentResponse({
+      ...currentResponse,
+      unit: unitRef.current?.innerHTML,
+    });
   }
 
   function handleKeyDown(e) {
@@ -184,10 +192,10 @@ export function UnitField({ numberRef, id, setCurrentResponse }) {
 
   return (
     <>
-      <NumberToolbar
+      <UnitToolbar
         disabled={!editorActive}
         setCurrentResponse={setCurrentResponse}
-        numberRef={numberRef}
+        unitRef={unitRef}
       />
       <Box
         className="editor-container"
@@ -198,7 +206,7 @@ export function UnitField({ numberRef, id, setCurrentResponse }) {
         <div
           className={`editor-content-area editor-content number-field equation-container`}
           contentEditable
-          ref={numberRef}
+          ref={unitRef}
           id={id}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
@@ -209,7 +217,7 @@ export function UnitField({ numberRef, id, setCurrentResponse }) {
   );
 }
 
-function NumberToolbar({ disabled, numberRef, setCurrentResponse }) {
+function UnitToolbar({ disabled, unitRef, setCurrentResponse }) {
   //TODO: return focus to numberfield on tab change
   const [tab, setTab] = useState("templates");
 
@@ -234,7 +242,7 @@ function NumberToolbar({ disabled, numberRef, setCurrentResponse }) {
             caption="fraction"
             onClick={() => {
               insertFraction();
-              setCurrentResponse({ number: numberRef.current.innerHTML });
+              setCurrentResponse({ unit: unitRef.current.innerHTML });
             }}
           />
           <SqrtTemplateBtn caption="square root" onClick={insertSqrt} />

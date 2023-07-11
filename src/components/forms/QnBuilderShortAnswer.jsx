@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { autoAddQueston, autoSaveQuestion } from "../..//utils/firestoreClient";
+import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import {
   Box,
   Checkbox,
@@ -14,8 +16,6 @@ import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { NumberField } from "../common/NumberField";
 import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
-import { autoAddQueston, autoSaveQuestion } from "../..//utils/firestoreClient";
-import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import { UnitField } from "../common/UnitField";
 
 export function ShortAnswer({
@@ -50,7 +50,6 @@ export function ShortAnswer({
   const [scoring, setScoring] = useState(initVal.scoring);
 
   function handleSubmit(e, correctAnswer) {
-    console.log(correctAnswer);
     if (add) {
       const values = {
         type: "short answer",
@@ -305,6 +304,8 @@ function Number({
   setScoring,
   submitting,
 }) {
+  const [loading, setLoading] = useState(true);
+
   const add = !edit;
   const numberRef = useRef();
   const defaultScoring = { percentTolerance: "2" };
@@ -329,10 +330,17 @@ function Number({
     []
   );
 
+  useEffect(() => {
+    const elems = numberRef.current.querySelectorAll(".eq-field");
+    elems.forEach((elem) => (elem.contentEditable = "true"));
+  });
+
+  useEffect(() => setLoading(false), []);
+
   return (
     <>
       <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: 2 }} color="text.secondary">
+        <Typography sx={{ mb: "100px" }} color="text.secondary">
           Response must match:
         </Typography>
         <div className="response-area">
@@ -350,10 +358,14 @@ function Number({
         <Typography sx={{ mb: 2 }} color="text.secondary">
           Options
         </Typography>
-        <PercentToleranceField
-          value={scoring?.percentTolerance}
-          onChange={handlePercentTolerance}
-        />
+        <Box sx={{ px: "35px" }}>
+          {!loading && (
+            <PercentToleranceField
+              value={scoring?.percentTolerance}
+              onChange={handlePercentTolerance}
+            />
+          )}
+        </Box>
       </Box>
       <BtnContainer right>
         <SubmitBtn
@@ -377,6 +389,8 @@ function Measurement({
   setScoring,
   submitting,
 }) {
+  const [loading, setLoading] = useState(true);
+
   const add = !edit;
   const numberRef = useRef();
   const unitRef = useRef();
@@ -404,13 +418,23 @@ function Measurement({
     []
   );
 
+  useEffect(() => {
+    const numberElems = numberRef.current.querySelectorAll(".eq-field");
+    numberElems.forEach((elem) => (elem.contentEditable = "true"));
+
+    const unitElems = unitRef.current.querySelectorAll(".eq-field");
+    unitElems.forEach((elem) => (elem.contentEditable = "true"));
+  });
+
+  useEffect(() => setLoading(false), []);
+
   return (
     <>
       <Box sx={{ px: "5%" }}>
         <Typography sx={{ mb: "100px" }} color="text.secondary">
           Response must match:
         </Typography>
-        <div className="response-area flex-space-around">
+        <div className="response-area">
           <div className="response-field-container">
             <NumberField
               id={`${selQuestion?.id}-number`}
@@ -421,7 +445,7 @@ function Measurement({
           <div className="response-field-container">
             <UnitField
               id={`${selQuestion?.id}-unit`}
-              numberRef={unitRef}
+              unitRef={unitRef}
               setCurrentResponse={() => console.log("skip")}
             />
           </div>
@@ -434,10 +458,15 @@ function Measurement({
         <Typography sx={{ mb: 2 }} color="text.secondary">
           Options
         </Typography>
-        <PercentToleranceField
-          value={scoring?.percentTolerance}
-          onChange={handlePercentTolerance}
-        />
+
+        <Box sx={{ px: "35px" }}>
+          {!loading && (
+            <PercentToleranceField
+              value={scoring?.percentTolerance}
+              onChange={handlePercentTolerance}
+            />
+          )}
+        </Box>
       </Box>
       <BtnContainer right>
         <SubmitBtn

@@ -264,7 +264,8 @@ export function PercentToleranceField({ onChange, value }) {
   return (
     <TextField
       onChange={onChange}
-      label="Percent tolerance"
+      label="percent tolerance"
+      sx={{ width: "120px" }}
       type="number"
       value={value}
       variant="filled"

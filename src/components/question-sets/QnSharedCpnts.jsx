@@ -35,9 +35,10 @@ export function ExampleResponsePreview({ question }) {
   return <div className="prompt">{parse(question.exampleResponse)}</div>;
 }
 
-export function CorrectIndicator({ lastSubmission }) {
+export function CorrectIndicator({ lastSubmission, submitting }) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
-  if (!lastSubmission) {
+
+  if (!lastSubmission || submitting) {
     return <div style={{ height: "10px" }}></div>;
   }
 

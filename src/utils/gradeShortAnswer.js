@@ -18,7 +18,7 @@ export function gradeShortAnswer(question, response) {
 
   console.time("Execution Time");
 
-  //============= SUBTYOE: TEXT =============//
+  //============================= SUBTYPE: TEXT =============================//
 
   if (subtype === "text") {
     console.log(question);
@@ -55,14 +55,14 @@ export function gradeShortAnswer(question, response) {
     return answeredCorrectly ? fullScore : zeroScore;
   }
 
-  //=========================== SUBTYPE: NUMBER =============================//
+  //============================ SUBTYPE: NUMBER ============================//
 
   if (subtype === "number") {
     let numbersMatch = false;
     const percentTolerance = Number(question.scoring.percentTolerance);
     const maxRounds = 5;
 
-    //======================== number =========================//
+    //======================== number ========================//
 
     console.log("GRADING NUMBER");
     logSpacer(1);
@@ -121,7 +121,7 @@ export function gradeShortAnswer(question, response) {
     return numbersMatch ? fullScore : zeroScore;
   }
 
-  //========================= SUBTYPE: MEASUREMENT ==========================//
+  //========================= SUBTYPE: MEASUREMENT =========================//
 
   if (subtype === "measurement") {
     let numbersMatch = false;

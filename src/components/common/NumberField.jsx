@@ -19,7 +19,12 @@ import {
 import { transcendentals } from "../../lists/transcendentals";
 import "../../css/Editor.css";
 
-export function NumberField({ numberRef, id, setCurrentResponse }) {
+export function NumberField({
+  id,
+  currentResponse,
+  numberRef,
+  setCurrentResponse,
+}) {
   //TODO: currentResponse does not update when inserting symbols...need to handle button press
   const [editorActive, setEditorActive] = useState(false);
 
@@ -35,7 +40,10 @@ export function NumberField({ numberRef, id, setCurrentResponse }) {
   }
 
   function handleKeyUp() {
-    setCurrentResponse({ number: numberRef.current?.innerHTML });
+    setCurrentResponse({
+      ...currentResponse,
+      number: numberRef.current?.innerHTML,
+    });
   }
 
   function handleKeyDown(e) {

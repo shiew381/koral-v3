@@ -11,7 +11,7 @@ import {
   Divider,
   Link,
   Stack,
-  TextField,
+  Typography,
 } from "@mui/material";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { NumberField } from "../common/NumberField";
@@ -23,6 +23,7 @@ import {
   PromptPreview,
 } from "./QnSharedCpnts";
 import parse from "html-react-parser";
+import { UnitField } from "../common/UnitField";
 
 // import styles from "@/styles/QuestionSet.module.css";
 
@@ -33,9 +34,7 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
   const lastResponse = lastSubmission?.response || null;
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
-  // function handleClearSubmissions() {
-  //   deleteQuestionSubmissions(question, qSet, user);
-  // }
+  const [submitting, setSubmitting] = useState(false);
 
   if (question.type !== "short answer") {
     return null;
@@ -65,7 +64,10 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
       <CardContent className="question-content">
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
-        <CorrectIndicator lastSubmission={lastSubmission} />
+        <CorrectIndicator
+          lastSubmission={lastSubmission}
+          submitting={submitting}
+        />
 
         {subtype === "text" && (
           <ShortAnswerText
@@ -76,6 +78,8 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
             question={question}
             qSet={qSet}
             submissions={submissions}
+            submitting={submitting}
+            setSubmitting={setSubmitting}
             user={user}
           />
         )}
@@ -87,6 +91,8 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
             question={question}
             qSet={qSet}
             submissions={submissions}
+            submitting={submitting}
+            setSubmitting={setSubmitting}
             user={user}
           />
         )}
@@ -98,6 +104,8 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
             question={question}
             qSet={qSet}
             submissions={submissions}
+            submitting={submitting}
+            setSubmitting={setSubmitting}
             user={user}
           />
         )}
@@ -112,11 +120,12 @@ function ShortAnswerText({
   mode,
   question,
   qSet,
+  setSubmitting,
   submissions,
+  submitting,
   user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
   const responseChanged = currentResponse?.text !== lastResponse?.text;
   const disabled = !responseChanged || submitting;
 
@@ -161,9 +170,17 @@ function ShortAnswerText({
 
   if (mode === "preview") {
     return (
-      <div className="correct-answer-area">
-        <div className="correct-answer-field-container">
-          {parse(question.correctAnswer?.text || "")}
+      <div className="flex flex-col flex-grow">
+        <Typography
+          sx={{ position: "relative", top: "70px", left: "100px" }}
+          color="text.secondary"
+        >
+          Response must match:
+        </Typography>
+        <div className="correct-answer-area">
+          <div className="correct-answer-field-container">
+            {parse(question.correctAnswer?.text || "")}
+          </div>
         </div>
       </div>
     );
@@ -216,19 +233,15 @@ function ShortAnswerNumber({
   mode,
   question,
   qSet,
+  setSubmitting,
   submissions,
+  submitting,
   user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
-  const [submitting, setSubmitting] = useState(false);
   const responseChanged = detectChange();
   const disabled = !responseChanged || submitting;
-
-  function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
-    numberRef.current.innerHTML = "";
-  }
 
   function detectChange() {
     if (currentResponse?.number === "") return false;
@@ -236,28 +249,37 @@ function ShortAnswerNumber({
     return currentResponse?.number !== lastResponse?.number;
   }
 
+  function handleClearSubmissions() {
+    deleteQuestionSubmissions(question, qSet, user);
+    numberRef.current.innerHTML = "";
+  }
+
   function handleSubmit() {
-    // setSubmitting(true);
+    setSubmitting(true);
     numberRef.current?.normalize();
-    const clone = numberRef.current.cloneNode(true);
-    const responseStringified = { number: convertElemtoStr(clone) };
-    console.log("response stringified: " + responseStringified);
+    const responseNumClone = numberRef.current.cloneNode(true);
+    const responseNumStr = convertElemtoStr(responseNumClone);
+    console.log("submitted num (str): " + responseNumStr);
+
+    const tidiedResponse = { number: responseNumStr };
 
     const correctElem = document.createElement("div");
     correctElem.innerHTML = question.correctAnswer.number.slice();
 
-    const correctNumberStringified = convertElemtoStr(correctElem);
-    console.log("response stringified: " + correctNumberStringified);
+    const correctNumStr = convertElemtoStr(correctElem);
+    console.log("correct number (str): " + correctNumStr);
 
-    const questionUpdated = {
+    const tidiedQuestion = {
       ...question,
-      correctAnswer: { number: correctNumberStringified },
+      correctAnswer: { number: correctNumStr },
     };
 
-    const grade = gradeResponse(questionUpdated, responseStringified);
+    console.log(tidiedQuestion);
+
+    const grade = gradeResponse(tidiedQuestion, tidiedResponse);
 
     saveQuestionResponse(
-      { number: numberRef.current.innerHTML },
+      currentResponse,
       grade,
       submissions,
       question,
@@ -279,9 +301,17 @@ function ShortAnswerNumber({
 
   if (mode === "preview") {
     return (
-      <div className="correct-answer-area">
-        <div className="correct-answer-field-container">
-          {parse(question.correctAnswer?.number || "")}
+      <div className="flex flex-col flex-grow">
+        <Typography
+          sx={{ position: "relative", top: "70px", left: "100px" }}
+          color="text.secondary"
+        >
+          Response must match:
+        </Typography>
+        <div className="correct-answer-area">
+          <div className="correct-answer-field-container">
+            {parse(question.correctAnswer?.number || "")}
+          </div>
         </div>
       </div>
     );
@@ -294,6 +324,7 @@ function ShortAnswerNumber({
           <div className="response-field-container">
             <NumberField
               id={question?.id}
+              currentResponse={currentResponse}
               numberRef={numberRef}
               setCurrentResponse={setCurrentResponse}
             />
@@ -331,40 +362,84 @@ function ShortAnswerNumber({
 
 function ShortAnswerMeasurement({
   answeredCorrectly,
-  correctAnswer,
   lastResponse,
   mode,
   question,
   qSet,
+  setSubmitting,
   submissions,
+  submitting,
   user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
-  const [submitting, setSubmitting] = useState(false);
+  const unitRef = useRef();
 
-  const responseChanged = true;
+  const responseChanged = detectChange();
   const disabled = !responseChanged || submitting;
+
+  function detectChange() {
+    if (currentResponse?.number === "") return false;
+    if (currentResponse?.unit === "") return false;
+    if (!lastResponse?.number) return true;
+    if (!lastResponse?.unit) return true;
+    return (
+      currentResponse?.number !== lastResponse?.number ||
+      currentResponse?.unit !== lastResponse?.unit
+    );
+  }
 
   function handleClearSubmissions() {
     deleteQuestionSubmissions(question, qSet, user);
     numberRef.current.innerHTML = "";
+    unitRef.current.innerHTML = "";
   }
 
   function handleSubmit() {
     setSubmitting(true);
-    const grade = gradeResponse(question, currentResponse);
+    numberRef.current?.normalize();
 
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user
-    );
+    const responseNumClone = numberRef.current.cloneNode(true);
+    const responseNumStr = convertElemtoStr(responseNumClone);
+    console.log("submitted number (str): " + responseNumStr);
 
-    setTimeout(() => setSubmitting(false), 400);
+    const responseUnitClone = unitRef.current.cloneNode(true);
+    const responseUnitStr = convertElemtoStr(responseUnitClone);
+    console.log("submitted unit (str): " + responseUnitStr);
+
+    const tidiedResponse = { number: responseNumStr, unit: responseUnitStr };
+
+    const correctNumElem = document.createElement("div");
+    correctNumElem.innerHTML = question.correctAnswer.number.slice();
+    const correctUnitElem = document.createElement("div");
+    correctUnitElem.innerHTML = question.correctAnswer.unit.slice();
+
+    const correctNumStr = convertElemtoStr(correctNumElem);
+    console.log("correct number (str): " + correctNumStr);
+    const correctUnitStr = convertElemtoStr(correctUnitElem);
+    console.log("correct unit: " + correctUnitStr);
+
+    const tidiedQuestion = {
+      ...question,
+      correctAnswer: {
+        number: correctNumStr,
+        unit: correctUnitStr,
+      },
+    };
+
+    const grade = gradeResponse(tidiedQuestion, tidiedResponse);
+
+    setTimeout(() => {
+      saveQuestionResponse(
+        currentResponse,
+        grade,
+        submissions,
+        question,
+        qSet,
+        user
+      );
+      setSubmitting(false);
+    }, 600);
   }
 
   useEffect(
@@ -381,14 +456,20 @@ function ShortAnswerMeasurement({
 
   if (mode === "preview") {
     return (
-      <div className="repsonse-area">
-        <div className="response-field-container">
-          <TextField
-            disabled
-            fullWidth
-            label="correct answer"
-            value={correctAnswer?.number || ""}
-          />
+      <div className="flex flex-col flex-grow">
+        <Typography
+          sx={{ position: "relative", top: "70px", left: "100px" }}
+          color="text.secondary"
+        >
+          Response must match:
+        </Typography>
+        <div className="correct-answer-area">
+          <div className="correct-answer-field-container">
+            {parse(question.correctAnswer?.number || "")}
+          </div>
+          <div className="correct-answer-field-container">
+            {parse(question.correctAnswer?.unit || "")}
+          </div>
         </div>
       </div>
     );
@@ -400,19 +481,27 @@ function ShortAnswerMeasurement({
         <div className="response-area">
           <div className="response-field-container">
             <NumberField
-              id={question?.id}
-              numberRef={numberRef}
+              id={`${question?.id}-number`}
+              currentResponse={currentResponse}
               setCurrentResponse={setCurrentResponse}
+              numberRef={numberRef}
+            />
+          </div>
+          <div className="response-field-container">
+            <UnitField
+              id={`${question?.id}-unit`}
+              currentResponse={currentResponse}
+              setCurrentResponse={setCurrentResponse}
+              unitRef={unitRef}
             />
           </div>
         </div>
 
-        {/* <UnitField value={currentResponse?.unit || ""} onChange={handleUnit} /> */}
         <BtnContainer right>
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" />
+              <VertDivider color="text.secondary" show />
               <Link
                 color="text.secondary"
                 underline="hover"
