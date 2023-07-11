@@ -20,6 +20,7 @@ import { cleanEditorHTML } from "../../utils/questionSetUtils";
 export function ShortAnswer({
   edit,
   handleAddQuestion,
+  handleUpdateQuestion,
   qSet,
   selQuestion,
   setEdit,
@@ -63,15 +64,16 @@ export function ShortAnswer({
       return;
     }
 
-    // if (edit) {
-    //   const values = {
-    //     ...selQuestion,
-    //     prompt: cleanEditorHTML(promptRef.current),
-    //     scoring: scoring,
-    //   };
-    //   handleUpdateQuestion(values);
-    //   return;
-    // }
+    if (edit) {
+      const values = {
+        ...selQuestion,
+        prompt: cleanEditorHTML(promptRef.current),
+        correctAnswer: correctAnswer,
+        scoring: scoring,
+      };
+      handleUpdateQuestion(values);
+      return;
+    }
   }
 
   function handleAutoAdd(newID) {
@@ -357,7 +359,7 @@ function Number({
           disabled={submitting}
           label="SAVE"
           onClick={(e) =>
-            handleSubmit(e, { number: numberRef.current.innerHTML })
+            handleSubmit(e, { number: cleanEditorHTML(numberRef.current) })
           }
           submitting={submitting}
         />

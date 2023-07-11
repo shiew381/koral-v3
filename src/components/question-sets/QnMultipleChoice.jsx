@@ -154,7 +154,7 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" />
+              <VertDivider color="text.secondary" show />
               <Link
                 color="text.secondary"
                 underline="hover"

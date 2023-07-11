@@ -26,7 +26,7 @@ import parse from "html-react-parser";
 
 // import styles from "@/styles/QuestionSet.module.css";
 
-export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
+export default function ShortAnswer({ mode, qSet, question, user }) {
   const subtype = question.subtype;
   const submissions = getSubmissions(qSet, question) || [];
   const lastSubmission = submissions?.at(-1) || null;
@@ -34,7 +34,7 @@ export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, userCred);
+    deleteQuestionSubmissions(question, qSet, user);
   }
 
   // useEffect(
@@ -84,7 +84,7 @@ export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
             question={question}
             qSet={qSet}
             submissions={submissions}
-            userCred={userCred}
+            user={user}
           />
         )}
         {subtype === "number" && (
@@ -95,7 +95,7 @@ export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
             question={question}
             qSet={qSet}
             submissions={submissions}
-            userCred={userCred}
+            user={user}
           />
         )}
         {subtype === "measurement" && (
@@ -106,7 +106,7 @@ export default function ShortAnswerPreview({ mode, qSet, question, userCred }) {
             question={question}
             qSet={qSet}
             submissions={submissions}
-            userCred={userCred}
+            user={user}
           />
         )}
       </CardContent>
@@ -186,7 +186,7 @@ function ShortAnswerText({
         <Stack>
           <Box sx={{ mb: 1 }}>
             <AttemptCounter question={question} submissions={submissions} />
-            <VertDivider color="text.secondary" />
+            <VertDivider color="text.secondary" show />
             <Link
               color="text.secondary"
               underline="hover"
@@ -218,7 +218,7 @@ function ShortAnswerNumber({
   question,
   qSet,
   submissions,
-  userCred,
+  user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
@@ -238,13 +238,24 @@ function ShortAnswerNumber({
   }
 
   function handleSubmit() {
-    setSubmitting(true);
+    // setSubmitting(true);
     numberRef.current?.normalize();
     const clone = numberRef.current.cloneNode(true);
-    const numberStringified = convertHTMLtoStr(clone);
-    const stringifiedResponse = { number: numberStringified };
+    const responseStringified = { number: convertElemtoStr(clone) };
+    console.log("response stringified: " + responseStringified);
 
-    const grade = gradeResponse(question, stringifiedResponse);
+    const correctElem = document.createElement("div");
+    correctElem.innerHTML = question.correctAnswer.number.slice();
+
+    const correctNumberStringified = convertElemtoStr(correctElem);
+    console.log("response stringified: " + correctNumberStringified);
+
+    const questionUpdated = {
+      ...question,
+      correctAnswer: { number: correctNumberStringified },
+    };
+
+    const grade = gradeResponse(questionUpdated, responseStringified);
 
     saveQuestionResponse(
       { number: numberRef.current.innerHTML },
@@ -252,7 +263,7 @@ function ShortAnswerNumber({
       submissions,
       question,
       qSet,
-      userCred
+      user
     );
     setSubmitting(false);
   }
@@ -293,7 +304,7 @@ function ShortAnswerNumber({
         <Stack>
           <Box sx={{ mb: 1 }}>
             <AttemptCounter question={question} submissions={submissions} />
-            <VertDivider color="text.secondary" />
+            <VertDivider color="text.secondary" show />
             <Link
               color="text.secondary"
               underline="hover"
@@ -412,7 +423,7 @@ function ShortAnswerMeasurement({
   );
 }
 
-function convertHTMLtoStr(elem) {
+function convertElemtoStr(elem) {
   let stringifiedForm = "";
 
   //quick check - if no templates used return early
@@ -469,5 +480,5 @@ function convertHTMLtoStr(elem) {
     stringifiedForm = elem.innerText;
   }
 
-  return stringifiedForm;
+  return stringifiedForm.trim();
 }
