@@ -16,6 +16,7 @@ import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
 import { autoAddQueston, autoSaveQuestion } from "../..//utils/firestoreClient";
 import { cleanEditorHTML } from "../../utils/questionSetUtils";
+import { UnitField } from "../common/UnitField";
 
 export function ShortAnswer({
   edit,
@@ -124,7 +125,7 @@ export function ShortAnswer({
           <MenuItem value={"measurement"}>Measurement</MenuItem>
         </Select>
       </FormControl>
-      <pre>{JSON.stringify(scoring)}</pre>
+
       <br />
       <br />
       <Editor
@@ -146,7 +147,6 @@ export function ShortAnswer({
         user={user}
       />
       <Box sx={{ p: 3 }}>
-        <pre>{JSON.stringify(selQuestion, null, 2)}</pre>
         {subtype == "text" && (
           <Text
             edit={edit}
@@ -340,6 +340,7 @@ function Number({
             <NumberField
               id={`${selQuestion?.id}-number`}
               numberRef={numberRef}
+              setCurrentResponse={() => console.log("skip")}
             />
           </div>
         </div>
@@ -369,43 +370,36 @@ function Number({
 }
 
 function Measurement({
-  add,
-  correctAnswer,
+  edit,
+  handleSubmit,
   scoring,
-  setCorrectAnswer,
+  selQuestion,
   setScoring,
+  submitting,
 }) {
-  function handleNumber(e) {
-    const correctAnswerCopy = { ...correctAnswer };
-    setCorrectAnswer({
-      number: e.target.value,
-      unit: correctAnswerCopy.unit,
-    });
-  }
-
-  // function handleUnit(e) {
-  //   const correctAnswerCopy = { ...correctAnswer };
-  //   setCorrectAnswer({
-  //     number: correctAnswerCopy.number,
-  //     unit: e.target.value,
-  //   });
-  // }
+  const add = !edit;
+  const numberRef = useRef();
+  const unitRef = useRef();
+  const defaultScoring = { percentTolerance: "2" };
 
   function handlePercentTolerance(e) {
     setScoring({ percentTolerance: e.target.value });
   }
 
-  function initializeSubtypeValues() {
-    if (add) {
-      setCorrectAnswer({ number: "0", unit: "" });
-      setScoring({
-        percentTolerance: 2,
-      });
-    }
-  }
-
   useEffect(
-    initializeSubtypeValues,
+    () => {
+      if (add) {
+        setScoring(defaultScoring);
+        numberRef.current.innerHTML = "";
+        unitRef.current.innerHTML = "";
+      }
+
+      if (edit) {
+        setScoring(selQuestion.scoring);
+        numberRef.current.innerHTML = selQuestion.correctAnswer.number;
+        unitRef.current.innerHTML = selQuestion.correctAnswer.unit;
+      }
+    },
     //eslint-disable-next-line
     []
   );
@@ -413,15 +407,27 @@ function Measurement({
   return (
     <>
       <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: 2 }} color="text.secondary">
+        <Typography sx={{ mb: "100px" }} color="text.secondary">
           Response must match:
         </Typography>
-        <NumberField
-          value={correctAnswer?.number || ""}
-          onChange={handleNumber}
-        />
-
-        {/* <UnitField value={correctAnswer?.unit || ""} onChange={handleUnit} /> */}
+        <div className="response-area flex-space-around">
+          <div className="response-field-container">
+            <NumberField
+              id={`${selQuestion?.id}-number`}
+              numberRef={numberRef}
+              setCurrentResponse={() => console.log("skip")}
+            />
+          </div>
+          <div className="response-field-container">
+            <UnitField
+              id={`${selQuestion?.id}-unit`}
+              numberRef={unitRef}
+              setCurrentResponse={() => console.log("skip")}
+            />
+          </div>
+        </div>
+        <br />
+        <br />
       </Box>
       <br />
       <Box sx={{ px: "5%" }}>
@@ -433,6 +439,19 @@ function Measurement({
           onChange={handlePercentTolerance}
         />
       </Box>
+      <BtnContainer right>
+        <SubmitBtn
+          disabled={submitting}
+          label="SAVE"
+          onClick={(e) =>
+            handleSubmit(e, {
+              number: cleanEditorHTML(numberRef.current),
+              unit: cleanEditorHTML(unitRef.current),
+            })
+          }
+          submitting={submitting}
+        />
+      </BtnContainer>
     </>
   );
 }

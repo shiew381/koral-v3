@@ -33,21 +33,9 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
   const lastResponse = lastSubmission?.response || null;
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
-  function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
-  }
-
-  // useEffect(
-  //   () => {
-  //     if (submissions.length === 0) {
-  //       setCurrentResponse(null);
-  //     } else {
-  //       setCurrentResponse(lastResponse);
-  //     }
-  //   },
-  //   //eslint-disable-next-line
-  //   [question.id, subtype]
-  // );
+  // function handleClearSubmissions() {
+  //   deleteQuestionSubmissions(question, qSet, user);
+  // }
 
   if (question.type !== "short answer") {
     return null;
@@ -59,10 +47,14 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
 
-        {subtype == "text" && <ShortAnswerText build question={question} />}
-        {subtype == "number" && <ShortAnswerNumber build question={question} />}
+        {subtype == "text" && (
+          <ShortAnswerText mode={mode} question={question} />
+        )}
+        {subtype == "number" && (
+          <ShortAnswerNumber mode={mode} question={question} />
+        )}
         {subtype === "measurement" && (
-          <ShortAnswerMeasurement build question={question} />
+          <ShortAnswerMeasurement mode={mode} question={question} />
         )}
       </CardContent>
     );
@@ -78,9 +70,9 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
         {subtype === "text" && (
           <ShortAnswerText
             answeredCorrectly={answeredCorrectly}
-            handleClearSubmissions={handleClearSubmissions}
             lastResponse={lastResponse}
             lastSubmission={lastSubmission}
+            mode={mode}
             question={question}
             qSet={qSet}
             submissions={submissions}
@@ -90,8 +82,8 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
         {subtype === "number" && (
           <ShortAnswerNumber
             answeredCorrectly={answeredCorrectly}
-            handleClearSubmissions={handleClearSubmissions}
             lastResponse={lastResponse}
+            mode={mode}
             question={question}
             qSet={qSet}
             submissions={submissions}
@@ -101,8 +93,8 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
         {subtype === "measurement" && (
           <ShortAnswerMeasurement
             answeredCorrectly={answeredCorrectly}
-            handleClearSubmissions={handleClearSubmissions}
             lastResponse={lastResponse}
+            mode={mode}
             question={question}
             qSet={qSet}
             submissions={submissions}
@@ -116,28 +108,22 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
 
 function ShortAnswerText({
   answeredCorrectly,
-  build,
-  handleClearSubmissions,
   lastResponse,
+  mode,
   question,
   qSet,
   submissions,
-  userCred,
+  user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const responseChanged = currentResponse?.text !== lastResponse?.text;
   const disabled = !responseChanged || submitting;
 
-  useEffect(
-    () => {
-      !build && submissions?.length > 0
-        ? setCurrentResponse(lastResponse)
-        : setCurrentResponse(null);
-    },
-    //eslint-disable-next-line
-    [question.id, build]
-  );
+  function handleClearSubmissions() {
+    deleteQuestionSubmissions(question, qSet, user);
+    setCurrentResponse({ text: "" });
+  }
 
   function handleResponse(e) {
     setCurrentResponse({
@@ -155,13 +141,25 @@ function ShortAnswerText({
       submissions,
       question,
       qSet,
-      userCred
+      user
     );
 
     setTimeout(() => setSubmitting(false), 400);
   }
 
-  if (build) {
+  useEffect(
+    () => {
+      if (mode === "test" && submissions?.length > 0) {
+        setCurrentResponse(lastResponse);
+      } else {
+        setCurrentResponse(null);
+      }
+    },
+    //eslint-disable-next-line
+    [question.id, mode]
+  );
+
+  if (mode === "preview") {
     return (
       <div className="correct-answer-area">
         <div className="correct-answer-field-container">
@@ -171,50 +169,51 @@ function ShortAnswerText({
     );
   }
 
-  return (
-    <>
-      <div className="response-area">
-        <div className="response-field-container">
-          <ShortTextField
-            onChange={handleResponse}
-            value={currentResponse?.text || ""}
-          />
-        </div>
-      </div>
-
-      <BtnContainer right>
-        <Stack>
-          <Box sx={{ mb: 1 }}>
-            <AttemptCounter question={question} submissions={submissions} />
-            <VertDivider color="text.secondary" show />
-            <Link
-              color="text.secondary"
-              underline="hover"
-              sx={{ cursor: "pointer" }}
-              onClick={handleClearSubmissions}
-            >
-              clear
-            </Link>
-          </Box>
-          {!answeredCorrectly && (
-            <SubmitBtn
-              label="SUBMIT"
-              onClick={handleSubmit}
-              submitting={submitting}
-              disabled={disabled}
+  if (mode === "test") {
+    return (
+      <>
+        <div className="response-area">
+          <div className="response-field-container">
+            <ShortTextField
+              onChange={handleResponse}
+              value={currentResponse?.text || ""}
             />
-          )}
-        </Stack>
-      </BtnContainer>
-    </>
-  );
+          </div>
+        </div>
+
+        <BtnContainer right>
+          <Stack>
+            <Box sx={{ mb: 1 }}>
+              <AttemptCounter question={question} submissions={submissions} />
+              <VertDivider color="text.secondary" show />
+              <Link
+                color="text.secondary"
+                underline="hover"
+                sx={{ cursor: "pointer" }}
+                onClick={handleClearSubmissions}
+              >
+                clear
+              </Link>
+            </Box>
+            {!answeredCorrectly && (
+              <SubmitBtn
+                label="SUBMIT"
+                onClick={handleSubmit}
+                submitting={submitting}
+                disabled={disabled}
+              />
+            )}
+          </Stack>
+        </BtnContainer>
+      </>
+    );
+  }
 }
 
 function ShortAnswerNumber({
   answeredCorrectly,
-  build,
-  handleClearSubmissions,
   lastResponse,
+  mode,
   question,
   qSet,
   submissions,
@@ -226,8 +225,8 @@ function ShortAnswerNumber({
   const responseChanged = detectChange();
   const disabled = !responseChanged || submitting;
 
-  function clearSubmisionsResetField() {
-    handleClearSubmissions();
+  function handleClearSubmissions() {
+    deleteQuestionSubmissions(question, qSet, user);
     numberRef.current.innerHTML = "";
   }
 
@@ -270,15 +269,15 @@ function ShortAnswerNumber({
 
   useEffect(
     () => {
-      if (!build && submissions?.length > 0) {
+      if (mode === "test" && submissions?.length > 0) {
         numberRef.current.innerHTML = lastResponse.number;
       }
     },
     //eslint-disable-next-line
-    [question.id, build]
+    [question.id, mode]
   );
 
-  if (build) {
+  if (mode === "preview") {
     return (
       <div className="correct-answer-area">
         <div className="correct-answer-field-container">
@@ -288,62 +287,69 @@ function ShortAnswerNumber({
     );
   }
 
-  return (
-    <>
-      <div className="response-area">
-        <div className="response-field-container">
-          <NumberField
-            id={question?.id}
-            numberRef={numberRef}
-            setCurrentResponse={setCurrentResponse}
-          />
-        </div>
-      </div>
-
-      <BtnContainer right>
-        <Stack>
-          <Box sx={{ mb: 1 }}>
-            <AttemptCounter question={question} submissions={submissions} />
-            <VertDivider color="text.secondary" show />
-            <Link
-              color="text.secondary"
-              underline="hover"
-              sx={{ cursor: "pointer" }}
-              onClick={clearSubmisionsResetField}
-            >
-              clear
-            </Link>
-          </Box>
-          {!answeredCorrectly && (
-            <SubmitBtn
-              label="SUBMIT"
-              onClick={handleSubmit}
-              submitting={submitting}
-              disabled={disabled}
+  if (mode === "test") {
+    return (
+      <>
+        <div className="response-area">
+          <div className="response-field-container">
+            <NumberField
+              id={question?.id}
+              numberRef={numberRef}
+              setCurrentResponse={setCurrentResponse}
             />
-          )}
-        </Stack>
-      </BtnContainer>
-    </>
-  );
+          </div>
+        </div>
+
+        <BtnContainer right>
+          <Stack>
+            <Box sx={{ mb: 1 }}>
+              <AttemptCounter question={question} submissions={submissions} />
+              <VertDivider color="text.secondary" show />
+              <Link
+                color="text.secondary"
+                underline="hover"
+                sx={{ cursor: "pointer" }}
+                onClick={handleClearSubmissions}
+              >
+                clear
+              </Link>
+            </Box>
+            {!answeredCorrectly && (
+              <SubmitBtn
+                label="SUBMIT"
+                onClick={handleSubmit}
+                submitting={submitting}
+                disabled={disabled}
+              />
+            )}
+          </Stack>
+        </BtnContainer>
+      </>
+    );
+  }
 }
 
 function ShortAnswerMeasurement({
   answeredCorrectly,
-  build,
   correctAnswer,
-  handleClearSubmissions,
   lastResponse,
+  mode,
   question,
   qSet,
   submissions,
-  userCred,
+  user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
+  const numberRef = useRef();
   const [submitting, setSubmitting] = useState(false);
 
   const responseChanged = true;
   const disabled = !responseChanged || submitting;
+
+  function handleClearSubmissions() {
+    deleteQuestionSubmissions(question, qSet, user);
+    numberRef.current.innerHTML = "";
+  }
 
   function handleSubmit() {
     setSubmitting(true);
@@ -355,7 +361,7 @@ function ShortAnswerMeasurement({
       submissions,
       question,
       qSet,
-      userCred
+      user
     );
 
     setTimeout(() => setSubmitting(false), 400);
@@ -363,15 +369,17 @@ function ShortAnswerMeasurement({
 
   useEffect(
     () => {
-      !build && submissions?.length > 0
-        ? setCurrentResponse(lastResponse)
-        : setCurrentResponse(null);
+      if (mode === "test" && submissions?.length > 0) {
+        setCurrentResponse(lastResponse);
+      } else {
+        setCurrentResponse(null);
+      }
     },
     //eslint-disable-next-line
-    [question.id, build]
+    [question.id, mode]
   );
 
-  if (build) {
+  if (mode === "preview") {
     return (
       <div className="repsonse-area">
         <div className="response-field-container">
@@ -386,41 +394,47 @@ function ShortAnswerMeasurement({
     );
   }
 
-  return (
-    <>
-      <div className="response-area">
-        <div className="response-field-container">
-          <NumberField id={question?.id} />
-        </div>
-      </div>
-
-      {/* <UnitField value={currentResponse?.unit || ""} onChange={handleUnit} /> */}
-      <BtnContainer right>
-        <Stack>
-          <Box sx={{ mb: 1 }}>
-            <AttemptCounter question={question} submissions={submissions} />
-            <VertDivider color="text.secondary" />
-            <Link
-              color="text.secondary"
-              underline="hover"
-              sx={{ cursor: "pointer" }}
-              onClick={handleClearSubmissions}
-            >
-              clear
-            </Link>
-          </Box>
-          {!answeredCorrectly && (
-            <SubmitBtn
-              label="SUBMIT"
-              onClick={handleSubmit}
-              submitting={submitting}
-              disabled={disabled}
+  if (mode === "test") {
+    return (
+      <>
+        <div className="response-area">
+          <div className="response-field-container">
+            <NumberField
+              id={question?.id}
+              numberRef={numberRef}
+              setCurrentResponse={setCurrentResponse}
             />
-          )}
-        </Stack>
-      </BtnContainer>
-    </>
-  );
+          </div>
+        </div>
+
+        {/* <UnitField value={currentResponse?.unit || ""} onChange={handleUnit} /> */}
+        <BtnContainer right>
+          <Stack>
+            <Box sx={{ mb: 1 }}>
+              <AttemptCounter question={question} submissions={submissions} />
+              <VertDivider color="text.secondary" />
+              <Link
+                color="text.secondary"
+                underline="hover"
+                sx={{ cursor: "pointer" }}
+                onClick={handleClearSubmissions}
+              >
+                clear
+              </Link>
+            </Box>
+            {!answeredCorrectly && (
+              <SubmitBtn
+                label="SUBMIT"
+                onClick={handleSubmit}
+                submitting={submitting}
+                disabled={disabled}
+              />
+            )}
+          </Stack>
+        </BtnContainer>
+      </>
+    );
+  }
 }
 
 function convertElemtoStr(elem) {

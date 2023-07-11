@@ -19,7 +19,7 @@ import {
 import { transcendentals } from "../../lists/transcendentals";
 import "../../css/Editor.css";
 
-export function NumberField({ numberRef, id, setCurrentResponse }) {
+export function UnitField({ numberRef, id, setCurrentResponse }) {
   //TODO: currentResponse does not update when inserting symbols...need to handle button press
   const [editorActive, setEditorActive] = useState(false);
 
@@ -194,7 +194,7 @@ export function NumberField({ numberRef, id, setCurrentResponse }) {
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
-        <EditorLabel label="number" />
+        <EditorLabel label="unit" />
         <div
           className={`editor-content-area editor-content number-field equation-container`}
           contentEditable
