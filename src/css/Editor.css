@@ -303,6 +303,16 @@ div.equation-container {
   text-align: center;
 }
 
+.number-field > sup {
+  position: relative;
+  bottom: 4px;
+}
+
+.number-field > sub {
+  position: relative;
+  bottom: -6px;
+}
+
 .equation {
   align-items: center;
   background-color: rgba(0, 0, 0, 0.05);

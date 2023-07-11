@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { autoAddQueston, autoSaveQuestion } from "../..//utils/firestoreClient";
+import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import {
   Box,
   Checkbox,
@@ -14,13 +16,12 @@ import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { NumberField } from "../common/NumberField";
 import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
-import { autoAddQueston, autoSaveQuestion } from "../..//utils/firestoreClient";
-import { cleanEditorHTML } from "../../utils/questionSetUtils";
+import { UnitField } from "../common/UnitField";
 
 export function ShortAnswer({
   edit,
   handleAddQuestion,
-
+  handleUpdateQuestion,
   qSet,
   selQuestion,
   setEdit,
@@ -49,7 +50,6 @@ export function ShortAnswer({
   const [scoring, setScoring] = useState(initVal.scoring);
 
   function handleSubmit(e, correctAnswer) {
-    console.log(correctAnswer);
     if (add) {
       const values = {
         type: "short answer",
@@ -64,15 +64,16 @@ export function ShortAnswer({
       return;
     }
 
-    // if (edit) {
-    //   const values = {
-    //     ...selQuestion,
-    //     prompt: cleanEditorHTML(promptRef.current),
-    //     scoring: scoring,
-    //   };
-    //   handleUpdateQuestion(values);
-    //   return;
-    // }
+    if (edit) {
+      const values = {
+        ...selQuestion,
+        prompt: cleanEditorHTML(promptRef.current),
+        correctAnswer: correctAnswer,
+        scoring: scoring,
+      };
+      handleUpdateQuestion(values);
+      return;
+    }
   }
 
   function handleAutoAdd(newID) {
@@ -123,7 +124,7 @@ export function ShortAnswer({
           <MenuItem value={"measurement"}>Measurement</MenuItem>
         </Select>
       </FormControl>
-      <pre>{JSON.stringify(scoring)}</pre>
+
       <br />
       <br />
       <Editor
@@ -145,7 +146,6 @@ export function ShortAnswer({
         user={user}
       />
       <Box sx={{ p: 3 }}>
-        <pre>{JSON.stringify(selQuestion, null, 2)}</pre>
         {subtype == "text" && (
           <Text
             edit={edit}
@@ -304,6 +304,8 @@ function Number({
   setScoring,
   submitting,
 }) {
+  const [loading, setLoading] = useState(true);
+
   const add = !edit;
   const numberRef = useRef();
   const defaultScoring = { percentTolerance: "2" };
@@ -328,10 +330,17 @@ function Number({
     []
   );
 
+  useEffect(() => {
+    const elems = numberRef.current.querySelectorAll(".eq-field");
+    elems.forEach((elem) => (elem.contentEditable = "true"));
+  });
+
+  useEffect(() => setLoading(false), []);
+
   return (
     <>
       <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: 2 }} color="text.secondary">
+        <Typography sx={{ mb: "100px" }} color="text.secondary">
           Response must match:
         </Typography>
         <div className="response-area">
@@ -339,6 +348,7 @@ function Number({
             <NumberField
               id={`${selQuestion?.id}-number`}
               numberRef={numberRef}
+              setCurrentResponse={() => console.log("skip")}
             />
           </div>
         </div>
@@ -348,17 +358,21 @@ function Number({
         <Typography sx={{ mb: 2 }} color="text.secondary">
           Options
         </Typography>
-        <PercentToleranceField
-          value={scoring?.percentTolerance}
-          onChange={handlePercentTolerance}
-        />
+        <Box sx={{ px: "35px" }}>
+          {!loading && (
+            <PercentToleranceField
+              value={scoring?.percentTolerance}
+              onChange={handlePercentTolerance}
+            />
+          )}
+        </Box>
       </Box>
       <BtnContainer right>
         <SubmitBtn
           disabled={submitting}
           label="SAVE"
           onClick={(e) =>
-            handleSubmit(e, { number: numberRef.current.innerHTML })
+            handleSubmit(e, { number: cleanEditorHTML(numberRef.current) })
           }
           submitting={submitting}
         />
@@ -368,70 +382,105 @@ function Number({
 }
 
 function Measurement({
-  add,
-  correctAnswer,
+  edit,
+  handleSubmit,
   scoring,
-  setCorrectAnswer,
+  selQuestion,
   setScoring,
+  submitting,
 }) {
-  function handleNumber(e) {
-    const correctAnswerCopy = { ...correctAnswer };
-    setCorrectAnswer({
-      number: e.target.value,
-      unit: correctAnswerCopy.unit,
-    });
-  }
+  const [loading, setLoading] = useState(true);
 
-  // function handleUnit(e) {
-  //   const correctAnswerCopy = { ...correctAnswer };
-  //   setCorrectAnswer({
-  //     number: correctAnswerCopy.number,
-  //     unit: e.target.value,
-  //   });
-  // }
+  const add = !edit;
+  const numberRef = useRef();
+  const unitRef = useRef();
+  const defaultScoring = { percentTolerance: "2" };
 
   function handlePercentTolerance(e) {
     setScoring({ percentTolerance: e.target.value });
   }
 
-  function initializeSubtypeValues() {
-    if (add) {
-      setCorrectAnswer({ number: "0", unit: "" });
-      setScoring({
-        percentTolerance: 2,
-      });
-    }
-  }
-
   useEffect(
-    initializeSubtypeValues,
+    () => {
+      if (add) {
+        setScoring(defaultScoring);
+        numberRef.current.innerHTML = "";
+        unitRef.current.innerHTML = "";
+      }
+
+      if (edit) {
+        setScoring(selQuestion.scoring);
+        numberRef.current.innerHTML = selQuestion.correctAnswer.number;
+        unitRef.current.innerHTML = selQuestion.correctAnswer.unit;
+      }
+    },
     //eslint-disable-next-line
     []
   );
 
+  useEffect(() => {
+    const numberElems = numberRef.current.querySelectorAll(".eq-field");
+    numberElems.forEach((elem) => (elem.contentEditable = "true"));
+
+    const unitElems = unitRef.current.querySelectorAll(".eq-field");
+    unitElems.forEach((elem) => (elem.contentEditable = "true"));
+  });
+
+  useEffect(() => setLoading(false), []);
+
   return (
     <>
       <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: 2 }} color="text.secondary">
+        <Typography sx={{ mb: "100px" }} color="text.secondary">
           Response must match:
         </Typography>
-        <NumberField
-          value={correctAnswer?.number || ""}
-          onChange={handleNumber}
-        />
-
-        {/* <UnitField value={correctAnswer?.unit || ""} onChange={handleUnit} /> */}
+        <div className="response-area">
+          <div className="response-field-container">
+            <NumberField
+              id={`${selQuestion?.id}-number`}
+              numberRef={numberRef}
+              setCurrentResponse={() => console.log("skip")}
+            />
+          </div>
+          <div className="response-field-container">
+            <UnitField
+              id={`${selQuestion?.id}-unit`}
+              unitRef={unitRef}
+              setCurrentResponse={() => console.log("skip")}
+            />
+          </div>
+        </div>
+        <br />
+        <br />
       </Box>
       <br />
       <Box sx={{ px: "5%" }}>
         <Typography sx={{ mb: 2 }} color="text.secondary">
           Options
         </Typography>
-        <PercentToleranceField
-          value={scoring?.percentTolerance}
-          onChange={handlePercentTolerance}
-        />
+
+        <Box sx={{ px: "35px" }}>
+          {!loading && (
+            <PercentToleranceField
+              value={scoring?.percentTolerance}
+              onChange={handlePercentTolerance}
+            />
+          )}
+        </Box>
       </Box>
+      <BtnContainer right>
+        <SubmitBtn
+          disabled={submitting}
+          label="SAVE"
+          onClick={(e) =>
+            handleSubmit(e, {
+              number: cleanEditorHTML(numberRef.current),
+              unit: cleanEditorHTML(unitRef.current),
+            })
+          }
+          submitting={submitting}
+        />
+      </BtnContainer>
     </>
   );
 }

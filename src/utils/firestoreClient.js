@@ -120,11 +120,9 @@ export function addUserQSet(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
   addDoc(ref, { ...values, questions: [], dateCreated: serverTimestamp() })
-    .then(() => {
-      setSubmitting(false);
-      handleClose();
-    })
-    .catch((error) => console.log(error));
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
 export function autoSaveQuestion(

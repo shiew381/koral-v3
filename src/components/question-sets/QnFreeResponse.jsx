@@ -8,30 +8,18 @@ import {
   AttemptCounter,
   PromptPreview,
   CorrectIndicator,
+  ExampleResponsePreview,
 } from "./QnSharedCpnts";
-import {
-  Alert,
-  Box,
-  CardContent,
-  Checkbox,
-  Divider,
-  Link,
-  Radio,
-  Stack,
-} from "@mui/material";
+import { Box, CardContent, Divider, Link, Stack } from "@mui/material";
 import { gradeResponse } from "../../utils/grading";
 import { VertDivider } from "../common/Dividers";
-import parse from "html-react-parser";
 import { getSubmissions } from "../../utils/questionSetUtils";
 // import styles from "@/styles/QuestionSet.module.css";
 
-export default function MultipleChoice({ mode, qSet, question, user }) {
-  const answerChoices = question?.answerChoices || [];
-  const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
+export default function FreeResponse({ mode, qSet, question, user }) {
   const submissions = getSubmissions(qSet, question) || [];
   const lastSubmission = submissions?.at(-1) || null;
   const lastResponse = lastSubmission?.response || [];
-  const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
   const [currentResponse, setCurrentResponse] = useState(lastResponse);
@@ -70,20 +58,6 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
     return false;
   }
 
-  function handleCurrentResponse(ind) {
-    if (numCorrect === 1) {
-      const updated = [ind];
-      setCurrentResponse(updated);
-    }
-
-    if (numCorrect > 1) {
-      const updated = currentResponse.includes(ind)
-        ? currentResponse.filter((el) => el !== ind)
-        : [...currentResponse, ind];
-      setCurrentResponse(updated.sort());
-    }
-  }
-
   function handleClearSubmissions() {
     deleteQuestionSubmissions(question, qSet, user);
     setCurrentResponse([]);
@@ -103,18 +77,7 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
       <CardContent className="question-content">
         <PromptPreview question={question} />
         <Divider sx={{ my: 2 }} />
-        {numCorrect === 0 && (
-          <Alert severity="warning">no correct answer selected</Alert>
-        )}
-        <div className="answer-choice-area">
-          {answerChoices.map((el, ind) => (
-            <Box className="answer-choice-row" key={`choice-${ind}`}>
-              {numCorrect <= 1 && <Radio checked={el.isCorrect} disabled />}
-              {numCorrect > 1 && <Checkbox checked={el.isCorrect} disabled />}
-              {parse(el.text)}
-            </Box>
-          ))}
-        </div>
+        <ExampleResponsePreview question={question} />
       </CardContent>
     );
   }
@@ -125,36 +88,12 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
         <CorrectIndicator lastSubmission={lastSubmission} />
-        {numCorrect === 0 && (
-          <Alert severity="warning">no correct answer selected</Alert>
-        )}
-        <div className="answer-choice-area">
-          {answerChoices.map((el, ind) => (
-            <Box className="answer-choice-row" key={`choice-${ind}`}>
-              {numCorrect <= 1 && (
-                <Radio
-                  checked={currentResponse.includes(ind) || false}
-                  onChange={() => handleCurrentResponse(ind)}
-                  disabled={attemptsExhausted}
-                />
-              )}
-              {numCorrect > 1 && (
-                <Checkbox
-                  checked={currentResponse.includes(ind) || false}
-                  onChange={() => handleCurrentResponse(ind)}
-                  disabled={attemptsExhausted}
-                />
-              )}
-              {parse(el.text)}
-            </Box>
-          ))}
-        </div>
 
         <BtnContainer right>
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
+              <VertDivider color="text.secondary" />
               <Link
                 color="text.secondary"
                 underline="hover"

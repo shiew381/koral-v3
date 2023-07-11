@@ -3,7 +3,6 @@ import {
   EditorLabel,
   EquationTab,
   FractionTemplateBtn,
-  SqrtTemplateBtn,
   Symbols,
 } from "./EditorCpnts";
 import { Box } from "@mui/material";
@@ -14,16 +13,15 @@ import {
   handleArrowRight,
   insertChar,
   insertFraction,
-  insertSqrt,
 } from "../../utils/editorUtils";
-import { transcendentals } from "../../lists/transcendentals";
+import { unitFieldSymbols } from "../../lists/unitField";
 import "../../css/Editor.css";
 
-export function NumberField({
+export function UnitField({
   id,
   currentResponse,
-  numberRef,
   setCurrentResponse,
+  unitRef,
 }) {
   //TODO: currentResponse does not update when inserting symbols...need to handle button press
   const [editorActive, setEditorActive] = useState(false);
@@ -42,7 +40,7 @@ export function NumberField({
   function handleKeyUp() {
     setCurrentResponse({
       ...currentResponse,
-      number: numberRef.current?.innerHTML,
+      unit: unitRef.current?.innerHTML,
     });
   }
 
@@ -192,21 +190,21 @@ export function NumberField({
 
   return (
     <>
-      <NumberToolbar
+      <UnitToolbar
         disabled={!editorActive}
         setCurrentResponse={setCurrentResponse}
-        numberRef={numberRef}
+        unitRef={unitRef}
       />
       <Box
         className="editor-container"
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
-        <EditorLabel label="number" />
+        <EditorLabel label="unit" />
         <div
           className={`editor-content-area editor-content number-field equation-container`}
           contentEditable
-          ref={numberRef}
+          ref={unitRef}
           id={id}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
@@ -217,7 +215,7 @@ export function NumberField({
   );
 }
 
-function NumberToolbar({ disabled, numberRef, setCurrentResponse }) {
+function UnitToolbar({ disabled, unitRef, setCurrentResponse }) {
   //TODO: return focus to numberfield on tab change
   const [tab, setTab] = useState("templates");
 
@@ -242,17 +240,13 @@ function NumberToolbar({ disabled, numberRef, setCurrentResponse }) {
             caption="fraction"
             onClick={() => {
               insertFraction();
-              setCurrentResponse({ number: numberRef.current.innerHTML });
+              setCurrentResponse({ unit: unitRef.current.innerHTML });
             }}
           />
-          <SqrtTemplateBtn caption="square root" onClick={insertSqrt} />
         </div>
       )}
       {tab === "symbols" && (
-        <Symbols
-          chars={[...transcendentals, { symbol: "°", caption: "degrees" }]}
-          insertChar={insertChar}
-        />
+        <Symbols chars={unitFieldSymbols} insertChar={insertChar} />
       )}
     </div>
   );
