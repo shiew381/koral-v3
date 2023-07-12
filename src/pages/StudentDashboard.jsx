@@ -134,9 +134,20 @@ function Announcements() {
 }
 
 function Assignments({ course }) {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const listWidth = "600px";
+
+  function redirectToAsgmt(asgmt) {
+    const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
+    const asgmtTitle = encodeURI(asgmt.title.replace(/\s/g, "-"));
+    console.log(courseTitle);
+    console.log(asgmtTitle);
+    const path = `/classroom/courses/${courseTitle}/${course.id}/assignment/${asgmtTitle}/${asgmt.id}`;
+
+    navigate(path, { replace: true });
+  }
 
   useEffect(
     () => fetchAssignments(course.id, setAssignments, setLoading),
@@ -170,7 +181,12 @@ function Assignments({ course }) {
             <ListItem
               key={asgmt.id}
               secondaryAction={
-                <Button endIcon={<NavigateNextIcon />}>VIEW</Button>
+                <Button
+                  endIcon={<NavigateNextIcon />}
+                  onClick={() => redirectToAsgmt(asgmt)}
+                >
+                  VIEW
+                </Button>
               }
             >
               <ListItemIcon>

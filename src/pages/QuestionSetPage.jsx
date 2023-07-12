@@ -311,7 +311,6 @@ function QuestionListItem({ qSet, question, index, selected, handleClick }) {
 
   return (
     <ListItemButton onClick={handleClick} sx={{ bgcolor: btnColor }}>
-      {/* <ListItemText primary={`Question ${index + 1}`} secondary={points} /> */}
       <ListItemText
         primary={`Question ${index + 1}`}
         secondary={`${pointsAwarded} of ${pointsPossible}`}
