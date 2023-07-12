@@ -236,33 +236,33 @@ function DocList({
             setAnchorEl={setAnchorEl}
             setSelItem={setSelItem}
           />
-          <MoreOptionsMenu
-            anchorEl={anchorEl}
-            handleClose={handleCloseMenu}
-            open={menuOpen}
-          >
-            <MenuOption>
-              <ListItemButton
-                href={selDocument?.url}
-                target="_blank"
-                onClick={handleCloseMenu}
-              >
-                Open in new tab
-              </ListItemButton>
-            </MenuOption>
-            <MenuOption>
-              <ListItemButton
-                onClick={() => {
-                  deleteDocument(selItem);
-                  handleCloseMenu();
-                }}
-              >
-                Delete
-              </ListItemButton>
-            </MenuOption>
-          </MoreOptionsMenu>
         </ListItem>
       ))}
+      <MoreOptionsMenu
+        anchorEl={anchorEl}
+        handleClose={handleCloseMenu}
+        open={menuOpen}
+      >
+        <MenuOption>
+          <ListItemButton
+            href={selDocument?.url}
+            target="_blank"
+            onClick={handleCloseMenu}
+          >
+            Open in new tab
+          </ListItemButton>
+        </MenuOption>
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              deleteDocument(selItem);
+              handleCloseMenu();
+            }}
+          >
+            Delete
+          </ListItemButton>
+        </MenuOption>
+      </MoreOptionsMenu>
     </List>
   );
 }

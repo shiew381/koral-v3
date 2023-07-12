@@ -6,21 +6,23 @@ import { ref, deleteObject } from "firebase/storage";
 import { storage } from "../config/firebaseConfig.js";
 import {
   addPointerToCourseImage,
+  deleteCourseAsgmt,
   deleteCourseImage,
+  deleteCourseResource,
   fetchAssignments,
   fetchCourse,
   fetchResources,
 } from "../utils/firestoreClient";
-import { formatDate, formatTime } from "../utils/dateUtils";
+import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
   Alert,
   Box,
   Button,
   Divider,
-  IconButton,
   LinearProgress,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   ListItemIcon,
   Tabs,
@@ -28,22 +30,22 @@ import {
   Typography,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ImageIcon from "@mui/icons-material/Image";
-import ArticleIcon from "@mui/icons-material/Article";
-import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AddIcon from "@mui/icons-material/Add";
 import {
+  AssignmentIcon,
   CourseImage,
   CourseSummary,
   Panel,
-} from "../components/common/CourseDashboard";
+  ResourceIcon,
+} from "../components/common/DashboardCpnts";
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
 import { getFileExtension } from "../utils/fileUtils";
 import "../css/CourseDashboard.css";
+import { MoreOptionsBtn } from "../components/common/Buttons";
+import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -261,9 +263,16 @@ function Grades() {
 }
 
 function Assignments({ course, handleOpen }) {
-  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [assignments, setAssignments] = useState([]);
+  const [selAsgmt, setSelAsgmt] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
   const listWidth = "600px";
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
 
   useEffect(
     () => fetchAssignments(course.id, setAssignments, setLoading),
@@ -281,7 +290,7 @@ function Assignments({ course, handleOpen }) {
 
   if (assignments?.length === 0) {
     return (
-      <Panel>
+      <Panel center>
         <div style={{ position: "relative", bottom: "80px" }}>
           <Typography sx={{ mb: 2 }}>
             Get started by add your first assignment!
@@ -303,17 +312,18 @@ function Assignments({ course, handleOpen }) {
           ADD ASSIGNMENT
         </Button>
       </Box>
-
+      <Divider sx={{ width: listWidth }} />
       <List sx={{ width: listWidth }}>
         {assignments.map((asgmt) => (
           <>
-            <Divider />
             <ListItem
               key={asgmt.id}
               secondaryAction={
-                <IconButton edge="end">
-                  <MoreVertIcon />
-                </IconButton>
+                <MoreOptionsBtn
+                  item={asgmt}
+                  setAnchorEl={setAnchorEl}
+                  setSelItem={setSelAsgmt}
+                />
               }
             >
               <ListItemIcon>
@@ -323,23 +333,51 @@ function Assignments({ course, handleOpen }) {
                 primary={<Typography variant="h6">{asgmt.title}</Typography>}
                 secondary={
                   <>
-                    <Typography>Open: {timeAndDate(asgmt.dateOpen)}</Typography>
-                    <Typography>Due: {timeAndDate(asgmt.dateDue)}</Typography>
+                    <Typography>
+                      Open: {formatTimeAndDate(asgmt.dateOpen)}
+                    </Typography>
+                    <Typography>
+                      Due: {formatTimeAndDate(asgmt.dateDue)}
+                    </Typography>
                   </>
                 }
               />
             </ListItem>
+            <Divider />
           </>
         ))}
       </List>
+      <MoreOptionsMenu
+        anchorEl={anchorEl}
+        handleClose={handleCloseMenu}
+        open={menuOpen}
+      >
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              deleteCourseAsgmt(course, selAsgmt);
+              handleCloseMenu();
+            }}
+          >
+            Delete
+          </ListItemButton>
+        </MenuOption>
+      </MoreOptionsMenu>
     </Panel>
   );
 }
 
 function Resources({ course, handleOpen }) {
-  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resources, setResources] = useState([]);
+  const [selResource, setSelResource] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
   const listWidth = "600px";
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
 
   useEffect(
     () => fetchResources(course.id, setResources, setLoading),
@@ -357,7 +395,7 @@ function Resources({ course, handleOpen }) {
 
   if (resources?.length === 0) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
+      <Panel center>
         <div style={{ position: "relative", bottom: "80px" }}>
           <Typography sx={{ mb: 2 }}>
             Get started by adding your first resource!
@@ -368,73 +406,63 @@ function Resources({ course, handleOpen }) {
             </Button>
           </div>
         </div>
-      </div>
+      </Panel>
     );
   }
 
   return (
-    <div
-      className="flex flex-col flex-align-center flex-grow"
-      style={{ padding: "10px" }}
-    >
-      <Box sx={{ width: listWidth }}>
+    <Panel>
+      <Box sx={{ width: listWidth, pt: "50px" }}>
         <Button onClick={handleOpen} startIcon={<AddIcon />}>
           Add Resource
         </Button>
       </Box>
-
+      <Divider sx={{ width: listWidth }} />
       <List sx={{ width: listWidth }}>
-        {resources.map((el) => (
+        {resources.map((resource) => (
           <>
-            <Divider />
             <ListItem
-              key={el.id}
+              key={resource.id}
               secondaryAction={
-                <IconButton edge="end">
-                  <MoreVertIcon />
-                </IconButton>
+                <MoreOptionsBtn
+                  item={resource}
+                  setAnchorEl={setAnchorEl}
+                  setSelItem={setSelResource}
+                />
               }
             >
               <ListItemIcon>
-                <ResourceIcon type={el.type} />
+                <ResourceIcon type={resource.type} />
               </ListItemIcon>
               <ListItemText
-                primary={<Typography variant="h6">{el.title}</Typography>}
+                primary={<Typography variant="h6">{resource.title}</Typography>}
                 secondary={
-                  <Typography>Added: {formatDate(el.dateCreated)}</Typography>
+                  <Typography>
+                    added: {formatDate(resource.dateCreated)}
+                  </Typography>
                 }
               />
             </ListItem>
+            <Divider />
           </>
         ))}
       </List>
-    </div>
+      <MoreOptionsMenu
+        anchorEl={anchorEl}
+        handleClose={handleCloseMenu}
+        open={menuOpen}
+      >
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              deleteCourseResource(course, selResource);
+              handleCloseMenu();
+            }}
+          >
+            Delete
+          </ListItemButton>
+        </MenuOption>
+      </MoreOptionsMenu>
+    </Panel>
   );
-}
-
-function AssignmentIcon({ type }) {
-  switch (type) {
-    case "question set": {
-      return <AppRegistrationIcon />;
-    }
-    default:
-      return null;
-  }
-}
-
-function ResourceIcon({ type }) {
-  switch (type) {
-    case "document": {
-      return <ArticleIcon />;
-    }
-    case "image": {
-      return <ImageIcon />;
-    }
-    default:
-      return null;
-  }
-}
-
-function timeAndDate(dateObj) {
-  return formatDate(dateObj) + " " + formatTime(dateObj);
 }

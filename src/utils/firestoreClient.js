@@ -182,6 +182,11 @@ export function autoAddQueston(
   return tidiedValues.id;
 }
 
+export function deleteCourseAsgmt(course, asgmt) {
+  const ref = doc(db, "courses", course.id, "assignments", asgmt.id);
+  deleteDoc(ref);
+}
+
 export function deleteCourseImage(course) {
   const ref = doc(db, "courses", course.id);
   updateDoc(ref, { courseImage: deleteField() });

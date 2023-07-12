@@ -21,6 +21,10 @@ export function formatTime(dateObj) {
   return formattedDate;
 }
 
+export function formatTimeAndDate(dateObj) {
+  return formatDate(dateObj) + " " + formatTime(dateObj);
+}
+
 export function getInitDueDate() {
   const date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   date.setHours(23);

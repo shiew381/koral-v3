@@ -1,6 +1,19 @@
 import { Box, Typography } from "@mui/material";
 import { formatInstructorNames } from "../../utils/commonUtils";
 import { formatDate } from "../../utils/dateUtils";
+import ImageIcon from "@mui/icons-material/Image";
+import ArticleIcon from "@mui/icons-material/Article";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+
+export function AssignmentIcon({ type }) {
+  switch (type) {
+    case "question set": {
+      return <AppRegistrationIcon />;
+    }
+    default:
+      return null;
+  }
+}
 
 export function Panel({ children, center }) {
   if (center) {
@@ -77,6 +90,19 @@ export function CourseSummary({ course, instructor }) {
       </tbody>
     </table>
   );
+}
+
+export function ResourceIcon({ type }) {
+  switch (type) {
+    case "document": {
+      return <ArticleIcon />;
+    }
+    case "image": {
+      return <ImageIcon />;
+    }
+    default:
+      return null;
+  }
 }
 
 function Row({ children }) {

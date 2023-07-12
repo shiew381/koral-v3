@@ -10,9 +10,9 @@
 .editor-container:focus-within {
   border-style: none;
   border-bottom: solid #5fa1b5 2px;
-  .editorLabel {
+  /* .editorLabel {
     color: #fd8835 !important;
-  }
+  } */
 }
 
 .editor-content-area {

@@ -6,6 +6,7 @@ import {
   fetchAssignments,
   fetchResources,
 } from "../utils/firestoreClient";
+import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
   Box,
   Button,
@@ -19,17 +20,15 @@ import {
   Typography,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ImageIcon from "@mui/icons-material/Image";
-import ArticleIcon from "@mui/icons-material/Article";
-import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import {
+  AssignmentIcon,
   CourseImage,
   CourseSummary,
   Panel,
-} from "../components/common/CourseDashboard";
-import { formatDate, formatTime } from "../utils/dateUtils";
+  ResourceIcon,
+} from "../components/common/DashboardCpnts";
 
 export function StudentDashboard() {
   const navigate = useNavigate();
@@ -185,8 +184,12 @@ function Assignments({ course }) {
                 }
                 secondary={
                   <>
-                    <Typography>Open: {timeAndDate(asgmt.dateOpen)}</Typography>
-                    <Typography>Due: {timeAndDate(asgmt.dateDue)}</Typography>
+                    <Typography>
+                      Open: {formatTimeAndDate(asgmt.dateOpen)}
+                    </Typography>
+                    <Typography>
+                      Due: {formatTimeAndDate(asgmt.dateDue)}
+                    </Typography>
                   </>
                 }
               />
@@ -263,31 +266,4 @@ function Resources({ course }) {
 
 function Grades() {
   return <Panel center>Grades</Panel>;
-}
-
-function AssignmentIcon({ type }) {
-  switch (type) {
-    case "question set": {
-      return <AppRegistrationIcon />;
-    }
-    default:
-      return null;
-  }
-}
-
-function ResourceIcon({ type }) {
-  switch (type) {
-    case "document": {
-      return <ArticleIcon />;
-    }
-    case "image": {
-      return <ImageIcon />;
-    }
-    default:
-      return null;
-  }
-}
-
-function timeAndDate(dateObj) {
-  return formatDate(dateObj) + " " + formatTime(dateObj);
 }
