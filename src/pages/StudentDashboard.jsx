@@ -1,14 +1,35 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchCourse, fetchAssignments } from "../utils/firestoreClient";
-import { Box, Button, Tab, Tabs, Typography } from "@mui/material";
+import {
+  fetchCourse,
+  fetchAssignments,
+  fetchResources,
+} from "../utils/firestoreClient";
+import {
+  Box,
+  Button,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Tabs,
+  Tab,
+  Typography,
+} from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ImageIcon from "@mui/icons-material/Image";
+import ArticleIcon from "@mui/icons-material/Article";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import {
   CourseImage,
   CourseSummary,
+  Panel,
 } from "../components/common/CourseDashboard";
+import { formatDate, formatTime } from "../utils/dateUtils";
 
 export function StudentDashboard() {
   const navigate = useNavigate();
@@ -28,6 +49,10 @@ export function StudentDashboard() {
 
   useEffect(() => fetchCourse(courseID, setCourse, setLoading), [courseID]);
 
+  if (!user) {
+    return null;
+  }
+
   if (loading) {
     return (
       <Page>
@@ -36,7 +61,7 @@ export function StudentDashboard() {
     );
   }
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container relative">
       <div style={{ position: "absolute" }}>
         <Button startIcon={<ChevronLeftIcon />} onClick={redirectToCourses}>
           All Courses
@@ -61,19 +86,52 @@ export function StudentDashboard() {
           <Tab label="Resources" />
         </Tabs>
       </div>
+      <div className="tabs-horizontal">
+        <Tabs value={tabIndex} onChange={selectTab}>
+          <Tab label="Course Info" />
+          <Tab label="Announcements" />
+          <Tab label="Grades" />
+          <Tab label="Assignments" />
+          <Tab label="Resources" />
+        </Tabs>
+      </div>
       {tabIndex === 0 && <CourseInfo course={course} />}
+      {tabIndex === 1 && <Announcements />}
       {tabIndex === 3 && <Assignments course={course} />}
+      {tabIndex == 4 && <Resources course={course} />}
+      {tabIndex === 2 && <Grades />}
     </div>
   );
 }
 
 function CourseInfo({ course }) {
+  const courseImage = course.courseImage || null;
+
   return (
-    <Box className="flex flex-grow flex-center">
-      <CourseImage />
+    <Panel center>
+      <Box sx={{ maxWidth: "640px" }}>
+        <Box className="flex flex-row flex-wrap">
+          <Box className="flex flex-justify-center flex-grow relative">
+            <Box className="relative" sx={{ mb: 2, width: "300px" }}>
+              <CourseImage url={courseImage?.url} />
+            </Box>
+          </Box>
+          <Box className="course-title-and-description">
+            <Typography color="primary" sx={{ mb: "10px" }} variant="h4">
+              {course.title}
+            </Typography>
+            <Typography>{course.description}</Typography>
+          </Box>
+        </Box>
+        <Divider sx={{ mb: 3 }} />
+      </Box>
       <CourseSummary course={course} />
-    </Box>
+    </Panel>
   );
+}
+
+function Announcements() {
+  return <Panel center>Announcements</Panel>;
 }
 
 function Assignments({ course }) {
@@ -89,22 +147,147 @@ function Assignments({ course }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
+      <Panel center>
         <LoadingIndicator />
-      </div>
+      </Panel>
     );
   }
 
   if (assignments?.length === 0) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
-        <div style={{ position: "relative", bottom: "80px" }}>
-          <Typography sx={{ mb: 2 }}>
-            Your instructor has not added any assignments yet!
-          </Typography>
-        </div>
-      </div>
+      <Panel center>
+        <Typography>
+          Your instructor has not added any assignments yet!
+        </Typography>
+      </Panel>
     );
   }
-  return <Box className="flex flex-grow flex-center">Assignments</Box>;
+
+  return (
+    <Panel>
+      <List sx={{ width: listWidth, pt: "50px" }}>
+        {assignments.map((asgmt, ind) => (
+          <>
+            <ListItem
+              key={asgmt.id}
+              secondaryAction={
+                <Button endIcon={<NavigateNextIcon />}>VIEW</Button>
+              }
+            >
+              <ListItemIcon>
+                <AssignmentIcon type={asgmt.type} />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography noWrap sx={{ maxWidth: "400px" }} variant="h6">
+                    {asgmt.title}
+                  </Typography>
+                }
+                secondary={
+                  <>
+                    <Typography>Open: {timeAndDate(asgmt.dateOpen)}</Typography>
+                    <Typography>Due: {timeAndDate(asgmt.dateDue)}</Typography>
+                  </>
+                }
+              />
+            </ListItem>
+            {ind < assignments.length - 1 && <Divider />}
+          </>
+        ))}
+      </List>
+    </Panel>
+  );
+}
+
+function Resources({ course }) {
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const listWidth = "600px";
+
+  useEffect(
+    () => fetchResources(course.id, setResources, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  if (resources?.length === 0) {
+    return (
+      <Panel center>
+        <Typography sx={{ mb: 2 }}>
+          Your instructor has not added any resources yet!
+        </Typography>
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <List sx={{ width: listWidth, pt: "50px" }}>
+        {resources.map((el, ind) => (
+          <>
+            <ListItem
+              key={el.id}
+              secondaryAction={
+                <Button endIcon={<NavigateNextIcon />}>VIEW</Button>
+              }
+            >
+              <ListItemIcon>
+                <ResourceIcon type={el.type} />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography noWrap sx={{ maxWidth: "400px" }} variant="h6">
+                    {el.title}
+                  </Typography>
+                }
+                secondary={
+                  <Typography>Added: {formatDate(el.dateCreated)}</Typography>
+                }
+              />
+            </ListItem>
+            {ind < resources.length - 1 && <Divider />}
+          </>
+        ))}
+      </List>
+    </Panel>
+  );
+}
+
+function Grades() {
+  return <Panel center>Grades</Panel>;
+}
+
+function AssignmentIcon({ type }) {
+  switch (type) {
+    case "question set": {
+      return <AppRegistrationIcon />;
+    }
+    default:
+      return null;
+  }
+}
+
+function ResourceIcon({ type }) {
+  switch (type) {
+    case "document": {
+      return <ArticleIcon />;
+    }
+    case "image": {
+      return <ImageIcon />;
+    }
+    default:
+      return null;
+  }
+}
+
+function timeAndDate(dateObj) {
+  return formatDate(dateObj) + " " + formatTime(dateObj);
 }

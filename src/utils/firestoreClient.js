@@ -3,6 +3,7 @@ import {
   addDoc,
   arrayUnion,
   deleteDoc,
+  deleteField,
   collection,
   doc,
   getDocs,
@@ -87,6 +88,20 @@ export function addPointerToFile(user, file, url, colName) {
     .catch((error) => console.log(error));
 }
 
+export function addPointerToCourseImage(course, file, url) {
+  const ref = doc(db, "courses", course.id);
+  const data = {
+    type: file.type,
+    name: file.name,
+    size: file.size,
+    dateUploaded: serverTimestamp(),
+    url: url,
+  };
+  updateDoc(ref, { courseImage: data })
+    .then(() => console.log("upload successful"))
+    .catch((error) => console.log(error));
+}
+
 export function addResource(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "resources");
   setSubmitting(true);
@@ -165,6 +180,11 @@ export function autoAddQueston(
   });
 
   return tidiedValues.id;
+}
+
+export function deleteCourseImage(course) {
+  const ref = doc(db, "courses", course.id);
+  updateDoc(ref, { courseImage: deleteField() });
 }
 
 export function deleteCourseResource(course, resource) {

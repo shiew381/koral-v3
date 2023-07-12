@@ -1,3 +1,17 @@
+.course-img-upload-progress {
+  width: 80%;
+  width: 80%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin: auto;
+}
+
+.course-title-and-description {
+  padding-left: 30px;
+  padding-right: 30px;
+  max-width: 250px;
+}
+
 .dashboard-container {
   display: flex;
   flex-direction: row;

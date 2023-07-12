@@ -1,85 +1,96 @@
-import { Tabs } from "@mui/material";
-import { Divider, Stack, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { formatInstructorNames } from "../../utils/commonUtils";
 import { formatDate } from "../../utils/dateUtils";
 
-export function CourseImage() {
+export function Panel({ children, center }) {
+  if (center) {
+    return (
+      <Box className="flex flex-col flex-grow flex-center">{children}</Box>
+    );
+  }
+
+  return (
+    <Box className="flex flex-col flex-grow flex-align-center">{children}</Box>
+  );
+}
+
+export function CourseImage({ url }) {
   return (
     <img
-      src={import.meta.env.VITE_COURSE_CARD_IMG}
+      src={url || import.meta.env.VITE_COURSE_CARD_IMG}
       alt="pond lotus flower"
-      width="320px"
+      width="100%"
     />
   );
 }
 
-export function CourseTabs({ children, handleChange, value }) {
-  const tabsStyle = {
-    borderRight: 1,
-    borderColor: "divider",
-    maxWidth: "200px",
-  };
+export function CourseSummary({ course, instructor }) {
+  const showCourseCode = instructor && course.availableTo === "invited";
+
+  if (!course) return null;
 
   return (
-    <Tabs
-      orientation="vertical"
-      variant="scrollable"
-      value={value}
-      onChange={handleChange}
-      sx={tabsStyle}
-    >
-      {children}
-    </Tabs>
+    <table>
+      <tbody>
+        <Row>
+          <Cell right>
+            <Typography>
+              {course.instructorNames?.length > 1
+                ? "instructors:"
+                : "instructor:"}
+            </Typography>
+          </Cell>
+          <Cell padLeft>
+            <Typography>{formatInstructorNames(course.instructors)}</Typography>
+          </Cell>
+        </Row>
+        <Row>
+          <Cell right>
+            <Typography>available to:</Typography>
+          </Cell>
+          <Cell padLeft>
+            <Typography>
+              {course.availableTo === "invited"
+                ? "invited students"
+                : `${import.meta.env.VITE_COMMUNITY_NAME}`}
+            </Typography>
+          </Cell>
+        </Row>
+        {showCourseCode && (
+          <Row>
+            <Cell right>
+              <Typography>course code: </Typography>
+            </Cell>
+            <Cell padLeft>
+              <Typography>{course.courseCode}</Typography>
+            </Cell>
+          </Row>
+        )}
+        <Row>
+          <Cell right>
+            <Typography>created:</Typography>
+          </Cell>
+          <Cell padLeft>
+            <Typography>{formatDate(course.dateCreated)}</Typography>
+          </Cell>
+        </Row>
+      </tbody>
+    </table>
   );
 }
 
-export function CourseSummary({ course }) {
-  if (!course) return null;
-  return (
-    <Stack sx={{ ml: "30px" }}>
-      <Typography variant="h4" color="primary" id="course-title">
-        {course.title}
-      </Typography>
-      <Typography>{course.description}</Typography>
-      <Divider />
-      <table style={{ marginLeft: "5px" }}>
-        <tbody>
-          <tr>
-            <td>
-              <Typography>
-                {course.instructorNames?.length > 1
-                  ? "instructors:"
-                  : "instructor:"}
-              </Typography>
-            </td>
-            <td style={{ paddingLeft: "20px" }}>
-              <Typography>
-                {formatInstructorNames(course.instructors)}
-              </Typography>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <Typography>available to:</Typography>
-            </td>
-            <td style={{ paddingLeft: "20px" }}>
-              <Typography>
-                {course.availableTo === "invited"
-                  ? "invited students"
-                  : `${import.meta.env.VITE_COMMUNITY_NAME}`}
-              </Typography>
-            </td>
-          </tr>
-          <tr>
-            <td>
-              <Typography>created</Typography>
-            </td>
-            <td style={{ paddingLeft: "20px" }}>
-              <Typography>{formatDate(course.dateCreated)}</Typography>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </Stack>
-  );
+function Row({ children }) {
+  return <tr>{children}</tr>;
+}
+
+function Cell({ children, right, padLeft }) {
+  if (right) {
+    return <td style={{ textAlign: "right" }}>{children}</td>;
+  }
+
+  if (padLeft) {
+    return <td style={{ paddingLeft: "20px" }}>{children}</td>;
+  }
+
+  return <td>{children}</td>;
 }

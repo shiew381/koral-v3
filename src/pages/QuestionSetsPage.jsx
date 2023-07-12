@@ -173,7 +173,7 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
   }
 
   function redirectToQSet() {
-    const qSetTitle = encodeURIComponent(qSet.title);
+    const qSetTitle = encodeURI(qSet.title.replace(/\s/g, "-"));
     navigate(`/content/question-sets/${qSetTitle}/${qSet.id}`);
   }
 
