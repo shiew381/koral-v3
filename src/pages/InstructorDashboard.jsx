@@ -1,40 +1,51 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useStorage } from "../hooks/useStorage";
 import { useNavigate, useParams } from "react-router-dom";
+import { ref, deleteObject } from "firebase/storage";
+import { storage } from "../config/firebaseConfig.js";
 import {
+  addPointerToCourseImage,
+  deleteCourseAsgmt,
+  deleteCourseImage,
+  deleteCourseResource,
   fetchAssignments,
   fetchCourse,
   fetchResources,
 } from "../utils/firestoreClient";
-import { formatDate, formatTime } from "../utils/dateUtils";
+import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
+  Alert,
   Box,
   Button,
+  Divider,
+  LinearProgress,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  ListItemIcon,
   Tabs,
   Tab,
   Typography,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
-  IconButton,
 } from "@mui/material";
-
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ImageIcon from "@mui/icons-material/Image";
-import ArticleIcon from "@mui/icons-material/Article";
-import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AddIcon from "@mui/icons-material/Add";
 import {
+  AssignmentIcon,
   CourseImage,
   CourseSummary,
-} from "../components/common/CourseDashboard";
+  Panel,
+  ResourceIcon,
+} from "../components/common/DashboardCpnts";
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
+import { getFileExtension } from "../utils/fileUtils";
 import "../css/CourseDashboard.css";
+import { MoreOptionsBtn } from "../components/common/Buttons";
+import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -72,8 +83,6 @@ export default function InstructorDashboard() {
 
   useEffect(() => fetchCourse(courseID, setCourse, setLoading), [courseID]);
 
-  // useEffect()
-
   if (loading) {
     return (
       <Page>
@@ -103,30 +112,30 @@ export default function InstructorDashboard() {
         >
           <Tab label="Course Info" />
           <Tab label="Announcements" />
-          <Tab label="Grades" />
           <Tab label="Assignments" />
           <Tab label="Resources" />
+          <Tab label="Grades" />
         </Tabs>
       </div>
       <div className="tabs-horizontal">
         <Tabs value={tabIndex} onChange={selectTab}>
           <Tab label="Course Info" />
           <Tab label="Announcements" />
-          <Tab label="Grades" />
           <Tab label="Assignments" />
           <Tab label="Resources" />
+          <Tab label="Grades" />
         </Tabs>
       </div>
 
       {tabIndex === 0 && <CourseInfo course={course} />}
       {tabIndex === 1 && <Announcements />}
-      {tabIndex === 2 && <Grades />}
-      {tabIndex === 3 && (
+      {tabIndex === 2 && (
         <Assignments course={course} handleOpen={handleAsgmtOpen} />
       )}
-      {tabIndex == 4 && (
+      {tabIndex == 3 && (
         <Resources course={course} handleOpen={handleResourceOpen} />
       )}
+      {tabIndex === 4 && <Grades />}
       <ResourceForm
         course={course}
         handleClose={handleResourceClose}
@@ -144,26 +153,126 @@ export default function InstructorDashboard() {
 }
 
 function CourseInfo({ course }) {
+  const [file, setFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const filePath = `courses/${course.id}/course_image/${file?.name}`;
+  const courseImage = course.courseImage || null;
+
+  function handleDeleteCourseImage() {
+    const storageRef = ref(storage, courseImage.url);
+    deleteObject(storageRef)
+      .then(() => deleteCourseImage(course))
+      .catch((error) => console.log(error));
+  }
+
+  function handleUploadSuccess(url) {
+    addPointerToCourseImage(course, file, url);
+  }
+
+  function handleSelectFile(e) {
+    let selectedFile = e.target.files[0];
+    const fileType = selectedFile?.type;
+    const fileExtension = getFileExtension(selectedFile);
+    const acceptedTypes = ["image/png", "image/jpeg"];
+    const acceptedExtensions = ["PNG", "jpeg"];
+
+    const validFile =
+      selectedFile &&
+      (acceptedTypes.includes(fileType) ||
+        acceptedExtensions.includes(fileExtension));
+
+    if (!validFile) {
+      setError(true);
+      setErrorMessage("please select an image file (PNG or JPG)");
+      setFile(null);
+      return;
+    }
+
+    setFile(selectedFile);
+    setError(false);
+    setErrorMessage("");
+  }
+
+  useStorage(file, setFile, filePath, setUploadProgress, handleUploadSuccess);
+
   return (
-    <Box className="flex flex-grow flex-center">
-      <CourseImage />
-      <CourseSummary course={course} />
-    </Box>
+    <Panel center>
+      <Box sx={{ maxWidth: "640px" }}>
+        <Box className="flex flex-row flex-wrap">
+          <Box className="flex flex-justify-center flex-grow relative">
+            <Box className="relative" sx={{ mb: 2, width: "300px" }}>
+              <CourseImage url={courseImage?.url} />
+              {!file && !courseImage && (
+                <Button
+                  fullWidth
+                  component="label"
+                  startIcon={<CloudUploadIcon />}
+                >
+                  UPLOAD CUSTOM IMAGE
+                  <input type="file" hidden onChange={handleSelectFile} />
+                </Button>
+              )}
+              {!file && courseImage && (
+                <Box className="flex flex-row flex-center">
+                  <Typography color="text.secondary" display="inline">
+                    {courseImage?.name}
+                  </Typography>
+                  <Typography
+                    color="text.secondary"
+                    display="inline"
+                    sx={{ ml: "8px" }}
+                  >
+                    |
+                  </Typography>
+                  <Button onClick={handleDeleteCourseImage}>DELETE</Button>
+                </Box>
+              )}
+              {file && (
+                <Box className="course-img-upload-progress">
+                  <LinearProgress
+                    variant="determinate"
+                    value={uploadProgress}
+                  />
+                </Box>
+              )}
+              {error && <Alert severity="warning">{errorMessage}</Alert>}
+            </Box>
+          </Box>
+          <Box className="course-title-and-description">
+            <Typography color="primary" sx={{ mb: "10px" }} variant="h4">
+              {course.title}
+            </Typography>
+            <Typography>{course.description}</Typography>
+          </Box>
+        </Box>
+        <Divider sx={{ mb: 3 }} />
+      </Box>
+      <CourseSummary course={course} instructor />
+    </Panel>
   );
 }
 
 function Announcements() {
-  return <Box className="flex flex-grow flex-center">Announcements</Box>;
+  return <Panel center>Announcements</Panel>;
 }
 
 function Grades() {
-  return <Box className="flex flex-grow flex-center">Grades</Box>;
+  return <Panel center>Grades</Panel>;
 }
 
 function Assignments({ course, handleOpen }) {
-  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [assignments, setAssignments] = useState([]);
+  const [selAsgmt, setSelAsgmt] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
   const listWidth = "600px";
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
 
   useEffect(
     () => fetchAssignments(course.id, setAssignments, setLoading),
@@ -173,15 +282,15 @@ function Assignments({ course, handleOpen }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
+      <Panel center>
         <LoadingIndicator />
-      </div>
+      </Panel>
     );
   }
 
   if (assignments?.length === 0) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
+      <Panel center>
         <div style={{ position: "relative", bottom: "80px" }}>
           <Typography sx={{ mb: 2 }}>
             Get started by add your first assignment!
@@ -192,57 +301,79 @@ function Assignments({ course, handleOpen }) {
             </Button>
           </div>
         </div>
-      </div>
+      </Panel>
     );
   }
 
   return (
-    <div
-      className="flex flex-col flex-align-center flex-grow"
-      style={{ padding: "10px" }}
-    >
-      <Box sx={{ width: listWidth }}>
+    <Panel>
+      <Box sx={{ width: listWidth, pt: "50px" }}>
         <Button onClick={handleOpen} startIcon={<AddIcon />}>
           ADD ASSIGNMENT
         </Button>
       </Box>
-
+      <Divider sx={{ width: listWidth }} />
       <List sx={{ width: listWidth }}>
         {assignments.map((asgmt) => (
-          <>
-            <Divider />
+          <div key={asgmt.id}>
             <ListItem
-              key={asgmt.id}
               secondaryAction={
-                <IconButton edge="end">
-                  <MoreVertIcon />
-                </IconButton>
+                <MoreOptionsBtn
+                  item={asgmt}
+                  setAnchorEl={setAnchorEl}
+                  setSelItem={setSelAsgmt}
+                />
               }
             >
               <ListItemIcon>
                 <AssignmentIcon type={asgmt.type} />
               </ListItemIcon>
               <ListItemText
-                primary={<Typography variant="h6">{asgmt.title}</Typography>}
+                primary={asgmt.title}
                 secondary={
                   <>
-                    <Typography>Open: {timeAndDate(asgmt.dateOpen)}</Typography>
-                    <Typography>Due: {timeAndDate(asgmt.dateOpen)}</Typography>
+                    Open: {formatTimeAndDate(asgmt.dateOpen)}
+                    <br />
+                    Due: {formatTimeAndDate(asgmt.dateDue)}
                   </>
                 }
               />
             </ListItem>
-          </>
+            <Divider />
+          </div>
         ))}
       </List>
-    </div>
+      <MoreOptionsMenu
+        anchorEl={anchorEl}
+        handleClose={handleCloseMenu}
+        open={menuOpen}
+      >
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              deleteCourseAsgmt(course, selAsgmt);
+              handleCloseMenu();
+            }}
+          >
+            Delete
+          </ListItemButton>
+        </MenuOption>
+      </MoreOptionsMenu>
+    </Panel>
   );
 }
 
 function Resources({ course, handleOpen }) {
-  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resources, setResources] = useState([]);
+  const [selResource, setSelResource] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
   const listWidth = "600px";
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
 
   useEffect(
     () => fetchResources(course.id, setResources, setLoading),
@@ -252,15 +383,15 @@ function Resources({ course, handleOpen }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
+      <Panel center>
         <LoadingIndicator />
-      </div>
+      </Panel>
     );
   }
 
   if (resources?.length === 0) {
     return (
-      <div className="flex flex-col flex-center flex-grow">
+      <Panel center>
         <div style={{ position: "relative", bottom: "80px" }}>
           <Typography sx={{ mb: 2 }}>
             Get started by adding your first resource!
@@ -271,88 +402,58 @@ function Resources({ course, handleOpen }) {
             </Button>
           </div>
         </div>
-      </div>
+      </Panel>
     );
   }
 
   return (
-    <div
-      className="flex flex-col flex-align-center flex-grow"
-      style={{ padding: "10px" }}
-    >
-      <Box sx={{ width: listWidth }}>
+    <Panel>
+      <Box sx={{ width: listWidth, pt: "50px" }}>
         <Button onClick={handleOpen} startIcon={<AddIcon />}>
           Add Resource
         </Button>
       </Box>
+      <Divider sx={{ width: listWidth }} />
       <List sx={{ width: listWidth }}>
-        {resources.map((el) => (
-          <>
-            <Divider />
+        {resources.map((resource) => (
+          <div key={resource.id}>
             <ListItem
-              key={el.id}
               secondaryAction={
-                <IconButton edge="end">
-                  <MoreVertIcon />
-                </IconButton>
+                <MoreOptionsBtn
+                  item={resource}
+                  setAnchorEl={setAnchorEl}
+                  setSelItem={setSelResource}
+                />
               }
             >
               <ListItemIcon>
-                <ResourceIcon type={el.type} />
+                <ResourceIcon type={resource.type} />
               </ListItemIcon>
               <ListItemText
-                primary={<Typography variant="h6">{el.title}</Typography>}
-                secondary={
-                  <Typography>Added: {formatDate(el.dateCreated)}</Typography>
-                }
+                primary={resource.title}
+                secondary={"added: " + formatDate(resource.dateCreated)}
               />
             </ListItem>
-          </>
+            <Divider />
+          </div>
         ))}
       </List>
-    </div>
+      <MoreOptionsMenu
+        anchorEl={anchorEl}
+        handleClose={handleCloseMenu}
+        open={menuOpen}
+      >
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              deleteCourseResource(course, selResource);
+              handleCloseMenu();
+            }}
+          >
+            Delete
+          </ListItemButton>
+        </MenuOption>
+      </MoreOptionsMenu>
+    </Panel>
   );
-}
-
-function AssignmentIcon({ type }) {
-  switch (type) {
-    case "question set": {
-      return <AppRegistrationIcon />;
-    }
-    default:
-      return null;
-  }
-}
-
-function ResourceIcon({ type }) {
-  switch (type) {
-    case "document": {
-      return <ArticleIcon />;
-    }
-    case "image": {
-      return <ImageIcon />;
-    }
-
-    default:
-      return null;
-  }
-}
-
-// function StudentView({ course }) {
-//   const { title, courseID } = course;
-//   const navigate = useNavigate();
-//   function navigateToStudentDashboard() {
-//     navigate(`/classroom/courses/${title}/${courseID}/student/dashboard`);
-//   }
-//   return (
-//     <Box sx={{ position: "absolute", top: 0, right: 0 }}>
-//       <Button onClick={navigateToStudentDashboard} startIcon={<GroupIcon />}>
-//         Student View
-//       </Button>
-//     </Box>
-//   );
-// }
-
-function timeAndDate(dateObj) {
-  return formatDate(dateObj) + " " + formatTime(dateObj);
 }

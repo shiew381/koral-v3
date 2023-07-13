@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import { filterByTerm } from "../utils/filterUtils";
 import { formatDate } from "../utils/dateUtils";
 import { fetchUserLinks } from "../utils/firestoreClient";
@@ -26,7 +27,6 @@ import {
   Page,
   PageHeader,
 } from "../components/common/Pages.jsx";
-import { useAuth } from "../contexts/AuthContext";
 import { AddLinkForm } from "../components/forms/AddLinkForm";
 
 export default function LinksPage() {

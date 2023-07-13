@@ -3,8 +3,10 @@ import {
   addDoc,
   arrayUnion,
   deleteDoc,
+  deleteField,
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   orderBy,
@@ -87,6 +89,20 @@ export function addPointerToFile(user, file, url, colName) {
     .catch((error) => console.log(error));
 }
 
+export function addPointerToCourseImage(course, file, url) {
+  const ref = doc(db, "courses", course.id);
+  const data = {
+    type: file.type,
+    name: file.name,
+    size: file.size,
+    dateUploaded: serverTimestamp(),
+    url: url,
+  };
+  updateDoc(ref, { courseImage: data })
+    .then(() => console.log("upload successful"))
+    .catch((error) => console.log(error));
+}
+
 export function addResource(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "resources");
   setSubmitting(true);
@@ -165,6 +181,16 @@ export function autoAddQueston(
   });
 
   return tidiedValues.id;
+}
+
+export function deleteCourseAsgmt(course, asgmt) {
+  const ref = doc(db, "courses", course.id, "assignments", asgmt.id);
+  deleteDoc(ref);
+}
+
+export function deleteCourseImage(course) {
+  const ref = doc(db, "courses", course.id);
+  updateDoc(ref, { courseImage: deleteField() });
 }
 
 export function deleteCourseResource(course, resource) {
@@ -378,6 +404,19 @@ export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
   return unsubscribe;
 }
 
+export function getAssignment(courseID, asgmtID, setAsgmt) {
+  const ref = doc(db, "courses", courseID, "assignments", asgmtID);
+  getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
+}
+
+export function getQSet(userID, qSetID, setQSet, setLoading) {
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
+  getDoc(ref).then((doc) => {
+    setQSet({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
 export function getUserDocuments(user, setDocuments, setSelItem) {
   const ref = collection(db, "users", user.uid, "documents");
   const q = query(ref);
@@ -457,6 +496,85 @@ export function saveQuestionResponse(
       [`submissionHistory.${question.id}`]: [newSubmission],
     });
   }
+
+  if (grade) {
+    newSubmission.answeredCorrectly = grade.answeredCorrectly;
+    newSubmission.pointsAwarded = grade.pointsAwarded;
+  }
+
+  if (question.type === "free response") {
+    overwriteResponse();
+  } else {
+    appendResponse();
+  }
+}
+
+export function fetchQSetSubmissionHistory(
+  courseID,
+  asgmtID,
+  user,
+  setSubmissionHistory
+) {
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    user.uid
+  );
+
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    setSubmissionHistory({
+      ...doc.data(),
+    });
+  });
+  return unsubscribe;
+}
+
+export function saveQResponseFromCourse(
+  currentResponse,
+  grade,
+  submissions,
+  courseID,
+  asgmtID,
+  question,
+  user,
+  setSubmitting
+) {
+  const newSubmission = {
+    response: currentResponse,
+    dateSubmitted: new Date(),
+  };
+
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    user.uid
+  );
+
+  function appendResponse() {
+    setDoc(
+      ref,
+      {
+        [question.id]: [...submissions, newSubmission],
+      },
+      { merge: true }
+    ).finally(() => setTimeout(() => setSubmitting(false), 500));
+  }
+
+  function overwriteResponse() {
+    updateDoc(ref, {
+      [`submissionHistory.${question.id}`]: [newSubmission],
+    });
+  }
+
+  setSubmitting(true);
 
   if (grade) {
     newSubmission.answeredCorrectly = grade.answeredCorrectly;

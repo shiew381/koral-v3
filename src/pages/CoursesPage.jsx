@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../contexts/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchInstructorCourses,
+  fetchStudentCourses,
+  fetchUserInfo,
+} from "../utils/firestoreClient.js";
 import {
   Box,
   Button,
@@ -16,12 +22,6 @@ import {
   PageHeader,
 } from "../components/common/Pages.jsx";
 import { AddCourseForm } from "../components/forms/AddCourseForm.jsx";
-import {
-  fetchInstructorCourses,
-  fetchStudentCourses,
-  fetchUserInfo,
-} from "../utils/firestoreClient.js";
-import { useAuth } from "../contexts/AuthContext.jsx";
 
 export default function CoursesPage() {
   const navigate = useNavigate();
@@ -77,7 +77,7 @@ export default function CoursesPage() {
               course={course}
               key={course.id}
               onClick={() => {
-                const courseTitle = course.title.replace(/\s/g, "-");
+                const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
                 navigate(
                   `/classroom/courses/${courseTitle}/${course.id}/instructor/dashboard`
                 );
@@ -89,7 +89,7 @@ export default function CoursesPage() {
               course={course}
               key={course.id}
               onClick={() => {
-                const courseTitle = course.title.replace(/\s/g, "-");
+                const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
                 navigate(
                   `/classroom/courses/${courseTitle}/${course.id}/student/dashboard`
                 );
@@ -124,13 +124,16 @@ function NoCoursesYet({ handleOpen }) {
 }
 
 function InstructorCourseCard({ course, onClick }) {
+  const courseImage = course.courseImage || null;
   return (
     <Card className="relative" sx={{ width: 300, height: 300, m: 2 }}>
       <CardActionArea onClick={onClick}>
         <CardMedia
           component="img"
           height="190"
-          image={import.meta.env.VITE_COURSE_CARD_IMG}
+          image={
+            courseImage ? courseImage.url : import.meta.env.VITE_COURSE_CARD_IMG
+          }
           alt="pond lotus flower"
         />
         <CardContent sx={{ height: 210 }}>
@@ -146,13 +149,16 @@ function InstructorCourseCard({ course, onClick }) {
 }
 
 function StudentCourseCard({ course, onClick }) {
+  const courseImage = course.courseImage || null;
   return (
     <Card className="relative" sx={{ width: 300, height: 300, m: 2 }}>
       <CardActionArea onClick={onClick}>
         <CardMedia
           component="img"
           height="190"
-          image={import.meta.env.VITE_COURSE_CARD_IMG}
+          image={
+            courseImage ? courseImage.url : import.meta.env.VITE_COURSE_CARD_IMG
+          }
           alt="pond lotus flower"
         />
         <CardContent sx={{ height: 210 }}>

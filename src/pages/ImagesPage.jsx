@@ -190,29 +190,28 @@ export default function ImagesPage() {
                     setSelItem={setSelImage}
                   />
                 </Box>
-
-                <MoreOptionsMenu
-                  anchorEl={anchorEl}
-                  handleClose={handleCloseMenu}
-                  open={menuOpen}
-                >
-                  <MenuOption>
-                    <ListItemButton>Download</ListItemButton>
-                  </MenuOption>
-                  <MenuOption>
-                    <ListItemButton href={selImage?.url} target="_blank">
-                      Open in new tab
-                    </ListItemButton>
-                  </MenuOption>
-                  <MenuOption>
-                    <ListItemButton onClick={() => deleteImage(selImage)}>
-                      Delete
-                    </ListItemButton>
-                  </MenuOption>
-                </MoreOptionsMenu>
               </Box>
             ))}
           </Box>
+          <MoreOptionsMenu
+            anchorEl={anchorEl}
+            handleClose={handleCloseMenu}
+            open={menuOpen}
+          >
+            <MenuOption>
+              <ListItemButton>Download</ListItemButton>
+            </MenuOption>
+            <MenuOption>
+              <ListItemButton href={selImage?.url} target="_blank">
+                Open in new tab
+              </ListItemButton>
+            </MenuOption>
+            <MenuOption>
+              <ListItemButton onClick={() => deleteImage(selImage)}>
+                Delete
+              </ListItemButton>
+            </MenuOption>
+          </MoreOptionsMenu>
         </Box>
 
         <br />

@@ -54,8 +54,8 @@ export function Editor({
   const [tempID, setTempID] = useState("");
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
-  const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  // const [error, setError] = useState(false);
+  // const [errorMessage, setErrorMessage] = useState("");
   const [activeGroup, setActiveGroup] = useState(null);
   const [activeTarget, setActiveTarget] = useState(null);
   const [action, setAction] = useState("");
@@ -608,8 +608,8 @@ export function Editor({
         acceptedExtensions.includes(fileExtension));
 
     if (!validFile) {
-      setError(true);
-      setErrorMessage("please select an image file (PNG or JPG)");
+      // setError(true);
+      // setErrorMessage("please select an image file (PNG or JPG)");
       setFile(null);
       return;
     }
@@ -619,8 +619,8 @@ export function Editor({
     }
 
     setFile(selectedFile);
-    setError(false);
-    setErrorMessage("");
+    // setError(false);
+    // setErrorMessage("");
   }
 
   function handleImageUploadSuccess(url) {
