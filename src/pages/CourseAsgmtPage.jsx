@@ -1,30 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import parse from "html-react-parser";
 import { LoadingIndicator, Page } from "../components/common/Pages";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Divider,
-  Radio,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Card, Typography } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import {
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
-  saveQResponseFromCourse,
 } from "../utils/firestoreClient";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  AttemptCounter,
-  CorrectIndicator,
-  PromptPreview,
   QSetContainer,
   QuestionCardPanel,
   QuestionNav,
@@ -32,8 +17,7 @@ import {
 } from "../components/question-sets/QSetSharedCpnts";
 
 import "../css/QuestionSet.css";
-import { BtnContainer, SubmitBtn } from "../components/common/Buttons";
-import { gradeResponse } from "../utils/grading";
+import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -100,6 +84,7 @@ function QuestionSetDisplay({
   user,
 }) {
   const [submissionHistory, setSubmissionHistory] = useState(null);
+
   const questions = qSet?.questions || [];
   const qIndex = questions.findIndex((el) =>
     selQuestion ? el.id === selQuestion.id : 0
@@ -150,6 +135,12 @@ function QuestionCard({
   submissionHistory,
   user,
 }) {
+  const docRefParams = {
+    asgmtID: asgmtID,
+    courseID: courseID,
+    userID: user.uid,
+  };
+
   if (!question) {
     return (
       <div className="question-card-placeholder">
@@ -162,6 +153,9 @@ function QuestionCard({
 
   if (question) {
     const { type } = question;
+    const submissions = submissionHistory[question.id] || [];
+
+    //TODO: pass submissions for specific question, rather than entire submission history
 
     return (
       <Card
@@ -170,141 +164,15 @@ function QuestionCard({
       >
         {type === "multiple choice" && (
           <MultipleChoice
-            asgmtID={asgmtID}
-            courseID={courseID}
+            docRefParams={docRefParams}
+            mode="course"
             question={question}
-            submissionHistory={submissionHistory}
-            user={user}
+            submissions={submissions}
           />
         )}
       </Card>
     );
   }
-}
-
-function MultipleChoice({
-  asgmtID,
-  courseID,
-  question,
-  submissionHistory,
-  user,
-}) {
-  const answerChoices = question?.answerChoices || [];
-  const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
-  const submissions = submissionHistory[question.id] || [];
-  const lastSubmission = submissions?.at(-1) || null;
-  const lastResponse = lastSubmission?.response || [];
-  const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
-  const answeredCorrectly = lastSubmission?.answeredCorrectly;
-
-  const [currentResponse, setCurrentResponse] = useState(lastResponse);
-  const [submitting, setSubmitting] = useState(false);
-
-  function detectChange() {
-    if (currentResponse.length > 0 && !lastSubmission) {
-      return true;
-    }
-
-    if (
-      currentResponse.length > 0 &&
-      currentResponse.length !== lastResponse.length
-    ) {
-      return true;
-    }
-
-    if (currentResponse.some((el) => !lastResponse.includes(el))) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function handleCurrentResponse(ind) {
-    if (numCorrect === 1) {
-      const updated = [ind];
-      setCurrentResponse(updated);
-    }
-
-    if (numCorrect > 1) {
-      const updated = currentResponse.includes(ind)
-        ? currentResponse.filter((el) => el !== ind)
-        : [...currentResponse, ind];
-      setCurrentResponse(updated.sort());
-    }
-  }
-
-  function handleSubmit() {
-    const grade = gradeResponse(question, currentResponse);
-
-    saveQResponseFromCourse(
-      currentResponse,
-      grade,
-      submissions,
-      courseID,
-      asgmtID,
-      question,
-      user,
-      setSubmitting
-    );
-  }
-
-  const responseChanged = detectChange();
-  const disabled = !responseChanged || submitting;
-
-  useEffect(
-    () => setCurrentResponse(lastResponse),
-    //eslint-disable-next-line
-    [question.id]
-  );
-
-  return (
-    <CardContent className="question-content">
-      <PromptPreview question={question} />
-      <Divider sx={{ my: 1 }} />
-      <CorrectIndicator
-        lastSubmission={lastSubmission}
-        submitting={submitting}
-      />
-      <div className="answer-choice-area">
-        {answerChoices.map((el, ind) => (
-          <Box className="answer-choice-row" key={`choice-${ind}`}>
-            {numCorrect === 1 && (
-              <Radio
-                checked={currentResponse.includes(ind) || false}
-                onChange={() => handleCurrentResponse(ind)}
-                disabled={attemptsExhausted || answeredCorrectly}
-              />
-            )}
-            {numCorrect > 1 && (
-              <Checkbox
-                checked={currentResponse.includes(ind) || false}
-                onChange={() => handleCurrentResponse(ind)}
-                disabled={attemptsExhausted || answeredCorrectly}
-              />
-            )}
-            {parse(el.text)}
-          </Box>
-        ))}
-      </div>
-
-      <BtnContainer right>
-        <Stack>
-          <Box sx={{ mb: 1 }}>
-            <AttemptCounter question={question} submissions={submissions} />
-          </Box>
-
-          {!answeredCorrectly && (
-            <SubmitBtn
-              label="SUBMIT"
-              onClick={handleSubmit}
-              submitting={submitting}
-              disabled={disabled}
-            />
-          )}
-        </Stack>
-      </BtnContainer>
-    </CardContent>
-  );
 }
 
 export function BackToStudentDashboard() {

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import parse from "html-react-parser";
 import {
   deleteQuestionSubmissions,
+  saveQResponseFromCourse,
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
@@ -22,13 +23,15 @@ import {
 } from "@mui/material";
 import { VertDivider } from "../common/Dividers";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
-import { getSubmissions } from "../../utils/questionSetUtils";
-// import styles from "@/styles/QuestionSet.module.css";
 
-export default function MultipleChoice({ mode, qSet, question, user }) {
+export default function MultipleChoice({
+  docRefParams,
+  mode,
+  question,
+  submissions,
+}) {
   const answerChoices = question?.answerChoices || [];
   const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
-  const submissions = getSubmissions(qSet, question) || [];
   const lastSubmission = submissions?.at(-1) || null;
   const lastResponse = lastSubmission?.response || [];
   const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
@@ -73,19 +76,31 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
   function handleSubmit() {
     const grade = gradeResponse(question, currentResponse);
 
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user,
-      setSubmitting
-    );
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
+
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
   }
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
+    deleteQuestionSubmissions(question, docRefParams);
     setCurrentResponse([]);
   }
 
@@ -119,7 +134,7 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
     );
   }
 
-  if (mode === "test") {
+  if (mode === "test" || mode === "course") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
@@ -157,15 +172,17 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider color="text.secondary" show />}
+              {mode == "test" && (
+                <Link
+                  color="text.secondary"
+                  underline="hover"
+                  sx={{ cursor: "pointer" }}
+                  onClick={handleClearSubmissions}
+                >
+                  clear
+                </Link>
+              )}
             </Box>
 
             {!answeredCorrectly && (

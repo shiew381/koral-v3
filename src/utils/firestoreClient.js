@@ -117,6 +117,31 @@ export function addResource(course, values, handleClose, setSubmitting) {
     });
 }
 
+export function addStudentToCourse(
+  course,
+  studentInfo,
+  handleClose,
+  setSubmitting
+) {
+  setSubmitting(true);
+  const ref1 = doc(db, "courses", course.id);
+  const ref2 = doc(db, "courses", course.id, "students", studentInfo.id);
+
+  setDoc(ref2, { ...studentInfo, dateJoined: serverTimestamp() }).catch(
+    (error) => console.log(error)
+  );
+
+  updateDoc(ref1, {
+    studentIDs: arrayUnion(studentInfo.id),
+  })
+    .then(() => {
+      setTimeout(() => setSubmitting(false), 400);
+      setTimeout(() => handleClose(), 500);
+    })
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
 export function addUser({ userCredentials, values }) {
   setDoc(doc(db, "users", userCredentials.user.uid), values);
 }
@@ -218,8 +243,9 @@ export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
   });
 }
 
-export function deleteQuestionSubmissions(selQuestion, qSet, user) {
-  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+export function deleteQuestionSubmissions(selQuestion, docRefParams) {
+  const { qSetID, userID } = docRefParams;
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
 
   updateDoc(ref, {
     [`submissionHistory.${selQuestion.id}`]: [],
@@ -286,6 +312,30 @@ export function fetchCourse(courseID, setCourse, setLoading) {
       dateCreated: doc.data().dateCreated.toDate(),
     });
     setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchQSetSubmissionHistory(
+  courseID,
+  asgmtID,
+  user,
+  setSubmissionHistory
+) {
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    user.uid
+  );
+
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    setSubmissionHistory({
+      ...doc.data(),
+    });
   });
   return unsubscribe;
 }
@@ -474,27 +524,28 @@ export function getUserQSets(user, setQSets, setSelItem) {
 }
 
 export function saveQuestionResponse(
+  submissions,
+  docRefParams,
+  question,
   currentResponse,
   grade,
-  submissions,
-  question,
-  qSet,
-  user
+  setSubmitting
 ) {
+  const { userID, qSetID } = docRefParams;
   const newSubmission = { response: currentResponse, submitted: new Date() };
 
-  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
 
   function appendResponse() {
+    const updatedSubmissions = [...submissions, newSubmission];
+    setSubmitting(true);
     updateDoc(ref, {
-      [`submissionHistory.${question.id}`]: [...submissions, newSubmission],
-    });
+      [`submissionHistory.${question.id}`]: updatedSubmissions,
+    }).finally(() => setTimeout(() => setSubmitting(false), 500));
   }
 
   function overwriteResponse() {
-    updateDoc(ref, {
-      [`submissionHistory.${question.id}`]: [newSubmission],
-    });
+    updateDoc(ref, { [`submissionHistory.${question.id}`]: [newSubmission] });
   }
 
   if (grade) {
@@ -509,40 +560,15 @@ export function saveQuestionResponse(
   }
 }
 
-export function fetchQSetSubmissionHistory(
-  courseID,
-  asgmtID,
-  user,
-  setSubmissionHistory
-) {
-  const ref = doc(
-    db,
-    "courses",
-    courseID,
-    "assignments",
-    asgmtID,
-    "submissions",
-    user.uid
-  );
-
-  const unsubscribe = onSnapshot(ref, (doc) => {
-    setSubmissionHistory({
-      ...doc.data(),
-    });
-  });
-  return unsubscribe;
-}
-
 export function saveQResponseFromCourse(
+  submissions,
+  docRefParams,
+  question,
   currentResponse,
   grade,
-  submissions,
-  courseID,
-  asgmtID,
-  question,
-  user,
   setSubmitting
 ) {
+  const { courseID, asgmtID, userID } = docRefParams;
   const newSubmission = {
     response: currentResponse,
     dateSubmitted: new Date(),
@@ -555,26 +581,20 @@ export function saveQResponseFromCourse(
     "assignments",
     asgmtID,
     "submissions",
-    user.uid
+    userID
   );
 
   function appendResponse() {
-    setDoc(
-      ref,
-      {
-        [question.id]: [...submissions, newSubmission],
-      },
-      { merge: true }
-    ).finally(() => setTimeout(() => setSubmitting(false), 500));
+    const updatedSubmissions = [...submissions, newSubmission];
+    setSubmitting(true);
+    setDoc(ref, { [question.id]: updatedSubmissions }, { merge: true }).finally(
+      () => setTimeout(() => setSubmitting(false), 500)
+    );
   }
 
   function overwriteResponse() {
-    updateDoc(ref, {
-      [`submissionHistory.${question.id}`]: [newSubmission],
-    });
+    updateDoc(ref, { [question.id]: [newSubmission] });
   }
-
-  setSubmitting(true);
 
   if (grade) {
     newSubmission.answeredCorrectly = grade.answeredCorrectly;
@@ -599,31 +619,6 @@ export function updateAdaptiveParams(
   setSubmitting(true);
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
-    .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 500));
-}
-
-export function addStudentToCourse(
-  course,
-  studentInfo,
-  handleClose,
-  setSubmitting
-) {
-  setSubmitting(true);
-  const ref1 = doc(db, "courses", course.id);
-  const ref2 = doc(db, "courses", course.id, "students", studentInfo.id);
-
-  setDoc(ref2, { ...studentInfo, dateJoined: serverTimestamp() }).catch(
-    (error) => console.log(error)
-  );
-
-  updateDoc(ref1, {
-    studentIDs: arrayUnion(studentInfo.id),
-  })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 400);
-      setTimeout(() => handleClose(), 500);
-    })
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }

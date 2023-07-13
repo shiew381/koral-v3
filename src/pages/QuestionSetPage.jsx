@@ -32,6 +32,7 @@ import {
   QuestionNav,
   QuestionsList,
 } from "../components/question-sets/QSetSharedCpnts";
+import { getSubmissions } from "../utils/questionSetUtils";
 
 export default function QuestionSetPage() {
   const { user } = useAuth();
@@ -271,6 +272,11 @@ function QuestionCard({
   question,
   user,
 }) {
+  const docRefParams = {
+    qSetID: qSet.id,
+    userID: user.uid,
+  };
+
   if (!question) {
     return (
       <div className="question-card-placeholder">
@@ -283,6 +289,7 @@ function QuestionCard({
 
   if (question) {
     const { type } = question;
+    const submissions = getSubmissions(qSet, question) || [];
 
     return (
       <Card className="question-card" sx={{ bgcolor: "rgba(255,255,255,0.2)" }}>
@@ -304,10 +311,10 @@ function QuestionCard({
 
         {type === "multiple choice" && (
           <MultipleChoice
+            docRefParams={docRefParams}
             mode={mode}
-            qSet={qSet}
             question={question}
-            user={user}
+            submissions={submissions}
           />
         )}
         {type === "short answer" && (
