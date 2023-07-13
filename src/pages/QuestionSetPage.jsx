@@ -28,7 +28,7 @@ import {
 } from "../components/forms/QnBuilder";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
-import "../css/QuestionSetPage.css";
+import "../css/QuestionSet.css";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
 
 export default function QuestionSetPage() {

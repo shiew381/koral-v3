@@ -4,6 +4,7 @@ import { formatDate } from "../../utils/dateUtils";
 import ImageIcon from "@mui/icons-material/Image";
 import ArticleIcon from "@mui/icons-material/Article";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import LinkIcon from "@mui/icons-material/Link";
 
 export function AssignmentIcon({ type }) {
   switch (type) {
@@ -99,6 +100,9 @@ export function ResourceIcon({ type }) {
     }
     case "image": {
       return <ImageIcon />;
+    }
+    case "link": {
+      return <LinkIcon />;
     }
     default:
       return null;

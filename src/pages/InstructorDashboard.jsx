@@ -315,9 +315,8 @@ function Assignments({ course, handleOpen }) {
       <Divider sx={{ width: listWidth }} />
       <List sx={{ width: listWidth }}>
         {assignments.map((asgmt) => (
-          <>
+          <div key={asgmt.id}>
             <ListItem
-              key={asgmt.id}
               secondaryAction={
                 <MoreOptionsBtn
                   item={asgmt}
@@ -330,21 +329,18 @@ function Assignments({ course, handleOpen }) {
                 <AssignmentIcon type={asgmt.type} />
               </ListItemIcon>
               <ListItemText
-                primary={<Typography variant="h6">{asgmt.title}</Typography>}
+                primary={asgmt.title}
                 secondary={
                   <>
-                    <Typography>
-                      Open: {formatTimeAndDate(asgmt.dateOpen)}
-                    </Typography>
-                    <Typography>
-                      Due: {formatTimeAndDate(asgmt.dateDue)}
-                    </Typography>
+                    Open: {formatTimeAndDate(asgmt.dateOpen)}
+                    <br />
+                    Due: {formatTimeAndDate(asgmt.dateDue)}
                   </>
                 }
               />
             </ListItem>
             <Divider />
-          </>
+          </div>
         ))}
       </List>
       <MoreOptionsMenu
@@ -420,9 +416,8 @@ function Resources({ course, handleOpen }) {
       <Divider sx={{ width: listWidth }} />
       <List sx={{ width: listWidth }}>
         {resources.map((resource) => (
-          <>
+          <div key={resource.id}>
             <ListItem
-              key={resource.id}
               secondaryAction={
                 <MoreOptionsBtn
                   item={resource}
@@ -435,16 +430,12 @@ function Resources({ course, handleOpen }) {
                 <ResourceIcon type={resource.type} />
               </ListItemIcon>
               <ListItemText
-                primary={<Typography variant="h6">{resource.title}</Typography>}
-                secondary={
-                  <Typography>
-                    added: {formatDate(resource.dateCreated)}
-                  </Typography>
-                }
+                primary={resource.title}
+                secondary={"added: " + formatDate(resource.dateCreated)}
               />
             </ListItem>
             <Divider />
-          </>
+          </div>
         ))}
       </List>
       <MoreOptionsMenu

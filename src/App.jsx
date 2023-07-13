@@ -51,7 +51,7 @@ export default function App() {
                   element={<StudentDashboard />}
                 />
                 <Route
-                  path="classroom/courses/:title/:courseID/assignment/:asgmtTitle/:assignmentID"
+                  path="classroom/courses/:title/:courseID/assignment/:asgmtTitle/:asgmtID"
                   element={<CourseAsgmtPage />}
                 />
                 <Route path="classroom/courses" element={<CoursesPage />} />

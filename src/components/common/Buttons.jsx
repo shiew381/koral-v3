@@ -10,11 +10,7 @@ export function SubmitBtn({ disabled, fullWidth, onClick, submitting, label }) {
       variant="contained"
       sx={{ minWidth: "130px", color: "#FFEDDE" }}
     >
-      {submitting ? (
-        <CircularProgress size={25} sx={{ mx: 3, color: "#FFEDDE" }} />
-      ) : (
-        label
-      )}
+      {submitting ? <CircularProgress size={25} sx={{ mx: 3 }} /> : label}
     </Button>
   );
 }

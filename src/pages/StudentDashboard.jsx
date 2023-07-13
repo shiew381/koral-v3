@@ -177,9 +177,8 @@ function Assignments({ course }) {
     <Panel>
       <List sx={{ width: listWidth, pt: "50px" }}>
         {assignments.map((asgmt, ind) => (
-          <>
+          <div key={asgmt.id}>
             <ListItem
-              key={asgmt.id}
               secondaryAction={
                 <Button
                   endIcon={<NavigateNextIcon />}
@@ -193,25 +192,18 @@ function Assignments({ course }) {
                 <AssignmentIcon type={asgmt.type} />
               </ListItemIcon>
               <ListItemText
-                primary={
-                  <Typography noWrap sx={{ maxWidth: "400px" }} variant="h6">
-                    {asgmt.title}
-                  </Typography>
-                }
+                primary={asgmt.title}
                 secondary={
                   <>
-                    <Typography>
-                      Open: {formatTimeAndDate(asgmt.dateOpen)}
-                    </Typography>
-                    <Typography>
-                      Due: {formatTimeAndDate(asgmt.dateDue)}
-                    </Typography>
+                    Open: {formatTimeAndDate(asgmt.dateOpen)}
+                    <br />
+                    Due: {formatTimeAndDate(asgmt.dateDue)}
                   </>
                 }
               />
             </ListItem>
             {ind < assignments.length - 1 && <Divider />}
-          </>
+          </div>
         ))}
       </List>
     </Panel>
@@ -250,30 +242,23 @@ function Resources({ course }) {
   return (
     <Panel>
       <List sx={{ width: listWidth, pt: "50px" }}>
-        {resources.map((el, ind) => (
-          <>
+        {resources.map((resource, ind) => (
+          <div key={resource.id}>
             <ListItem
-              key={el.id}
               secondaryAction={
                 <Button endIcon={<NavigateNextIcon />}>VIEW</Button>
               }
             >
               <ListItemIcon>
-                <ResourceIcon type={el.type} />
+                <ResourceIcon type={resource.type} />
               </ListItemIcon>
               <ListItemText
-                primary={
-                  <Typography noWrap sx={{ maxWidth: "400px" }} variant="h6">
-                    {el.title}
-                  </Typography>
-                }
-                secondary={
-                  <Typography>Added: {formatDate(el.dateCreated)}</Typography>
-                }
+                primary={resource.title}
+                secondary={"Added: " + formatDate(resource.dateCreated)}
               />
             </ListItem>
             {ind < resources.length - 1 && <Divider />}
-          </>
+          </div>
         ))}
       </List>
     </Panel>

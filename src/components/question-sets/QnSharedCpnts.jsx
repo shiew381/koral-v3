@@ -38,11 +38,11 @@ export function ExampleResponsePreview({ question }) {
 export function CorrectIndicator({ lastSubmission, submitting }) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
-  if (!lastSubmission || submitting) {
-    return <div style={{ height: "10px" }}></div>;
+  if (submitting) {
+    return <div style={{ height: "37px" }}></div>;
   }
 
-  if (!answeredCorrectly) {
+  if (lastSubmission && !answeredCorrectly) {
     return (
       <Alert icon={false} severity="error">
         Try again...
@@ -50,7 +50,9 @@ export function CorrectIndicator({ lastSubmission, submitting }) {
     );
   }
 
-  if (answeredCorrectly) {
+  if (lastSubmission && answeredCorrectly) {
     return <Alert severity="success">Nicely Done</Alert>;
   }
+
+  return <div style={{ height: "37px" }}></div>;
 }
