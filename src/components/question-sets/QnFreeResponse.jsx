@@ -9,7 +9,7 @@ import {
   PromptPreview,
   CorrectIndicator,
   ExampleResponsePreview,
-} from "./QnSharedCpnts";
+} from "./QSetSharedCpnts";
 import { Box, CardContent, Divider, Link, Stack } from "@mui/material";
 import { gradeResponse } from "../../utils/grading";
 import { VertDivider } from "../common/Dividers";

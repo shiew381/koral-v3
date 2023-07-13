@@ -9,7 +9,7 @@ import {
   AttemptCounter,
   PromptPreview,
   CorrectIndicator,
-} from "./QnSharedCpnts";
+} from "./QSetSharedCpnts";
 import {
   Alert,
   Box,
@@ -36,20 +36,6 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
 
   const [currentResponse, setCurrentResponse] = useState(lastResponse);
   const [submitting, setSubmitting] = useState(false);
-
-  function handleSubmit() {
-    const grade = gradeResponse(question, currentResponse);
-
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user,
-      setSubmitting
-    );
-  }
 
   function detectChange() {
     if (currentResponse.length > 0 && !lastSubmission) {
@@ -82,6 +68,20 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
         : [...currentResponse, ind];
       setCurrentResponse(updated.sort());
     }
+  }
+
+  function handleSubmit() {
+    const grade = gradeResponse(question, currentResponse);
+
+    saveQuestionResponse(
+      currentResponse,
+      grade,
+      submissions,
+      question,
+      qSet,
+      user,
+      setSubmitting
+    );
   }
 
   function handleClearSubmissions() {
@@ -124,14 +124,17 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
       <CardContent className="question-content">
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
-        <CorrectIndicator lastSubmission={lastSubmission} />
+        <CorrectIndicator
+          lastSubmission={lastSubmission}
+          submitting={submitting}
+        />
         {numCorrect === 0 && (
           <Alert severity="warning">no correct answer selected</Alert>
         )}
         <div className="answer-choice-area">
           {answerChoices.map((el, ind) => (
             <Box className="answer-choice-row" key={`choice-${ind}`}>
-              {numCorrect <= 1 && (
+              {numCorrect === 1 && (
                 <Radio
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}

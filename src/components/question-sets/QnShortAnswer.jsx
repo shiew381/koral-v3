@@ -21,7 +21,7 @@ import {
   AttemptCounter,
   CorrectIndicator,
   PromptPreview,
-} from "./QnSharedCpnts";
+} from "./QSetSharedCpnts";
 import parse from "html-react-parser";
 import { UnitField } from "../common/UnitField";
 
