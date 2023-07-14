@@ -124,18 +124,16 @@ export function ShortAnswer({
           <MenuItem value={"measurement"}>Measurement</MenuItem>
         </Select>
       </FormControl>
-
       <br />
       <br />
       <Editor
         editorRef={promptRef}
         id="prompt"
-        label="prompt"
         handleAutoSave={handleAutoSave}
         handleAutoAdd={handleAutoAdd}
+        label="prompt"
         qSet={qSet}
         selQuestion={selQuestion}
-        setSelQuestion={setSelQuestion}
         toolbarOptions={[
           "font style",
           "superscript/subscript",

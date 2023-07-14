@@ -1,75 +1,91 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import parse from "html-react-parser";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import {
-  deleteQuestionSubmissions,
-  saveQuestionResponse,
+  saveFreeResponse,
+  // saveQResponseFromCourse,
+  // saveQuestionResponse,
 } from "../../utils/firestoreClient";
+import { PromptPreview } from "./QSetSharedCpnts";
 import {
-  AttemptCounter,
-  PromptPreview,
-  CorrectIndicator,
-  ExampleResponsePreview,
-} from "./QSetSharedCpnts";
-import { Box, CardContent, Divider, Link, Stack } from "@mui/material";
-import { gradeResponse } from "../../utils/grading";
-import { VertDivider } from "../common/Dividers";
-import { getSubmissions } from "../../utils/questionSetUtils";
-// import styles from "@/styles/QuestionSet.module.css";
+  Box,
+  CardContent,
+  Divider,
+  Link,
+  Stack,
+  Typography,
+} from "@mui/material";
+import { Editor } from "../common/Editor";
+import { formatDate, formatTime } from "../../utils/dateUtils.js";
 
-export default function FreeResponse({ mode, qSet, question, user }) {
-  const submissions = getSubmissions(qSet, question) || [];
+export default function FreeResponse({
+  docRefParams,
+  mode,
+  qSet,
+  question,
+  submissions,
+  user,
+}) {
   const lastSubmission = submissions?.at(-1) || null;
   const lastResponse = lastSubmission?.response || [];
-  const answeredCorrectly = lastSubmission?.answeredCorrectly;
+  const lastSaved = lastSubmission
+    ? formatDate(lastSubmission.dateSubmitted?.toDate()) +
+      " at " +
+      formatTime(lastSubmission.dateSubmitted?.toDate())
+    : null;
 
-  const [currentResponse, setCurrentResponse] = useState(lastResponse);
+  // const [currentResponse, setCurrentResponse] = useState(lastResponse);
   const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit() {
-    const grade = gradeResponse(question, currentResponse);
+  const responseRef = useRef();
 
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user,
-      setSubmitting
-    );
+  function handleSubmit() {
+    // if (mode === "course") {
+    //   saveQResponseFromCourse(
+    //     submissions,
+    //     docRefParams,
+    //     question,
+    //     currentResponse,
+    //     grade,
+    //     setSubmitting
+    //   );
+    // }
+
+    responseRef.current.normalize();
+    const currentResponse = responseRef.current.innerHTML;
+
+    if (mode === "test") {
+      saveFreeResponse(docRefParams, question, currentResponse, setSubmitting);
+    }
   }
 
   function detectChange() {
-    if (currentResponse.length > 0 && !lastSubmission) {
-      return true;
-    }
-
-    if (
-      currentResponse.length > 0 &&
-      currentResponse.length !== lastResponse.length
-    ) {
-      return true;
-    }
-
-    if (currentResponse.some((el) => !lastResponse.includes(el))) {
-      return true;
-    }
-
-    return false;
+    return true;
   }
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
-    setCurrentResponse([]);
+    responseRef.current.innerHTML =
+      "<div><br></div><div><br></div><div><br></div>";
   }
 
   const responseChanged = detectChange();
   const disabled = !responseChanged || submitting;
 
   useEffect(
-    () => setCurrentResponse(lastResponse),
+    () => {
+      if (mode === "preview") {
+        return;
+      }
+      if (submissions?.length > 0) {
+        responseRef.current.innerHTML = lastResponse;
+      }
+      if (submissions?.length === 0) {
+        responseRef.current.innerHTML =
+          "<div><br></div><div><br></div><div><br></div>";
+      }
+    },
     //eslint-disable-next-line
-    [question.id]
+    [question.id, mode]
   );
 
   if (mode === "preview") {
@@ -77,7 +93,14 @@ export default function FreeResponse({ mode, qSet, question, user }) {
       <CardContent className="question-content">
         <PromptPreview question={question} />
         <Divider sx={{ my: 2 }} />
-        <ExampleResponsePreview question={question} />
+        <Box sx={{ p: 5 }}>
+          <Typography color="text.secondary" sx={{ mb: 2 }}>
+            example response
+          </Typography>
+          <Box className="example-free-response">
+            {parse(question.exampleResponse)}
+          </Box>
+        </Box>
       </CardContent>
     );
   }
@@ -87,26 +110,47 @@ export default function FreeResponse({ mode, qSet, question, user }) {
       <CardContent className="question-content">
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
-        <CorrectIndicator lastSubmission={lastSubmission} />
 
+        <div className="flex flex-col flex-grow">
+          <br />
+          <Editor
+            editorRef={responseRef}
+            id="free-response"
+            label="response"
+            // handleAutoSave={handleAutoSave}
+            // handleAutoAdd={handleAutoAdd}
+            qSet={qSet}
+            selQuestion={question}
+            toolbarOptions={[
+              "font style",
+              "superscript/subscript",
+              "list",
+              "equation",
+              "image",
+            ]}
+            user={user}
+          />
+          <BtnContainer right>
+            <Link
+              color="text.secondary"
+              underline="hover"
+              sx={{ cursor: "pointer", p: 1 }}
+              onClick={handleClearSubmissions}
+            >
+              clear
+            </Link>
+          </BtnContainer>
+        </div>
         <BtnContainer right>
           <Stack>
-            <Box sx={{ mb: 1 }}>
-              <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
-            </Box>
-
-            {!answeredCorrectly && (
+            {lastSaved && (
+              <Box sx={{ mb: 1 }}>
+                <Typography>saved {lastSaved} </Typography>
+              </Box>
+            )}
+            {responseChanged && (
               <SubmitBtn
-                label="SUBMIT"
+                label="SAVE"
                 onClick={handleSubmit}
                 submitting={submitting}
                 disabled={disabled}

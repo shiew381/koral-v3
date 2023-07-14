@@ -146,6 +146,11 @@
   min-height: calc(100vh - 60px);
 }
 
+.example-free-response {
+  min-height: 80px;
+  font-family: Lato;
+}
+
 .prompt {
   min-height: 80px;
   padding: 20px;

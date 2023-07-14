@@ -58,6 +58,7 @@ export default function QuestionSetPage() {
   const submissionHistory = qSet?.submissionHistory || null;
 
   function handleAddQuestion() {
+    console.log("hello");
     setOpenBuilder(true);
     setEdit(false);
   }
@@ -120,10 +121,21 @@ export default function QuestionSetPage() {
       <Page>
         <BackToQSets />
         <PageHeader title={qSet?.title} />
+        <pre>{JSON.stringify(openBuilder)}</pre>
         <GetStarted
           handleAddQuestion={handleAddQuestion}
           loading={loading}
           questions={questions}
+        />
+        <QuestionBuilder
+          edit={edit}
+          handleClose={handleCloseBuilder}
+          open={openBuilder}
+          qSet={qSet}
+          selQuestion={edit ? selQuestion : null}
+          setEdit={setEdit}
+          setSelQuestion={setSelQuestion}
+          user={user}
         />
       </Page>
     );
@@ -168,7 +180,7 @@ export default function QuestionSetPage() {
                 exclusive
                 onChange={handleMode}
                 size="small"
-                sx={{ position: "absolute", top: -35, right: 23 }}
+                sx={{ position: "absolute", top: -35, right: 15 }}
                 value={mode}
               >
                 <ToggleButton value="preview">Preview</ToggleButton>
@@ -319,17 +331,19 @@ function QuestionCard({
         )}
         {type === "short answer" && (
           <ShortAnswer
+            docRefParams={docRefParams}
             mode={mode}
             question={question}
-            qSet={qSet}
-            user={user}
+            submissions={submissions}
           />
         )}
         {type == "free response" && (
           <FreeResponse
+            docRefParams={docRefParams}
             mode={mode}
             question={question}
             qSet={qSet}
+            submissions={submissions}
             user={user}
           />
         )}

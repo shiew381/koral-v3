@@ -523,6 +523,27 @@ export function getUserQSets(user, setQSets, setSelItem) {
   });
 }
 
+export function saveFreeResponse(
+  docRefParams,
+  question,
+  currentResponse,
+  setSubmitting
+) {
+  const { userID, qSetID } = docRefParams;
+  const newSubmission = {
+    response: currentResponse,
+    dateSubmitted: new Date(),
+  };
+
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
+
+  // overwrite previous response
+  setSubmitting(true);
+  updateDoc(ref, {
+    [`submissionHistory.${question.id}`]: [newSubmission],
+  }).finally(() => setTimeout(() => setSubmitting(false), 1000));
+}
+
 export function saveQuestionResponse(
   submissions,
   docRefParams,
@@ -532,32 +553,22 @@ export function saveQuestionResponse(
   setSubmitting
 ) {
   const { userID, qSetID } = docRefParams;
-  const newSubmission = { response: currentResponse, submitted: new Date() };
-
   const ref = doc(db, "users", userID, "question-sets", qSetID);
 
-  function appendResponse() {
-    const updatedSubmissions = [...submissions, newSubmission];
-    setSubmitting(true);
-    updateDoc(ref, {
-      [`submissionHistory.${question.id}`]: updatedSubmissions,
-    }).finally(() => setTimeout(() => setSubmitting(false), 500));
-  }
+  const newSubmission = {
+    response: currentResponse,
+    dateSubmitted: new Date(),
+  };
 
-  function overwriteResponse() {
-    updateDoc(ref, { [`submissionHistory.${question.id}`]: [newSubmission] });
-  }
+  newSubmission.answeredCorrectly = grade.answeredCorrectly;
+  newSubmission.pointsAwarded = grade.pointsAwarded;
 
-  if (grade) {
-    newSubmission.answeredCorrectly = grade.answeredCorrectly;
-    newSubmission.pointsAwarded = grade.pointsAwarded;
-  }
+  const updatedSubmissions = [...submissions, newSubmission];
 
-  if (question.type === "free response") {
-    overwriteResponse();
-  } else {
-    appendResponse();
-  }
+  setSubmitting(true);
+  updateDoc(ref, {
+    [`submissionHistory.${question.id}`]: updatedSubmissions,
+  }).finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
 export function saveQResponseFromCourse(

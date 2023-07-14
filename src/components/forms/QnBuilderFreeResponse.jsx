@@ -89,7 +89,6 @@ export function FreeResponse({
         handleAutoAdd={handleAutoAdd}
         qSet={qSet}
         selQuestion={selQuestion}
-        setSelQuestion={setSelQuestion}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -109,7 +108,6 @@ export function FreeResponse({
           handleAutoAdd={handleAutoAdd}
           qSet={qSet}
           selQuestion={selQuestion}
-          setSelQuestion={setSelQuestion}
           toolbarOptions={[
             "font style",
             "superscript/subscript",

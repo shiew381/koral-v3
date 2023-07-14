@@ -34,25 +34,22 @@ export function PromptPreview({ question }) {
   return <div className="prompt">{parse(question.prompt)}</div>;
 }
 
-export function ExampleResponsePreview({ question }) {
-  if (!question?.exampleResponse) {
-    return (
-      <div style={{ color: "gray" }}>
-        {"(error rendering example response)"}
-      </div>
-    );
-  }
-  return <div className="prompt">{parse(question.exampleResponse)}</div>;
-}
-
-export function CorrectIndicator({ lastSubmission, submitting }) {
+export function CorrectIndicator({
+  attemptsExhausted,
+  lastSubmission,
+  submitting,
+}) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
-  if (submitting) {
+  if (submitting || !lastSubmission) {
     return <div style={{ height: "37px" }}></div>;
   }
 
-  if (lastSubmission && !answeredCorrectly) {
+  if (answeredCorrectly) {
+    return <Alert severity="success">Nicely Done</Alert>;
+  }
+
+  if (!attemptsExhausted && !answeredCorrectly) {
     return (
       <Alert icon={false} severity="error">
         Try again...
@@ -60,8 +57,12 @@ export function CorrectIndicator({ lastSubmission, submitting }) {
     );
   }
 
-  if (lastSubmission && answeredCorrectly) {
-    return <Alert severity="success">Nicely Done</Alert>;
+  if (attemptsExhausted && !answeredCorrectly) {
+    return (
+      <Alert icon={false} severity="error">
+        Out of attempts...
+      </Alert>
+    );
   }
 
   return <div style={{ height: "37px" }}></div>;

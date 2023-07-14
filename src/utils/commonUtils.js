@@ -30,3 +30,13 @@ export function compareBases(a, b) {
   if (a.base.toLowerCase() > b.base.toLowerCase()) return 1;
   return 0;
 }
+
+export function searchifyStr(str) {
+  if (typeof str !== "string") return [];
+
+  const arr = str.split(" ");
+  const lowercaseArr = arr.map((tag) => tag.toLowerCase());
+  const normalizedArr = [...new Set(lowercaseArr)]; // removes duplicate elements from array
+
+  return normalizedArr.filter((el) => el); // removes undefined elements from array
+}

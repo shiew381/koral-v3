@@ -140,11 +140,15 @@ export default function MultipleChoice({
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
         <CorrectIndicator
+          attemptsExhausted={attemptsExhausted}
           lastSubmission={lastSubmission}
           submitting={submitting}
         />
         {numCorrect === 0 && (
-          <Alert severity="warning">no correct answer selected</Alert>
+          <Alert severity="warning">
+            no correct answer
+            {mode === "course" ? " - please contact your instructor" : null}
+          </Alert>
         )}
         <div className="answer-choice-area">
           {answerChoices.map((el, ind) => (
@@ -153,14 +157,14 @@ export default function MultipleChoice({
                 <Radio
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}
-                  disabled={attemptsExhausted}
+                  disabled={attemptsExhausted || answeredCorrectly}
                 />
               )}
               {numCorrect > 1 && (
                 <Checkbox
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}
-                  disabled={attemptsExhausted}
+                  disabled={attemptsExhausted || answeredCorrectly}
                 />
               )}
               {parse(el.text)}
@@ -185,7 +189,7 @@ export default function MultipleChoice({
               )}
             </Box>
 
-            {!answeredCorrectly && (
+            {(submitting || !answeredCorrectly) && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}

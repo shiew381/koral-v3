@@ -155,8 +155,6 @@ function QuestionCard({
     const { type } = question;
     const submissions = submissionHistory[question.id] || [];
 
-    //TODO: pass submissions for specific question, rather than entire submission history
-
     return (
       <Card
         className="question-card"

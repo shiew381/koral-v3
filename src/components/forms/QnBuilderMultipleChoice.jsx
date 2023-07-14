@@ -49,7 +49,7 @@ export function MultipleChoice({
   function addAnswerChoice() {
     const updatedAnswerChoices = [
       ...answerChoices,
-      { id: generateRandomCode(), text: "", isCorrect: false },
+      { id: generateRandomCode(4), text: "", isCorrect: false },
     ];
 
     setAnswerChoices(updatedAnswerChoices);
@@ -70,7 +70,7 @@ export function MultipleChoice({
       cleanEditorHTML(elem);
       tidiedAnswerChoices.push({
         id: el.id,
-        text: elem.innerHTML,
+        text: elem?.innerHTML,
         isCorrect: el.isCorrect,
       });
     });
@@ -145,7 +145,6 @@ export function MultipleChoice({
         handleAutoAdd={handleAutoAdd}
         qSet={qSet}
         selQuestion={selQuestion}
-        setSelQuestion={setSelQuestion}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -177,7 +176,6 @@ export function MultipleChoice({
               handleAutoAdd={handleAutoAdd}
               qSet={qSet}
               selQuestion={selQuestion}
-              setSelQuestion={setSelQuestion}
               user={user}
             />
             <Box sx={{ paddingTop: "60px" }}>
@@ -213,7 +211,6 @@ function AnswerChoiceField({
   handleAutoAdd,
   qSet,
   selQuestion,
-  setSelQuestion,
   user,
 }) {
   const editorRef = useRef();
@@ -228,7 +225,6 @@ function AnswerChoiceField({
         handleAutoAdd={handleAutoAdd}
         qSet={qSet}
         selQuestion={selQuestion}
-        setSelQuestion={setSelQuestion}
         toolbarOptions={["subscript/superscript", "equation", "image"]}
         user={user}
       />
