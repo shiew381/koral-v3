@@ -2,6 +2,7 @@ import {
   Alert,
   Box,
   IconButton,
+  Link,
   List,
   ListItemButton,
   ListItemText,
@@ -32,6 +33,19 @@ export function PromptPreview({ question }) {
     return <div style={{ color: "gray" }}>{"(error rendering prompt)"}</div>;
   }
   return <div className="prompt">{parse(question.prompt)}</div>;
+}
+
+export function ClearSubmissions({ handleClick }) {
+  return (
+    <Link
+      color="text.secondary"
+      underline="hover"
+      sx={{ cursor: "pointer" }}
+      onClick={handleClick}
+    >
+      clear
+    </Link>
+  );
 }
 
 export function CorrectIndicator({

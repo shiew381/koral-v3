@@ -10,6 +10,7 @@ import {
   AttemptCounter,
   PromptPreview,
   CorrectIndicator,
+  ClearSubmissions,
 } from "./QSetSharedCpnts";
 import {
   Alert,
@@ -17,7 +18,6 @@ import {
   CardContent,
   Checkbox,
   Divider,
-  Link,
   Radio,
   Stack,
 } from "@mui/material";
@@ -176,16 +176,9 @@ export default function MultipleChoice({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              {mode === "test" && <VertDivider color="text.secondary" show />}
+              {mode === "test" && <VertDivider />}
               {mode == "test" && (
-                <Link
-                  color="text.secondary"
-                  underline="hover"
-                  sx={{ cursor: "pointer" }}
-                  onClick={handleClearSubmissions}
-                >
-                  clear
-                </Link>
+                <ClearSubmissions handleClick={handleClearSubmissions} />
               )}
             </Box>
 

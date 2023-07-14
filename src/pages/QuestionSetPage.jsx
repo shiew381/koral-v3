@@ -308,9 +308,9 @@ function QuestionCard({
         {mode === "preview" && (
           <Box className="question-card-actions">
             <Points question={question} handleClick={handleOpenPoints} />
-            <VertDivider question={question} />
+            <VertDivider />
             <Attempts question={question} handleClick={handleOpenAttempts} />
-            <VertDivider show />
+            <VertDivider />
             <Button
               onClick={handleEditQuestion}
               startIcon={<EditIcon />}

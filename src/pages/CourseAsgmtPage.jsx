@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { LoadingIndicator, Page } from "../components/common/Pages";
-import { Box, Button, Card, Typography } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { useAuth } from "../contexts/AuthContext";
 import {
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
 } from "../utils/firestoreClient";
-import { useAuth } from "../contexts/AuthContext";
+import { Box, Button, Card, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+
+import { LoadingIndicator, Page } from "../components/common/Pages";
 import {
   QSetContainer,
   QuestionCardPanel,
   QuestionNav,
   QuestionsList,
 } from "../components/question-sets/QSetSharedCpnts";
-
-import "../css/QuestionSet.css";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
+import ShortAnswer from "../components/question-sets/QnShortAnswer";
+import FreeResponse from "../components/question-sets/QnFreeResponse";
+import "../css/QuestionSet.css";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -162,6 +164,22 @@ function QuestionCard({
       >
         {type === "multiple choice" && (
           <MultipleChoice
+            docRefParams={docRefParams}
+            mode="course"
+            question={question}
+            submissions={submissions}
+          />
+        )}
+        {type === "short answer" && (
+          <ShortAnswer
+            docRefParams={docRefParams}
+            mode="course"
+            question={question}
+            submissions={submissions}
+          />
+        )}
+        {type === "free response" && (
+          <FreeResponse
             docRefParams={docRefParams}
             mode="course"
             question={question}

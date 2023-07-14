@@ -3,6 +3,7 @@ import parse from "html-react-parser";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import {
   saveFreeResponse,
+  saveFreeResponseFromCourse,
   // saveQResponseFromCourse,
   // saveQuestionResponse,
 } from "../../utils/firestoreClient";
@@ -34,25 +35,22 @@ export default function FreeResponse({
       formatTime(lastSubmission.dateSubmitted?.toDate())
     : null;
 
-  // const [currentResponse, setCurrentResponse] = useState(lastResponse);
   const [submitting, setSubmitting] = useState(false);
 
   const responseRef = useRef();
 
   function handleSubmit() {
-    // if (mode === "course") {
-    //   saveQResponseFromCourse(
-    //     submissions,
-    //     docRefParams,
-    //     question,
-    //     currentResponse,
-    //     grade,
-    //     setSubmitting
-    //   );
-    // }
-
     responseRef.current.normalize();
     const currentResponse = responseRef.current.innerHTML;
+
+    if (mode === "course") {
+      saveFreeResponseFromCourse(
+        docRefParams,
+        question,
+        currentResponse,
+        setSubmitting
+      );
+    }
 
     if (mode === "test") {
       saveFreeResponse(docRefParams, question, currentResponse, setSubmitting);
@@ -76,6 +74,11 @@ export default function FreeResponse({
       if (mode === "preview") {
         return;
       }
+
+      if (!responseRef.current) {
+        return;
+      }
+
       if (submissions?.length > 0) {
         responseRef.current.innerHTML = lastResponse;
       }
@@ -105,7 +108,7 @@ export default function FreeResponse({
     );
   }
 
-  if (mode === "test") {
+  if (mode === "test" || mode === "course") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />

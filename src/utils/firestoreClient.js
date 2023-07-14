@@ -541,7 +541,39 @@ export function saveFreeResponse(
   setSubmitting(true);
   updateDoc(ref, {
     [`submissionHistory.${question.id}`]: [newSubmission],
-  }).finally(() => setTimeout(() => setSubmitting(false), 1000));
+  }).finally(() => setTimeout(() => setSubmitting(false), 300));
+}
+
+export function saveFreeResponseFromCourse(
+  docRefParams,
+  question,
+  currentResponse,
+  setSubmitting
+) {
+  const { courseID, asgmtID, userID } = docRefParams;
+
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  function overwriteResponse() {
+    const newSubmission = {
+      response: currentResponse,
+      dateSubmitted: new Date(),
+    };
+    setSubmitting(true);
+    updateDoc(ref, { [question.id]: [newSubmission] }).finally(() =>
+      setTimeout(() => setSubmitting(false), 300)
+    );
+  }
+
+  overwriteResponse();
 }
 
 export function saveQuestionResponse(
@@ -580,10 +612,6 @@ export function saveQResponseFromCourse(
   setSubmitting
 ) {
   const { courseID, asgmtID, userID } = docRefParams;
-  const newSubmission = {
-    response: currentResponse,
-    dateSubmitted: new Date(),
-  };
 
   const ref = doc(
     db,
@@ -595,28 +623,22 @@ export function saveQResponseFromCourse(
     userID
   );
 
+  const newSubmission = {
+    response: currentResponse,
+    dateSubmitted: new Date(),
+  };
+
   function appendResponse() {
     const updatedSubmissions = [...submissions, newSubmission];
+    newSubmission.answeredCorrectly = grade.answeredCorrectly;
+    newSubmission.pointsAwarded = grade.pointsAwarded;
     setSubmitting(true);
     setDoc(ref, { [question.id]: updatedSubmissions }, { merge: true }).finally(
       () => setTimeout(() => setSubmitting(false), 500)
     );
   }
 
-  function overwriteResponse() {
-    updateDoc(ref, { [question.id]: [newSubmission] });
-  }
-
-  if (grade) {
-    newSubmission.answeredCorrectly = grade.answeredCorrectly;
-    newSubmission.pointsAwarded = grade.pointsAwarded;
-  }
-
-  if (question.type === "free response") {
-    overwriteResponse();
-  } else {
-    appendResponse();
-  }
+  appendResponse();
 }
 
 export function updateAdaptiveParams(

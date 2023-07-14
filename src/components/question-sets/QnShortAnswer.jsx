@@ -5,14 +5,7 @@ import {
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
-import {
-  Box,
-  CardContent,
-  Divider,
-  Link,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { ShortTextField } from "../common/InputFields";
 import { VertDivider } from "../common/Dividers";
@@ -20,6 +13,7 @@ import { NumberField } from "../common/NumberField";
 import { UnitField } from "../common/UnitField";
 import {
   AttemptCounter,
+  ClearSubmissions,
   CorrectIndicator,
   PromptPreview,
 } from "./QSetSharedCpnts";
@@ -190,15 +184,10 @@ function ShortAnswerText({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
             {(submitting || !answeredCorrectly) && (
               <SubmitBtn
@@ -333,15 +322,10 @@ function ShortAnswerNumber({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
             {(submitting || !answeredCorrectly) && (
               <SubmitBtn
@@ -508,15 +492,10 @@ function ShortAnswerMeasurement({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
             {(submitting || !answeredCorrectly) && (
               <SubmitBtn
