@@ -6,7 +6,11 @@ export function VertDivider({ hidden }) {
   }
 
   return (
-    <Typography display="inline" sx={{ mx: 2 }}>
+    <Typography
+      color="text.secondary"
+      display="inline"
+      sx={{ mx: 2, fontSize: "20px" }}
+    >
       |
     </Typography>
   );

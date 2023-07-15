@@ -20,19 +20,69 @@ export function MultipleChoice({
   user,
 }) {
   const add = !edit;
-  const initVal = {
-    prompt:
-      selQuestion?.prompt || "<div><br></div><div><br></div><div><br></div>",
-    answerChoices: selQuestion?.answerChoices || [
-      { id: generateRandomCode(4), text: "<div><br></div>", isCorrect: false },
-      { id: generateRandomCode(4), text: "<div><br></div>", isCorrect: false },
-      { id: generateRandomCode(4), text: "<div><br></div>", isCorrect: false },
-      { id: generateRandomCode(4), text: "<div><br></div>", isCorrect: false },
-    ],
-  };
-  const promptRef = useRef();
+  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
+  const initVal = edit
+    ? {
+        prompt: selQuestion?.prompt || "<div><br></div>",
+        answerChoices: selQuestion?.answerChoices || [],
+      }
+    : {
+        prompt: "<div><br></div><div><br></div><div><br></div>",
+        answerChoices: [
+          {
+            id: generateRandomCode(4),
+            text: "<div><br></div>",
+            isCorrect: false,
+          },
+          {
+            id: generateRandomCode(4),
+            text: "<div><br></div>",
+            isCorrect: false,
+          },
+          {
+            id: generateRandomCode(4),
+            text: "<div><br></div>",
+            isCorrect: false,
+          },
+          {
+            id: generateRandomCode(4),
+            text: "<div><br></div>",
+            isCorrect: false,
+          },
+        ],
+      };
 
+  const promptRef = useRef();
   const [answerChoices, setAnswerChoices] = useState(initVal.answerChoices);
+
+  function addAnswerChoice() {
+    const updatedAnswerChoices = [
+      ...answerChoices,
+      { id: generateRandomCode(4), text: "", isCorrect: false },
+    ];
+
+    setAnswerChoices(updatedAnswerChoices);
+  }
+
+  function handleAutoAdd() {
+    const values = {
+      type: "multiple choice",
+      prompt: cleanEditorHTML(promptRef.current),
+      answerChoices: answerChoices,
+      pointsPossible: 1,
+      attemptsPossible: 1,
+    };
+    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
+  }
+
+  function handleAutoSave() {
+    const values = {
+      ...selQuestion,
+      prompt: cleanEditorHTML(promptRef.current),
+      answerChoices: answerChoices,
+    };
+    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
+  }
 
   function handleCheckbox(e, ind) {
     const updatedState = e.target.checked;
@@ -43,15 +93,6 @@ export function MultipleChoice({
     const updatedAnswerChoices = answerChoices.map((el, index) =>
       ind === index ? updatedAnswerChoice : el
     );
-    setAnswerChoices(updatedAnswerChoices);
-  }
-
-  function addAnswerChoice() {
-    const updatedAnswerChoices = [
-      ...answerChoices,
-      { id: generateRandomCode(4), text: "", isCorrect: false },
-    ];
-
     setAnswerChoices(updatedAnswerChoices);
   }
 
@@ -101,26 +142,6 @@ export function MultipleChoice({
     }
   }
 
-  function handleAutoAdd(newID) {
-    const values = {
-      type: "multiple choice",
-      prompt: cleanEditorHTML(promptRef.current),
-      answerChoices: answerChoices,
-      pointsPossible: 1,
-      attemptsPossible: 1,
-    };
-    autoAddQueston(values, newID, qSet, user, setEdit, setSelQuestion);
-  }
-
-  function handleAutoSave() {
-    const values = {
-      ...selQuestion,
-      prompt: cleanEditorHTML(promptRef.current),
-      answerChoices: answerChoices,
-    };
-    autoSaveQuestion(values, selQuestion, qSet, user, setSelQuestion);
-  }
-
   useEffect(
     () => {
       promptRef.current.innerHTML = initVal.prompt;
@@ -140,11 +161,10 @@ export function MultipleChoice({
       <Editor
         editorRef={promptRef}
         id="prompt"
+        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}}`}
         label="prompt"
-        handleAutoSave={handleAutoSave}
-        handleAutoAdd={handleAutoAdd}
-        qSet={qSet}
-        selQuestion={selQuestion}
+        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -152,9 +172,7 @@ export function MultipleChoice({
           "equation",
           "image",
         ]}
-        user={user}
       />
-
       <Box className="answer-choices-container">
         <Typography align="right" variant="subtitle2" sx={{ mr: 1 }}>
           correct

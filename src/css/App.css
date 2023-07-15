@@ -66,22 +66,13 @@
 }
 
 .add-question-container {
-  position: absolute;
-  bottom: 0;
-  width: 190px;
+  margin-top: 10px;
+  width: 210px;
 }
 
 .answer-choices-container {
   margin-top: 1rem;
   margin-bottom: 1rem;
-}
-
-.answer-choice-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 15px;
-  font-family: Lato;
 }
 
 .build-first-item {

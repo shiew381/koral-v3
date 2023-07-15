@@ -168,14 +168,14 @@ export function addUserQSet(user, values, setSubmitting, handleClose) {
 
 export function autoSaveQuestion(
   values,
-  selQuestion,
+  questionID,
   qSet,
   user,
   setSelQuestion
 ) {
   const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
   const updatedQuestions = qSet.questions.map((question) =>
-    question.id === selQuestion.id ? values : question
+    question.id === questionID ? values : question
   );
 
   updateDoc(ref, {

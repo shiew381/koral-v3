@@ -5,6 +5,7 @@ import { Editor } from "../common/Editor";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 
 import { Box, Divider } from "@mui/material";
+import { generateRandomCode } from "../../utils/commonUtils";
 
 export function FreeResponse({
   edit,
@@ -18,24 +19,28 @@ export function FreeResponse({
   user,
 }) {
   const add = !edit;
-  const initVal = {
-    prompt:
-      selQuestion?.prompt || "<div><br></div><div><br></div><div><br></div>",
-    exampleResponse:
-      selQuestion?.exampleResponse ||
-      "<div><br></div><div><br></div><div><br></div>",
-  };
+  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
+  const initVal = edit
+    ? {
+        prompt: selQuestion?.prompt || "<div><br></div>",
+        exampleResponse: selQuestion?.exampleResponse || "<div><br></div>",
+      }
+    : {
+        prompt: "<div><br></div><div><br></div><div><br></div>",
+        exampleResponse: "<div><br></div><div><br></div><div><br></div>",
+      };
   const promptRef = useRef();
   const exampleResponseRef = useRef();
 
-  function handleAutoAdd(newID) {
+  function handleAutoAdd() {
     const values = {
       type: "free response",
       prompt: cleanEditorHTML(promptRef.current),
       exampleResponse: cleanEditorHTML(exampleResponseRef.current),
       pointsPossible: 1,
     };
-    autoAddQueston(values, newID, qSet, user, setEdit, setSelQuestion);
+    console.log("auto adding...");
+    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
   }
 
   function handleAutoSave() {
@@ -43,7 +48,8 @@ export function FreeResponse({
       ...selQuestion,
       prompt: cleanEditorHTML(promptRef.current),
     };
-    autoSaveQuestion(values, selQuestion, qSet, user, setSelQuestion);
+    console.log("auto saving...");
+    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
   }
 
   function handleSubmit() {
@@ -84,11 +90,10 @@ export function FreeResponse({
       <Editor
         editorRef={promptRef}
         id="prompt"
+        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}}`}
         label="prompt"
-        handleAutoSave={handleAutoSave}
-        handleAutoAdd={handleAutoAdd}
-        qSet={qSet}
-        selQuestion={selQuestion}
+        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -96,18 +101,16 @@ export function FreeResponse({
           "equation",
           "image",
         ]}
-        user={user}
       />
       <Divider sx={{ my: 3 }} />
       <Box sx={{ p: 3 }}>
         <Editor
           editorRef={exampleResponseRef}
           id="response"
+          imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}}`}
           label="example response"
-          handleAutoSave={handleAutoSave}
-          handleAutoAdd={handleAutoAdd}
-          qSet={qSet}
-          selQuestion={selQuestion}
+          onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
+          onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
           toolbarOptions={[
             "font style",
             "superscript/subscript",
@@ -115,7 +118,6 @@ export function FreeResponse({
             "equation",
             "image",
           ]}
-          user={user}
         />
       </Box>
       <br />

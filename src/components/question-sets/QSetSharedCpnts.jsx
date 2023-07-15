@@ -86,7 +86,7 @@ export function QuestionCardPanel({ children }) {
   return <Box className="right-panel">{children}</Box>;
 }
 
-export function QuestionsList({
+export function QuestionList({
   questions,
   selQuestion,
   setSelQuestion,

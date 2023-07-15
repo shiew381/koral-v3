@@ -30,7 +30,7 @@ import {
   QSetContainer,
   QuestionCardPanel,
   QuestionNav,
-  QuestionsList,
+  QuestionList,
 } from "../components/question-sets/QSetSharedCpnts";
 import { getSubmissions } from "../utils/questionSetUtils";
 
@@ -58,7 +58,6 @@ export default function QuestionSetPage() {
   const submissionHistory = qSet?.submissionHistory || null;
 
   function handleAddQuestion() {
-    console.log("hello");
     setOpenBuilder(true);
     setEdit(false);
   }
@@ -149,7 +148,7 @@ export default function QuestionSetPage() {
         <Divider />
         <QSetContainer>
           <Box className="question-list-container">
-            <QuestionsList
+            <QuestionList
               questions={questions}
               selQuestion={selQuestion}
               setSelQuestion={setSelQuestion}
@@ -308,7 +307,7 @@ function QuestionCard({
         {mode === "preview" && (
           <Box className="question-card-actions">
             <Points question={question} handleClick={handleOpenPoints} />
-            <VertDivider />
+            <VertDivider hidden={question.type === "free response"} />
             <Attempts question={question} handleClick={handleOpenAttempts} />
             <VertDivider />
             <Button

@@ -14,7 +14,7 @@ import {
   QSetContainer,
   QuestionCardPanel,
   QuestionNav,
-  QuestionsList,
+  QuestionList,
 } from "../components/question-sets/QSetSharedCpnts";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
@@ -104,7 +104,7 @@ function QuestionSetDisplay({
   return (
     <QSetContainer>
       <Box className="question-list-container">
-        <QuestionsList
+        <QuestionList
           questions={questions}
           selQuestion={selQuestion}
           setSelQuestion={setSelQuestion}

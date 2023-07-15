@@ -4,8 +4,6 @@ import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import {
   saveFreeResponse,
   saveFreeResponseFromCourse,
-  // saveQResponseFromCourse,
-  // saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { PromptPreview } from "./QSetSharedCpnts";
 import {
@@ -22,7 +20,6 @@ import { formatDate, formatTime } from "../../utils/dateUtils.js";
 export default function FreeResponse({
   docRefParams,
   mode,
-  qSet,
   question,
   submissions,
   user,
@@ -120,10 +117,6 @@ export default function FreeResponse({
             editorRef={responseRef}
             id="free-response"
             label="response"
-            // handleAutoSave={handleAutoSave}
-            // handleAutoAdd={handleAutoAdd}
-            qSet={qSet}
-            selQuestion={question}
             toolbarOptions={[
               "font style",
               "superscript/subscript",
