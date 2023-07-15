@@ -143,7 +143,7 @@ export function BtnGroupImage({
   uploadProgress,
 }) {
   return (
-    <ToggleButtonGroup disabled={disabled || file} size="small">
+    <ToggleButtonGroup disabled={disabled || Boolean(file)} size="small">
       <ToggleButton
         className="editor-btn"
         component="label"

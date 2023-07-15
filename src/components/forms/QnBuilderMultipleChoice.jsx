@@ -161,7 +161,7 @@ export function MultipleChoice({
       <Editor
         editorRef={promptRef}
         id="prompt"
-        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}}`}
+        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
         label="prompt"
         onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
         onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}

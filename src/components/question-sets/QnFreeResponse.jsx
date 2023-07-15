@@ -22,7 +22,6 @@ export default function FreeResponse({
   mode,
   question,
   submissions,
-  user,
 }) {
   const lastSubmission = submissions?.at(-1) || null;
   const lastResponse = lastSubmission?.response || [];
@@ -113,10 +112,18 @@ export default function FreeResponse({
 
         <div className="flex flex-col flex-grow">
           <br />
+
           <Editor
             editorRef={responseRef}
             id="free-response"
+            imagePath={
+              mode === "course"
+                ? `courses/${docRefParams?.courseID}/assignments/${docRefParams?.asgmtID}/${docRefParams?.userID}/${question?.id}`
+                : `users/${docRefParams?.userID}/question-sets/${docRefParams?.qSetID}/${question?.id}`
+            }
             label="response"
+            onImageDeleteSuccess={handleSubmit}
+            onImageUploadSuccess={handleSubmit}
             toolbarOptions={[
               "font style",
               "superscript/subscript",
@@ -124,7 +131,6 @@ export default function FreeResponse({
               "equation",
               "image",
             ]}
-            user={user}
           />
           <BtnContainer right>
             <Link
