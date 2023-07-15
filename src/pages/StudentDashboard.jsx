@@ -142,8 +142,7 @@ function Assignments({ course }) {
   function redirectToAsgmt(asgmt) {
     const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
     const asgmtTitle = encodeURI(asgmt.title.replace(/\s/g, "-"));
-    console.log(courseTitle);
-    console.log(asgmtTitle);
+
     const path = `/classroom/courses/${courseTitle}/${course.id}/assignment/${asgmtTitle}/${asgmt.id}`;
 
     navigate(path, { replace: true });

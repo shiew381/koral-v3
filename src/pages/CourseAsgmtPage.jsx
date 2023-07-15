@@ -1,38 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import parse from "html-react-parser";
-import { LoadingIndicator, Page } from "../components/common/Pages";
-import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Checkbox,
-  Divider,
-  List,
-  ListItemButton,
-  ListItemText,
-  Radio,
-  Stack,
-  Typography,
-} from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import { useAuth } from "../contexts/AuthContext";
 import {
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
-  saveQResponseFromCourse,
 } from "../utils/firestoreClient";
-import { useAuth } from "../contexts/AuthContext";
-import {
-  AttemptCounter,
-  CorrectIndicator,
-  PromptPreview,
-} from "../components/question-sets/QnSharedCpnts";
+import { Box, Button, Card, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 
+import { LoadingIndicator, Page } from "../components/common/Pages";
+import {
+  QSetContainer,
+  QuestionCardPanel,
+  QuestionNav,
+  QuestionList,
+} from "../components/question-sets/QSetSharedCpnts";
+import MultipleChoice from "../components/question-sets/QnMultipleChoice";
+import ShortAnswer from "../components/question-sets/QnShortAnswer";
+import FreeResponse from "../components/question-sets/QnFreeResponse";
 import "../css/QuestionSet.css";
-import { BtnContainer, SubmitBtn } from "../components/common/Buttons";
-import { gradeResponse } from "../utils/grading";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -42,9 +29,13 @@ export default function CourseAsgmtPage() {
   const [selQuestion, setSelQuestion] = useState(null);
   const { courseID, asgmtID } = useParams();
 
-  useEffect(() => {
-    getAssignment(courseID, asgmtID, setAsgmt);
-  }, []);
+  useEffect(
+    () => {
+      getAssignment(courseID, asgmtID, setAsgmt);
+    },
+    //eslint-disable-next-line
+    []
+  );
 
   useEffect(
     () => {
@@ -96,6 +87,11 @@ function QuestionSetDisplay({
 }) {
   const [submissionHistory, setSubmissionHistory] = useState(null);
 
+  const questions = qSet?.questions || [];
+  const qIndex = questions.findIndex((el) =>
+    selQuestion ? el.id === selQuestion.id : 0
+  );
+
   useEffect(
     () => {
       if (!user) return;
@@ -107,79 +103,31 @@ function QuestionSetDisplay({
 
   return (
     <QSetContainer>
-      <QuestionsList
-        qSet={qSet}
-        selQuestion={selQuestion}
+      <Box className="question-list-container">
+        <QuestionList
+          questions={questions}
+          selQuestion={selQuestion}
+          setSelQuestion={setSelQuestion}
+          submissionHistory={submissionHistory}
+        />
+      </Box>
+      <QuestionNav
+        qIndex={qIndex}
+        questions={questions}
         setSelQuestion={setSelQuestion}
-        submissionHistory={submissionHistory}
       />
-      {/* <pre>{JSON.stringify(submissionHistory, null, 2)}</pre> */}
-      <QuestionCard
-        asgmtID={asgmtID}
-        courseID={courseID}
-        qSet={qSet}
-        question={selQuestion}
-        submissionHistory={submissionHistory}
-        user={user}
-      />
+      <QuestionCardPanel>
+        <QuestionCard
+          asgmtID={asgmtID}
+          courseID={courseID}
+          qSet={qSet}
+          question={selQuestion}
+          submissionHistory={submissionHistory}
+          user={user}
+        />
+      </QuestionCardPanel>
     </QSetContainer>
   );
-}
-
-function QuestionsList({
-  qSet,
-  selQuestion,
-  setSelQuestion,
-  submissionHistory,
-}) {
-  const listStyle = {
-    height: "500px",
-    width: "250px",
-    overflow: "auto",
-    padding: 0,
-    margin: "20px",
-    minWidth: "230px",
-  };
-
-  const questions = qSet?.questions;
-
-  if (!qSet) {
-    return null;
-  }
-
-  if (questions?.length == 0) {
-    return null;
-  }
-
-  return (
-    <List sx={listStyle}>
-      {questions?.map((question, index) => (
-        <ListItemButton
-          key={question?.id}
-          onClick={() => setSelQuestion(question)}
-          sx={{
-            bgcolor:
-              question?.id === selQuestion?.id
-                ? "rgba(0,180,235,0.1)"
-                : "transparent",
-          }}
-        >
-          <ListItemText
-            primary={`Question ${index + 1}`}
-            secondary={
-              pointsAwarded(question, submissionHistory) +
-              " of " +
-              pointsPossible(question)
-            }
-          />
-        </ListItemButton>
-      ))}
-    </List>
-  );
-}
-
-function QSetContainer({ children }) {
-  return <div className="question-set-container">{children}</div>;
 }
 
 function QuestionCard({
@@ -189,9 +137,15 @@ function QuestionCard({
   submissionHistory,
   user,
 }) {
+  const docRefParams = {
+    asgmtID: asgmtID,
+    courseID: courseID,
+    userID: user.uid,
+  };
+
   if (!question) {
     return (
-      <div className="course-question-card-placeholder">
+      <div className="question-card-placeholder">
         <Typography color="text.secondary">
           please select a question from the list
         </Typography>
@@ -201,149 +155,40 @@ function QuestionCard({
 
   if (question) {
     const { type } = question;
+    const submissions = submissionHistory[question.id] || [];
 
     return (
       <Card
-        className="course-question-card"
+        className="question-card"
         sx={{ bgcolor: "rgba(255, 255, 255, 0.2)" }}
       >
         {type === "multiple choice" && (
           <MultipleChoice
-            asgmtID={asgmtID}
-            courseID={courseID}
+            docRefParams={docRefParams}
+            mode="course"
             question={question}
-            submissionHistory={submissionHistory}
-            user={user}
+            submissions={submissions}
+          />
+        )}
+        {type === "short answer" && (
+          <ShortAnswer
+            docRefParams={docRefParams}
+            mode="course"
+            question={question}
+            submissions={submissions}
+          />
+        )}
+        {type === "free response" && (
+          <FreeResponse
+            docRefParams={docRefParams}
+            mode="course"
+            question={question}
+            submissions={submissions}
           />
         )}
       </Card>
     );
   }
-}
-
-function MultipleChoice({
-  asgmtID,
-  courseID,
-  question,
-  submissionHistory,
-  user,
-}) {
-  const answerChoices = question?.answerChoices || [];
-  const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
-  const submissions = submissionHistory[question.id] || [];
-  const lastSubmission = submissions?.at(-1) || null;
-  const lastResponse = lastSubmission?.response || [];
-  const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
-  const answeredCorrectly = lastSubmission?.answeredCorrectly;
-
-  const [currentResponse, setCurrentResponse] = useState(lastResponse);
-  const [submitting, setSubmitting] = useState(false);
-
-  function handleCurrentResponse(ind) {
-    if (numCorrect === 1) {
-      const updated = [ind];
-      setCurrentResponse(updated);
-    }
-
-    if (numCorrect > 1) {
-      const updated = currentResponse.includes(ind)
-        ? currentResponse.filter((el) => el !== ind)
-        : [...currentResponse, ind];
-      setCurrentResponse(updated.sort());
-    }
-  }
-
-  function detectChange() {
-    if (currentResponse.length > 0 && !lastSubmission) {
-      return true;
-    }
-
-    if (
-      currentResponse.length > 0 &&
-      currentResponse.length !== lastResponse.length
-    ) {
-      return true;
-    }
-
-    if (currentResponse.some((el) => !lastResponse.includes(el))) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function handleSubmit() {
-    const grade = gradeResponse(question, currentResponse);
-
-    saveQResponseFromCourse(
-      currentResponse,
-      grade,
-      submissions,
-      courseID,
-      asgmtID,
-      question,
-      user,
-      setSubmitting
-    );
-  }
-
-  const responseChanged = detectChange();
-  const disabled = !responseChanged || submitting;
-
-  useEffect(
-    () => setCurrentResponse(lastResponse),
-    //eslint-disable-next-line
-    [question.id]
-  );
-
-  return (
-    <CardContent>
-      <PromptPreview question={question} />
-      <Divider sx={{ my: 1 }} />
-      <CorrectIndicator
-        lastSubmission={lastSubmission}
-        responseChanged={responseChanged}
-        submitting={submitting}
-      />
-      <div className="answer-choice-area">
-        {answerChoices.map((el, ind) => (
-          <Box className="answer-choice-row" key={`choice-${ind}`}>
-            {numCorrect <= 1 && (
-              <Radio
-                checked={currentResponse.includes(ind) || false}
-                onChange={() => handleCurrentResponse(ind)}
-                disabled={attemptsExhausted || answeredCorrectly}
-              />
-            )}
-            {numCorrect > 1 && (
-              <Checkbox
-                checked={currentResponse.includes(ind) || false}
-                onChange={() => handleCurrentResponse(ind)}
-                disabled={attemptsExhausted || answeredCorrectly}
-              />
-            )}
-            {parse(el.text)}
-          </Box>
-        ))}
-      </div>
-      <BtnContainer right>
-        <Stack>
-          <Box sx={{ mb: 1 }}>
-            <AttemptCounter question={question} submissions={submissions} />
-          </Box>
-
-          {!answeredCorrectly && (
-            <SubmitBtn
-              label="SUBMIT"
-              onClick={handleSubmit}
-              submitting={submitting}
-              disabled={disabled}
-            />
-          )}
-        </Stack>
-      </BtnContainer>
-    </CardContent>
-  );
 }
 
 export function BackToStudentDashboard() {
@@ -364,25 +209,4 @@ export function BackToStudentDashboard() {
       </Button>
     </div>
   );
-}
-
-function pointsAwarded(question, submissionHistory) {
-  if (!submissionHistory) {
-    return 0;
-  }
-
-  const submissions = submissionHistory[question.id] || [];
-  const lastSubmission = submissions?.at(-1) || null;
-  const pointsAwarded = lastSubmission?.pointsAwarded || 0;
-  return pointsAwarded;
-}
-
-function pointsPossible(question) {
-  if (!question) {
-    return "";
-  }
-
-  return question.pointsPossible > 1
-    ? `${question.pointsPossible} points`
-    : `${question.pointsPossible} point`;
 }

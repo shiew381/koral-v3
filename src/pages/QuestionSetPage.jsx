@@ -7,9 +7,6 @@ import {
   Card,
   Divider,
   Link,
-  List,
-  ListItemButton,
-  ListItemText,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -17,7 +14,6 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { getSubmissions } from "../utils/questionSetUtils";
 import { deleteQuestion, fetchUserQSet } from "../utils/firestoreClient";
 import { VertDivider } from "../components/common/Dividers";
 import { Page, PageHeader, LoadingIndicator } from "../components/common/Pages";
@@ -30,6 +26,13 @@ import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import "../css/QuestionSet.css";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
+import {
+  QSetContainer,
+  QuestionCardPanel,
+  QuestionNav,
+  QuestionList,
+} from "../components/question-sets/QSetSharedCpnts";
+import { getSubmissions } from "../utils/questionSetUtils";
 
 export default function QuestionSetPage() {
   const { user } = useAuth();
@@ -51,6 +54,8 @@ export default function QuestionSetPage() {
   const qIndex = questions.findIndex((el) =>
     selQuestion ? el.id === selQuestion.id : 0
   );
+
+  const submissionHistory = qSet?.submissionHistory || null;
 
   function handleAddQuestion() {
     setOpenBuilder(true);
@@ -110,35 +115,71 @@ export default function QuestionSetPage() {
     );
   }
 
+  if (questions.length === 0) {
+    return (
+      <Page>
+        <BackToQSets />
+        <PageHeader title={qSet?.title} />
+        <pre>{JSON.stringify(openBuilder)}</pre>
+        <GetStarted
+          handleAddQuestion={handleAddQuestion}
+          loading={loading}
+          questions={questions}
+        />
+        <QuestionBuilder
+          edit={edit}
+          handleClose={handleCloseBuilder}
+          open={openBuilder}
+          qSet={qSet}
+          selQuestion={edit ? selQuestion : null}
+          setEdit={setEdit}
+          setSelQuestion={setSelQuestion}
+          user={user}
+        />
+      </Page>
+    );
+  }
+
   return (
     <Page>
       <BackToQSets />
       <Box sx={{ px: 2 }}>
         <PageHeader title={qSet?.title} />
         <Divider />
-        <div className="title-preview-spacer"></div>
-        <PreviewContainer>
-          <GetStarted
-            handleAddQuestion={handleAddQuestion}
-            loading={loading}
+        <QSetContainer>
+          <Box className="question-list-container">
+            <QuestionList
+              questions={questions}
+              selQuestion={selQuestion}
+              setSelQuestion={setSelQuestion}
+              submissionHistory={submissionHistory}
+            />
+            <Box className="add-question-container">
+              <Divider sx={{ mb: 2 }} />
+              <Button
+                fullWidth
+                startIcon={<AddIcon />}
+                onClick={handleAddQuestion}
+                sx={{ borderRadius: 0 }}
+              >
+                ADD QUESTION
+              </Button>
+            </Box>
+          </Box>
+          <QuestionNav
+            qIndex={qIndex}
             questions={questions}
-          />
-          <QuestionsList
-            handleAddQuestion={handleAddQuestion}
-            qSet={qSet}
-            questions={questions}
-            selQuestion={selQuestion}
             setSelQuestion={setSelQuestion}
           />
 
-          <RightPanel selQuestion={selQuestion} questions={questions}>
+          <QuestionCardPanel>
             {questions.length > 0 && (
               <ToggleButtonGroup
                 color="primary"
                 exclusive
                 onChange={handleMode}
                 size="small"
-                sx={{ position: "absolute", top: -47, right: 0 }}
+                sx={{ position: "absolute", top: -35, right: 15 }}
                 value={mode}
               >
                 <ToggleButton value="preview">Preview</ToggleButton>
@@ -160,10 +201,9 @@ export default function QuestionSetPage() {
                 <Button onClick={handleDeleteQuestion}>Delete Question</Button>
               </Box>
             )}
-          </RightPanel>
-        </PreviewContainer>
+          </QuestionCardPanel>
+        </QSetContainer>
       </Box>
-
       <QuestionBuilder
         edit={edit}
         handleClose={handleCloseBuilder}
@@ -209,26 +249,7 @@ export function BackToQSets() {
   );
 }
 
-function PreviewContainer({ children }) {
-  return (
-    <div
-      className="flex flex-row flex-justify-center"
-      style={{ maxWidth: "100vw", minHeight: "300px" }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function GetStarted({ loading, questions, handleAddQuestion }) {
-  if (loading) {
-    return null;
-  }
-
-  if (questions.length > 0) {
-    return null;
-  }
-
+function GetStarted({ handleAddQuestion }) {
   return (
     <Box display="block">
       <Typography
@@ -253,72 +274,6 @@ function GetStarted({ loading, questions, handleAddQuestion }) {
   );
 }
 
-function QuestionsList({
-  handleAddQuestion,
-  qSet,
-  questions,
-  selQuestion,
-  setSelQuestion,
-}) {
-  const listStyle = {
-    height: "465px",
-    overflow: "auto",
-    padding: 0,
-  };
-
-  if (questions.length == 0) return null;
-
-  return (
-    <Box className="questions-list">
-      <List sx={listStyle}>
-        {questions.map((question, index) => (
-          <QuestionListItem
-            handleClick={() => setSelQuestion(question)}
-            key={question.id}
-            qSet={qSet}
-            question={question}
-            index={index}
-            selected={question.id === selQuestion?.id}
-          />
-        ))}
-      </List>
-      <Divider sx={{ width: "190px", mt: 1 }} />
-      <Box className="add-question-container">
-        <Button
-          fullWidth
-          startIcon={<AddIcon />}
-          onClick={handleAddQuestion}
-          sx={{ borderRadius: 0 }}
-        >
-          ADD QUESTION
-        </Button>
-      </Box>
-    </Box>
-  );
-}
-
-function QuestionListItem({ qSet, question, index, selected, handleClick }) {
-  const btnColor = selected ? "rgba(0,180,235,0.1)" : "transparent";
-
-  const submissions = getSubmissions(qSet, question) || [];
-  const lastSubmission = submissions?.at(-1) || null;
-  const pointsAwarded = lastSubmission?.pointsAwarded || 0;
-
-  const pointsPossible =
-    question.pointsPossible > 1
-      ? `${question.pointsPossible} points`
-      : `${question.pointsPossible} point`;
-
-  return (
-    <ListItemButton onClick={handleClick} sx={{ bgcolor: btnColor }}>
-      <ListItemText
-        primary={`Question ${index + 1}`}
-        secondary={`${pointsAwarded} of ${pointsPossible}`}
-      />
-    </ListItemButton>
-  );
-}
-
 function QuestionCard({
   handleEditQuestion,
   handleOpenPoints,
@@ -328,27 +283,33 @@ function QuestionCard({
   question,
   user,
 }) {
+  const docRefParams = {
+    qSetID: qSet.id,
+    userID: user.uid,
+  };
+
   if (!question) {
-    return null;
+    return (
+      <div className="question-card-placeholder">
+        <Typography color="text.secondary">
+          please select a question from the list
+        </Typography>
+      </div>
+    );
   }
 
   if (question) {
     const { type } = question;
-
-    const cardStyle = {
-      bgcolor: "rgba(255,255,255,0.2)",
-      display: "flex",
-      flexDirection: "column",
-    };
+    const submissions = getSubmissions(qSet, question) || [];
 
     return (
-      <Card sx={cardStyle} className="question-card">
+      <Card className="question-card" sx={{ bgcolor: "rgba(255,255,255,0.2)" }}>
         {mode === "preview" && (
           <Box className="question-card-actions">
             <Points question={question} handleClick={handleOpenPoints} />
-            <VertDivider question={question} />
+            <VertDivider hidden={question.type === "free response"} />
             <Attempts question={question} handleClick={handleOpenAttempts} />
-            <VertDivider show />
+            <VertDivider />
             <Button
               onClick={handleEditQuestion}
               startIcon={<EditIcon />}
@@ -361,25 +322,27 @@ function QuestionCard({
 
         {type === "multiple choice" && (
           <MultipleChoice
+            docRefParams={docRefParams}
             mode={mode}
-            qSet={qSet}
             question={question}
-            user={user}
+            submissions={submissions}
           />
         )}
         {type === "short answer" && (
           <ShortAnswer
+            docRefParams={docRefParams}
             mode={mode}
             question={question}
-            qSet={qSet}
-            user={user}
+            submissions={submissions}
           />
         )}
         {type == "free response" && (
           <FreeResponse
+            docRefParams={docRefParams}
             mode={mode}
             question={question}
             qSet={qSet}
+            submissions={submissions}
             user={user}
           />
         )}
@@ -414,22 +377,4 @@ function Attempts({ question, handleClick }) {
       {attemptsPossible + " " + label}
     </Link>
   );
-}
-
-function RightPanel({ children, questions, selQuestion }) {
-  if (questions.length === 0) {
-    return null;
-  }
-
-  if (questions.length > 0 && !selQuestion) {
-    return (
-      <Box className="right-panel">
-        <Box className="flex flex-center" sx={{ minHeight: "300px" }}>
-          Please select a question from the list.
-        </Box>
-      </Box>
-    );
-  }
-
-  return <Box className="right-panel">{children}</Box>;
 }

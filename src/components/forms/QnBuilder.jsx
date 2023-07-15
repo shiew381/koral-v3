@@ -16,8 +16,8 @@ import { FreeResponse } from "./QnBuilderFreeResponse";
 
 export function QuestionBuilder({
   edit,
-  open,
   handleClose,
+  open,
   qSet,
   selQuestion,
   setEdit,
@@ -33,7 +33,6 @@ export function QuestionBuilder({
   }
 
   function handleAddQuestion(values) {
-    console.log("pressed");
     addQuestion(values, qSet, user, setSubmitting, setSelQuestion, handleClose);
   }
 

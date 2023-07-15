@@ -17,6 +17,7 @@ import { NumberField } from "../common/NumberField";
 import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
 import { UnitField } from "../common/UnitField";
+import { generateRandomCode } from "../../utils/commonUtils";
 
 export function ShortAnswer({
   edit,
@@ -30,6 +31,7 @@ export function ShortAnswer({
   user,
 }) {
   const add = !edit;
+  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
   const initVal = edit
     ? {
         subtype: selQuestion?.subtype,
@@ -48,6 +50,28 @@ export function ShortAnswer({
   const promptRef = useRef();
   const [subtype, setSubtype] = useState(initVal.subtype);
   const [scoring, setScoring] = useState(initVal.scoring);
+
+  function handleAutoAdd() {
+    const values = {
+      type: "short answer",
+      subtype: subtype,
+      prompt: cleanEditorHTML(promptRef.current),
+      scoring: scoring,
+      correctAnswer: {},
+      pointsPossible: 1,
+      attemptsPossible: 1,
+    };
+    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
+  }
+
+  function handleAutoSave() {
+    const values = {
+      ...selQuestion,
+      prompt: cleanEditorHTML(promptRef.current),
+      scoring: scoring,
+    };
+    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
+  }
 
   function handleSubmit(e, correctAnswer) {
     if (add) {
@@ -74,26 +98,6 @@ export function ShortAnswer({
       handleUpdateQuestion(values);
       return;
     }
-  }
-
-  function handleAutoAdd(newID) {
-    const values = {
-      type: "short answer",
-      prompt: cleanEditorHTML(promptRef.current),
-      scoring: scoring,
-      pointsPossible: 1,
-      attemptsPossible: 1,
-    };
-    autoAddQueston(values, newID, qSet, user, setEdit, setSelQuestion);
-  }
-
-  function handleAutoSave() {
-    const values = {
-      ...selQuestion,
-      prompt: cleanEditorHTML(promptRef.current),
-      scoring: scoring,
-    };
-    autoSaveQuestion(values, selQuestion, qSet, user, setSelQuestion);
   }
 
   function handleSubtype(e) {
@@ -124,18 +128,15 @@ export function ShortAnswer({
           <MenuItem value={"measurement"}>Measurement</MenuItem>
         </Select>
       </FormControl>
-
       <br />
       <br />
       <Editor
         editorRef={promptRef}
         id="prompt"
+        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
         label="prompt"
-        handleAutoSave={handleAutoSave}
-        handleAutoAdd={handleAutoAdd}
-        qSet={qSet}
-        selQuestion={selQuestion}
-        setSelQuestion={setSelQuestion}
+        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -143,7 +144,6 @@ export function ShortAnswer({
           "equation",
           "image",
         ]}
-        user={user}
       />
       <Box sx={{ p: 3 }}>
         {subtype == "text" && (
@@ -178,12 +178,6 @@ export function ShortAnswer({
           />
         )}
       </Box>
-      {/* <pre>{JSON.stringify(subtype)}</pre>
-      <pre>{"correct answer: "}</pre>
-      <pre>{JSON.stringify(correctAnswer)}</pre>
-      <pre>{"scoring: "}</pre>
-      <pre>{JSON.stringify(scoring)}</pre>
-      <pre>{JSON.stringify(selQuestion, null, 2)}</pre> */}
     </>
   );
 }

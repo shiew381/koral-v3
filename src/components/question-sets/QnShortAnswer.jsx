@@ -1,37 +1,34 @@
 import { useState, useEffect, useRef } from "react";
 import {
   deleteQuestionSubmissions,
+  saveQResponseFromCourse,
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
-import { getSubmissions } from "../../utils/questionSetUtils";
-import {
-  Box,
-  CardContent,
-  Divider,
-  Link,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, CardContent, Divider, Stack, Typography } from "@mui/material";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
-import { NumberField } from "../common/NumberField";
 import { ShortTextField } from "../common/InputFields";
 import { VertDivider } from "../common/Dividers";
+import { NumberField } from "../common/NumberField";
+import { UnitField } from "../common/UnitField";
 import {
   AttemptCounter,
+  ClearSubmissions,
   CorrectIndicator,
   PromptPreview,
-} from "./QnSharedCpnts";
+} from "./QSetSharedCpnts";
 import parse from "html-react-parser";
-import { UnitField } from "../common/UnitField";
 
-// import styles from "@/styles/QuestionSet.module.css";
-
-export default function ShortAnswer({ mode, qSet, question, user }) {
+export default function ShortAnswer({
+  docRefParams,
+  mode,
+  question,
+  submissions,
+}) {
   const subtype = question.subtype;
-  const submissions = getSubmissions(qSet, question) || [];
   const lastSubmission = submissions?.at(-1) || null;
   const lastResponse = lastSubmission?.response || null;
+  const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
   const [submitting, setSubmitting] = useState(false);
@@ -40,97 +37,72 @@ export default function ShortAnswer({ mode, qSet, question, user }) {
     return null;
   }
 
-  if (mode === "preview") {
-    return (
-      <CardContent className="question-content">
-        <PromptPreview question={question} />
-        <Divider sx={{ my: 1 }} />
-
-        {subtype == "text" && (
-          <ShortAnswerText mode={mode} question={question} />
-        )}
-        {subtype == "number" && (
-          <ShortAnswerNumber mode={mode} question={question} />
-        )}
-        {subtype === "measurement" && (
-          <ShortAnswerMeasurement mode={mode} question={question} />
-        )}
-      </CardContent>
-    );
-  }
-
-  if (mode === "test") {
-    return (
-      <CardContent className="question-content">
-        <PromptPreview question={question} />
-        <Divider sx={{ my: 1 }} />
-        <CorrectIndicator
-          lastSubmission={lastSubmission}
+  return (
+    <CardContent className="question-content">
+      <PromptPreview question={question} />
+      <Divider sx={{ my: 1 }} />
+      <CorrectIndicator
+        attemptsExhausted={attemptsExhausted}
+        lastSubmission={lastSubmission}
+        submitting={submitting}
+      />
+      {subtype === "text" && (
+        <ShortAnswerText
+          answeredCorrectly={answeredCorrectly}
+          docRefParams={docRefParams}
+          lastResponse={lastResponse}
+          mode={mode}
+          question={question}
+          submissions={submissions}
           submitting={submitting}
+          setSubmitting={setSubmitting}
         />
+      )}
 
-        {subtype === "text" && (
-          <ShortAnswerText
-            answeredCorrectly={answeredCorrectly}
-            lastResponse={lastResponse}
-            lastSubmission={lastSubmission}
-            mode={mode}
-            question={question}
-            qSet={qSet}
-            submissions={submissions}
-            submitting={submitting}
-            setSubmitting={setSubmitting}
-            user={user}
-          />
-        )}
-        {subtype === "number" && (
-          <ShortAnswerNumber
-            answeredCorrectly={answeredCorrectly}
-            lastResponse={lastResponse}
-            mode={mode}
-            question={question}
-            qSet={qSet}
-            submissions={submissions}
-            submitting={submitting}
-            setSubmitting={setSubmitting}
-            user={user}
-          />
-        )}
-        {subtype === "measurement" && (
-          <ShortAnswerMeasurement
-            answeredCorrectly={answeredCorrectly}
-            lastResponse={lastResponse}
-            mode={mode}
-            question={question}
-            qSet={qSet}
-            submissions={submissions}
-            submitting={submitting}
-            setSubmitting={setSubmitting}
-            user={user}
-          />
-        )}
-      </CardContent>
-    );
-  }
+      {subtype === "number" && (
+        <ShortAnswerNumber
+          answeredCorrectly={answeredCorrectly}
+          docRefParams={docRefParams}
+          lastResponse={lastResponse}
+          mode={mode}
+          question={question}
+          submissions={submissions}
+          submitting={submitting}
+          setSubmitting={setSubmitting}
+        />
+      )}
+      {subtype === "measurement" && (
+        <ShortAnswerMeasurement
+          answeredCorrectly={answeredCorrectly}
+          docRefParams={docRefParams}
+          lastResponse={lastResponse}
+          mode={mode}
+          question={question}
+          submissions={submissions}
+          submitting={submitting}
+          setSubmitting={setSubmitting}
+        />
+      )}
+    </CardContent>
+  );
 }
 
 function ShortAnswerText({
   answeredCorrectly,
+  docRefParams,
   lastResponse,
   mode,
   question,
-  qSet,
   setSubmitting,
   submissions,
   submitting,
-  user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const responseChanged = currentResponse?.text !== lastResponse?.text;
   const disabled = !responseChanged || submitting;
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
+    deleteQuestionSubmissions(question, docRefParams);
     setCurrentResponse({ text: "" });
   }
 
@@ -141,24 +113,34 @@ function ShortAnswerText({
   }
 
   function handleSubmit() {
-    setSubmitting(true);
     const grade = gradeResponse(question, currentResponse);
 
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user
-    );
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
 
-    setTimeout(() => setSubmitting(false), 400);
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
   }
 
   useEffect(
     () => {
-      if (mode === "test" && submissions?.length > 0) {
+      if (mode !== "preview" && submissions?.length > 0) {
         setCurrentResponse(lastResponse);
       } else {
         setCurrentResponse(null);
@@ -172,7 +154,7 @@ function ShortAnswerText({
     return (
       <div className="flex flex-col flex-grow">
         <Typography
-          sx={{ position: "relative", top: "70px", left: "100px" }}
+          sx={{ position: "relative", top: "50px", left: "100px" }}
           color="text.secondary"
         >
           Response must match:
@@ -186,7 +168,7 @@ function ShortAnswerText({
     );
   }
 
-  if (mode === "test") {
+  if (mode === "test" || mode === "course") {
     return (
       <>
         <div className="response-area">
@@ -202,17 +184,12 @@ function ShortAnswerText({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
-            {!answeredCorrectly && (
+            {(submitting || !answeredCorrectly) && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}
@@ -229,14 +206,13 @@ function ShortAnswerText({
 
 function ShortAnswerNumber({
   answeredCorrectly,
+  docRefParams,
   lastResponse,
   mode,
   question,
-  qSet,
   setSubmitting,
   submissions,
   submitting,
-  user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
@@ -250,12 +226,11 @@ function ShortAnswerNumber({
   }
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
+    deleteQuestionSubmissions(question, docRefParams);
     numberRef.current.innerHTML = "";
   }
 
   function handleSubmit() {
-    setSubmitting(true);
     numberRef.current?.normalize();
     const responseNumClone = numberRef.current.cloneNode(true);
     const responseNumStr = convertElemtoStr(responseNumClone);
@@ -278,20 +253,32 @@ function ShortAnswerNumber({
 
     const grade = gradeResponse(tidiedQuestion, tidiedResponse);
 
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user
-    );
-    setSubmitting(false);
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
+
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
   }
 
   useEffect(
     () => {
-      if (mode === "test" && submissions?.length > 0) {
+      if (mode !== "preview" && submissions?.length > 0) {
         numberRef.current.innerHTML = lastResponse.number;
       }
     },
@@ -303,7 +290,7 @@ function ShortAnswerNumber({
     return (
       <div className="flex flex-col flex-grow">
         <Typography
-          sx={{ position: "relative", top: "70px", left: "100px" }}
+          sx={{ position: "relative", top: "50px", left: "100px" }}
           color="text.secondary"
         >
           Response must match:
@@ -317,7 +304,7 @@ function ShortAnswerNumber({
     );
   }
 
-  if (mode === "test") {
+  if (mode === "test" || mode === "course") {
     return (
       <>
         <div className="response-area">
@@ -335,17 +322,12 @@ function ShortAnswerNumber({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
-            {!answeredCorrectly && (
+            {(submitting || !answeredCorrectly) && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}
@@ -362,14 +344,13 @@ function ShortAnswerNumber({
 
 function ShortAnswerMeasurement({
   answeredCorrectly,
+  docRefParams,
   lastResponse,
   mode,
   question,
-  qSet,
   setSubmitting,
   submissions,
   submitting,
-  user,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
@@ -390,13 +371,12 @@ function ShortAnswerMeasurement({
   }
 
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
+    deleteQuestionSubmissions(question, docRefParams);
     numberRef.current.innerHTML = "";
     unitRef.current.innerHTML = "";
   }
 
   function handleSubmit() {
-    setSubmitting(true);
     numberRef.current?.normalize();
 
     const responseNumClone = numberRef.current.cloneNode(true);
@@ -429,25 +409,36 @@ function ShortAnswerMeasurement({
 
     const grade = gradeResponse(tidiedQuestion, tidiedResponse);
 
-    setTimeout(() => {
-      saveQuestionResponse(
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
         currentResponse,
         grade,
-        submissions,
-        question,
-        qSet,
-        user
+        setSubmitting
       );
-      setSubmitting(false);
-    }, 600);
+    }
+
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
   }
+
+  //TODO: check if innerHTML of fields is resetting properly
 
   useEffect(
     () => {
-      if (mode === "test" && submissions?.length > 0) {
-        setCurrentResponse(lastResponse);
-      } else {
-        setCurrentResponse(null);
+      if (mode !== "preview" && submissions?.length > 0) {
+        numberRef.current.innerHTML = lastResponse.number;
+        unitRef.current.innerHTML = lastResponse.unit;
       }
     },
     //eslint-disable-next-line
@@ -475,7 +466,7 @@ function ShortAnswerMeasurement({
     );
   }
 
-  if (mode === "test") {
+  if (mode === "test" || mode === "course") {
     return (
       <>
         <div className="response-area">
@@ -501,17 +492,12 @@ function ShortAnswerMeasurement({
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
-            {!answeredCorrectly && (
+            {(submitting || !answeredCorrectly) && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}

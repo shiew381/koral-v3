@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import parse from "html-react-parser";
 import {
   deleteQuestionSubmissions,
+  saveQResponseFromCourse,
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
@@ -9,26 +10,28 @@ import {
   AttemptCounter,
   PromptPreview,
   CorrectIndicator,
-} from "./QnSharedCpnts";
+  ClearSubmissions,
+} from "./QSetSharedCpnts";
 import {
   Alert,
   Box,
   CardContent,
   Checkbox,
   Divider,
-  Link,
   Radio,
   Stack,
 } from "@mui/material";
 import { VertDivider } from "../common/Dividers";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
-import { getSubmissions } from "../../utils/questionSetUtils";
-// import styles from "@/styles/QuestionSet.module.css";
 
-export default function MultipleChoice({ mode, qSet, question, user }) {
+export default function MultipleChoice({
+  docRefParams,
+  mode,
+  question,
+  submissions,
+}) {
   const answerChoices = question?.answerChoices || [];
   const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
-  const submissions = getSubmissions(qSet, question) || [];
   const lastSubmission = submissions?.at(-1) || null;
   const lastResponse = lastSubmission?.response || [];
   const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
@@ -36,20 +39,6 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
 
   const [currentResponse, setCurrentResponse] = useState(lastResponse);
   const [submitting, setSubmitting] = useState(false);
-
-  function handleSubmit() {
-    const grade = gradeResponse(question, currentResponse);
-
-    saveQuestionResponse(
-      currentResponse,
-      grade,
-      submissions,
-      question,
-      qSet,
-      user,
-      setSubmitting
-    );
-  }
 
   function detectChange() {
     if (currentResponse.length > 0 && !lastSubmission) {
@@ -84,8 +73,34 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
     }
   }
 
+  function handleSubmit() {
+    const grade = gradeResponse(question, currentResponse);
+
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
+
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
+  }
+
   function handleClearSubmissions() {
-    deleteQuestionSubmissions(question, qSet, user);
+    deleteQuestionSubmissions(question, docRefParams);
     setCurrentResponse([]);
   }
 
@@ -119,30 +134,37 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
     );
   }
 
-  if (mode === "test") {
+  if (mode === "test" || mode === "course") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
         <Divider sx={{ my: 1 }} />
-        <CorrectIndicator lastSubmission={lastSubmission} />
+        <CorrectIndicator
+          attemptsExhausted={attemptsExhausted}
+          lastSubmission={lastSubmission}
+          submitting={submitting}
+        />
         {numCorrect === 0 && (
-          <Alert severity="warning">no correct answer selected</Alert>
+          <Alert severity="warning">
+            no correct answer
+            {mode === "course" ? " - please contact your instructor" : null}
+          </Alert>
         )}
         <div className="answer-choice-area">
           {answerChoices.map((el, ind) => (
             <Box className="answer-choice-row" key={`choice-${ind}`}>
-              {numCorrect <= 1 && (
+              {numCorrect === 1 && (
                 <Radio
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}
-                  disabled={attemptsExhausted}
+                  disabled={attemptsExhausted || answeredCorrectly}
                 />
               )}
               {numCorrect > 1 && (
                 <Checkbox
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}
-                  disabled={attemptsExhausted}
+                  disabled={attemptsExhausted || answeredCorrectly}
                 />
               )}
               {parse(el.text)}
@@ -154,18 +176,13 @@ export default function MultipleChoice({ mode, qSet, question, user }) {
           <Stack>
             <Box sx={{ mb: 1 }}>
               <AttemptCounter question={question} submissions={submissions} />
-              <VertDivider color="text.secondary" show />
-              <Link
-                color="text.secondary"
-                underline="hover"
-                sx={{ cursor: "pointer" }}
-                onClick={handleClearSubmissions}
-              >
-                clear
-              </Link>
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
             </Box>
 
-            {!answeredCorrectly && (
+            {(submitting || !answeredCorrectly) && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}

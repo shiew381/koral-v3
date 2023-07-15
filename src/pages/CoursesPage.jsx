@@ -33,7 +33,7 @@ export default function CoursesPage() {
   const [studentCourses, setStudentCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const allCourses = [...instructorCourses];
+  const allCourses = [...instructorCourses, ...studentCourses];
 
   function handleOpen() {
     setOpen(true);
@@ -70,7 +70,7 @@ export default function CoursesPage() {
     <Page>
       <PageHeader title="Courses" />
       {allCourses.length === 0 && <NoCoursesYet handleOpen={handleOpen} />}
-      {instructorCourses.length > 0 && (
+      {allCourses.length > 0 && (
         <Box className="flex flex-wrap flex-center" sx={{ px: 2 }}>
           {instructorCourses.map((course) => (
             <InstructorCourseCard

@@ -25,6 +25,7 @@ import {
 import {
   formatInstructorNames,
   generateRandomCode,
+  searchifyStr,
 } from "../../utils/commonUtils.js";
 import AddIcon from "@mui/icons-material/Add";
 import LockIcon from "@mui/icons-material/Lock";
@@ -74,6 +75,7 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
   function createNewCourse() {
     const values = {
       title: title,
+      title_searchable: searchifyStr(title),
       courseCode: generateRandomCode(6),
       description: description,
       instructors: [

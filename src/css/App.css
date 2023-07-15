@@ -66,22 +66,13 @@
 }
 
 .add-question-container {
-  position: absolute;
-  bottom: 0;
-  width: 190px;
+  margin-top: 10px;
+  width: 210px;
 }
 
 .answer-choices-container {
   margin-top: 1rem;
   margin-bottom: 1rem;
-}
-
-.answer-choice-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-bottom: 15px;
-  font-family: Lato;
 }
 
 .build-first-item {
@@ -146,6 +137,11 @@
   min-height: calc(100vh - 60px);
 }
 
+.example-free-response {
+  min-height: 80px;
+  font-family: Lato;
+}
+
 .prompt {
   min-height: 80px;
   padding: 20px;
@@ -159,10 +155,3 @@
 .prompt .equation {
   background-color: transparent;
 }
-
-/* .questions-list {
-  height: 510px;
-  position: relative;
-  width: 190px;
-  margin-right: 20px;
-} */

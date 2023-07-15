@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useStorage } from "../../hooks/useStorage.js";
 import { storage } from "../../config/firebaseConfig.js";
 import { ref, deleteObject } from "firebase/storage";
-import { generateRandomCode } from "../../utils/commonUtils.js";
 import { getFileExtension } from "../../utils/fileUtils.js";
 import {
   backspaceEqElem,
@@ -42,16 +41,13 @@ import "../../css/Editor.css";
 export function Editor({
   editorRef,
   id,
-  handleAutoAdd,
-  handleAutoSave,
+  imagePath,
   label,
-  qSet,
-  selQuestion,
+  onImageDeleteSuccess,
+  onImageUploadSuccess,
   toolbarOptions,
-  user,
 }) {
   const [editorActive, setEditorActive] = useState(false);
-  const [tempID, setTempID] = useState("");
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
   // const [error, setError] = useState(false);
@@ -73,10 +69,8 @@ export function Editor({
 
     deleteObject(storageRef)
       .then(() => console.log("object deleted from storage"))
-      .then(() => {
-        imgElem.parentElement.remove();
-        handleAutoSave();
-      })
+      .then(() => imgElem.parentElement.remove())
+      .then(() => setTimeout(() => onImageDeleteSuccess(), 200))
       .catch((error) => console.log(error));
     setActiveGroup(null);
     setActiveTarget(null);
@@ -614,24 +608,14 @@ export function Editor({
       return;
     }
 
-    if (!selQuestion?.id) {
-      setTempID(() => generateRandomCode(8));
-    }
-
     setFile(selectedFile);
     // setError(false);
     // setErrorMessage("");
   }
 
-  function handleImageUploadSuccess(url) {
+  function handleUploadSuccess(url) {
     insertImage(url);
-    if (!selQuestion) {
-      handleAutoAdd(tempID);
-      setTempID("");
-    } else {
-      handleAutoSave();
-      setTempID("");
-    }
+    setTimeout(() => onImageUploadSuccess(), 200);
   }
 
   function moveImageResizeHandles(e) {
@@ -818,11 +802,9 @@ export function Editor({
   useStorage(
     file,
     setFile,
-    `users/${user?.uid}/question-sets/${qSet.id}/${selQuestion?.id || tempID}/${
-      file?.name
-    }`,
+    `${imagePath}/${file?.name}`,
     setUploadProgress,
-    handleImageUploadSuccess
+    handleUploadSuccess
   );
 
   useEffect(() => {

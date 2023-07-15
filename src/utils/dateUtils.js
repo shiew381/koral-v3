@@ -22,7 +22,7 @@ export function formatTime(dateObj) {
 }
 
 export function formatTimeAndDate(dateObj) {
-  return formatDate(dateObj) + " " + formatTime(dateObj);
+  return formatDate(dateObj) + " at " + formatTime(dateObj);
 }
 
 export function getInitDueDate() {
