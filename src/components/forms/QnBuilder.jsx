@@ -16,8 +16,8 @@ import { FreeResponse } from "./QnBuilderFreeResponse";
 
 export function QuestionBuilder({
   edit,
-  open,
   handleClose,
+  open,
   qSet,
   selQuestion,
   setEdit,

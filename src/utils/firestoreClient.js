@@ -264,9 +264,9 @@ export function fetchAssignments(courseID, setAssignments, setLoading) {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-      dateCreated: doc.data().dateCreated.toDate(),
-      dateDue: doc.data().dateDue.toDate(),
-      dateOpen: doc.data().dateOpen.toDate(),
+      dateCreated: doc.data().dateCreated?.toDate(),
+      dateDue: doc.data().dateDue?.toDate(),
+      dateOpen: doc.data().dateOpen?.toDate(),
     }));
     setAssignments(fetchedItems);
     setLoading(false);
@@ -652,6 +652,22 @@ export function updateAdaptiveParams(
   setSubmitting(true);
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function updateAssignment(
+  course,
+  selAsgmt,
+  values,
+  handleClose,
+  setSubmitting
+) {
+  const ref = doc(db, "courses", course.id, "assignments", selAsgmt.id);
+
+  setSubmitting(true);
+  updateDoc(ref, values)
+    .then(() => setTimeout(() => handleClose(), 800))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }

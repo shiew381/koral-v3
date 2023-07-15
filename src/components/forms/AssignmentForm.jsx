@@ -17,7 +17,11 @@ import {
   OpenDatePicker,
   OpenTimePicker,
 } from "../common/InputFields";
-import { addAssignment, getUserQSets } from "../../utils/firestoreClient";
+import {
+  addAssignment,
+  getUserQSets,
+  updateAssignment,
+} from "../../utils/firestoreClient";
 import { getInitDueDate } from "../../utils/dateUtils";
 
 function getTitle(type, selItem) {
@@ -26,7 +30,15 @@ function getTitle(type, selItem) {
   }
 }
 
-export function AssignmentForm({ course, handleClose, open, user }) {
+export function AssignmentForm({
+  course,
+  edit,
+  handleClose,
+  open,
+  selAsgmt,
+  user,
+}) {
+  const add = !edit;
   const [type, setType] = useState("question set");
   const [selItem, setSelItem] = useState(null);
   const [dateDue, setDateDue] = useState(getInitDueDate());
@@ -63,7 +75,13 @@ export function AssignmentForm({ course, handleClose, open, user }) {
   }
 
   function handleSubmit() {
-    addAssignment(course, values, handleClose, setSubmitting);
+    if (add) {
+      addAssignment(course, values, handleClose, setSubmitting);
+    }
+
+    if (edit) {
+      updateAssignment(course, selAsgmt, values, handleClose, setSubmitting);
+    }
   }
 
   function handleType(e) {
@@ -71,8 +89,11 @@ export function AssignmentForm({ course, handleClose, open, user }) {
   }
 
   function resetForm() {
-    setDateDue(getInitDueDate());
+    setType("question set");
+    setHasDateOpen(false);
+    setHasDateDue(false);
     setDateOpen(new Date());
+    setDateDue(getInitDueDate());
   }
 
   function toggleHasDateOpen(e) {
@@ -85,6 +106,16 @@ export function AssignmentForm({ course, handleClose, open, user }) {
 
   useEffect(resetForm, [open]);
 
+  useEffect(() => {
+    if (edit) {
+      setSelItem(selAsgmt);
+      setHasDateOpen(selAsgmt.hasDateOpen);
+      setHasDateDue(selAsgmt.hasDateDue);
+      setDateOpen(selAsgmt.dateOpen);
+      setDateDue(selAsgmt.dateDue);
+    }
+  }, [selAsgmt, edit]);
+
   return (
     <Lightbox
       open={open}
@@ -93,21 +124,27 @@ export function AssignmentForm({ course, handleClose, open, user }) {
       customStyle={{ maxWidth: "900px" }}
     >
       <LightboxHeader title="Add Assignment" />
-      <Body>
+      <FormBody>
         <FormControl>
           <InputLabel>type</InputLabel>
           <Select
+            disabled={edit}
             label="type"
             onChange={handleType}
             sx={{ mr: "15px", minWidth: "160px" }}
             value={type}
           >
             <MenuItem value="question set">Question Set</MenuItem>
-            <MenuItem value="student upload">Student Upload</MenuItem>
+            {/* <MenuItem value="student upload">Student Upload</MenuItem> */}
           </Select>
         </FormControl>
         {type === "question set" && (
-          <QSetSelect selItem={selItem} setSelItem={setSelItem} user={user} />
+          <QSetSelect
+            edit={edit}
+            selItem={selItem}
+            setSelItem={setSelItem}
+            user={user}
+          />
         )}
         <br />
         <br />
@@ -121,11 +158,11 @@ export function AssignmentForm({ course, handleClose, open, user }) {
           toggleHasDateDue={toggleHasDateDue}
           toggleHasDateOpen={toggleHasDateOpen}
         />
-      </Body>
+      </FormBody>
 
       <BtnContainer right>
         <SubmitBtn
-          label="ADD"
+          label={edit ? "SAVE" : "ADD"}
           onClick={handleSubmit}
           disabled={submitting}
           submitting={submitting}
@@ -135,7 +172,7 @@ export function AssignmentForm({ course, handleClose, open, user }) {
   );
 }
 
-function QSetSelect({ selItem, setSelItem, user }) {
+function QSetSelect({ edit, selItem, setSelItem, user }) {
   const [qSets, setQSets] = useState([]);
 
   function handleItemSelect(e) {
@@ -145,22 +182,42 @@ function QSetSelect({ selItem, setSelItem, user }) {
 
   useEffect(
     () => {
-      if (!user) return;
+      if (!user) {
+        return;
+      }
+
+      if (edit && selItem) {
+        setQSets([selItem]);
+        return;
+      }
+
       getUserQSets(user, setQSets, setSelItem);
     },
     //eslint-disable-next-line
-    [user]
+    [user, edit]
   );
 
   if (!selItem) {
     return null;
   }
 
+  if (edit) {
+    return (
+      <Select disabled sx={{ minWidth: "180px" }} value={selItem?.id || ""}>
+        <MenuItem value={selItem.id}>{selItem.title}</MenuItem>
+      </Select>
+    );
+  }
+
+  if (qSets.length === 0) {
+    return null;
+  }
+
   return (
     <Select
-      value={selItem?.id || ""}
       onChange={handleItemSelect}
       sx={{ minWidth: "180px" }}
+      value={selItem?.id || ""}
     >
       {qSets.map((qSet) => (
         <MenuItem key={qSet.id} value={qSet.id}>
@@ -171,7 +228,7 @@ function QSetSelect({ selItem, setSelItem, user }) {
   );
 }
 
-function Body({ children }) {
+function FormBody({ children }) {
   return <Box sx={{ px: 3, py: 1 }}>{children}</Box>;
 }
 

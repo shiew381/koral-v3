@@ -56,6 +56,8 @@ export default function InstructorDashboard() {
   const [tabIndex, setTabIndex] = useState(0);
   const [asgmtOpen, setAsgmtOpen] = useState(false);
   const [resourceOpen, setResourceOpen] = useState(false);
+  const [selAsgmt, setSelAsgmt] = useState(null);
+  const [edit, setEdit] = useState(false);
 
   function redirectToCourses() {
     navigate("/classroom/courses");
@@ -71,6 +73,7 @@ export default function InstructorDashboard() {
 
   function handleAsgmtClose() {
     setAsgmtOpen(false);
+    setEdit(false);
   }
 
   function handleResourceOpen() {
@@ -130,7 +133,13 @@ export default function InstructorDashboard() {
       {tabIndex === 0 && <CourseInfo course={course} />}
       {tabIndex === 1 && <Announcements />}
       {tabIndex === 2 && (
-        <Assignments course={course} handleOpen={handleAsgmtOpen} />
+        <Assignments
+          course={course}
+          handleOpen={handleAsgmtOpen}
+          selAsgmt={selAsgmt}
+          setSelAsgmt={setSelAsgmt}
+          setEdit={setEdit}
+        />
       )}
       {tabIndex == 3 && (
         <Resources course={course} handleOpen={handleResourceOpen} />
@@ -144,8 +153,11 @@ export default function InstructorDashboard() {
       />
       <AssignmentForm
         course={course}
+        edit={edit}
         handleClose={handleAsgmtClose}
         open={asgmtOpen}
+        selAsgmt={selAsgmt}
+        setSelAsgmt={setSelAsgmt}
         user={user}
       />
     </div>
@@ -262,10 +274,10 @@ function Grades() {
   return <Panel center>Grades</Panel>;
 }
 
-function Assignments({ course, handleOpen }) {
+function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
-  const [selAsgmt, setSelAsgmt] = useState(null);
+
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
   const listWidth = "600px";
@@ -332,9 +344,14 @@ function Assignments({ course, handleOpen }) {
                 primary={asgmt.title}
                 secondary={
                   <>
-                    Open: {formatTimeAndDate(asgmt.dateOpen)}
-                    <br />
-                    Due: {formatTimeAndDate(asgmt.dateDue)}
+                    {!asgmt.hasDateOpen &&
+                      !asgmt.hasDateDue &&
+                      "always available"}
+                    {asgmt.hasDateOpen &&
+                      `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
+                    {asgmt.hasDateOpen && <br />}
+                    {asgmt.hasDateDue &&
+                      `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
                   </>
                 }
               />
@@ -348,6 +365,17 @@ function Assignments({ course, handleOpen }) {
         handleClose={handleCloseMenu}
         open={menuOpen}
       >
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              handleOpen();
+              handleCloseMenu();
+              setEdit(true);
+            }}
+          >
+            Edit
+          </ListItemButton>
+        </MenuOption>
         <MenuOption>
           <ListItemButton
             onClick={() => {
