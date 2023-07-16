@@ -192,6 +192,21 @@ export function LastNameField({ onChange, value }) {
   );
 }
 
+export function MessageField({ onChange, value }) {
+  return (
+    <TextField
+      autoComplete="off"
+      fullWidth
+      label="message"
+      multiline
+      onChange={onChange}
+      rows={4}
+      value={value}
+      variant="filled"
+    />
+  );
+}
+
 export function PasswordField({ onChange, value }) {
   return (
     <TextField

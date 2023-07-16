@@ -38,13 +38,29 @@ export function AssignmentForm({
   selAsgmt,
   user,
 }) {
+  const initVal = edit
+    ? {
+        selItem: selAsgmt,
+        hasDateOpen: selAsgmt?.hasDateOpen,
+        hasDateDue: selAsgmt?.hasDateDue,
+        dateOpen: selAsgmt?.dateOpen,
+        dateDue: selAsgmt?.dateDue,
+      }
+    : {
+        selItem: null,
+        hasDateOpen: false,
+        hasDateDue: false,
+        dateOpen: new Date(),
+        dateDue: getInitDueDate(),
+      };
+
   const add = !edit;
   const [type, setType] = useState("question set");
-  const [selItem, setSelItem] = useState(null);
-  const [dateDue, setDateDue] = useState(getInitDueDate());
-  const [dateOpen, setDateOpen] = useState(new Date());
-  const [hasDateOpen, setHasDateOpen] = useState(false);
-  const [hasDateDue, setHasDateDue] = useState(false);
+  const [selItem, setSelItem] = useState(initVal.selItem);
+  const [dateDue, setDateDue] = useState(initVal.dateDue);
+  const [dateOpen, setDateOpen] = useState(initVal.dateOpen);
+  const [hasDateOpen, setHasDateOpen] = useState(initVal.hasDateOpen);
+  const [hasDateDue, setHasDateDue] = useState(initVal.hasDateDue);
   const [submitting, setSubmitting] = useState(false);
 
   const values = {
@@ -90,10 +106,11 @@ export function AssignmentForm({
 
   function resetForm() {
     setType("question set");
-    setHasDateOpen(false);
-    setHasDateDue(false);
-    setDateOpen(new Date());
-    setDateDue(getInitDueDate());
+    setSelItem(initVal.selItem);
+    setHasDateOpen(initVal.hasDateOpen);
+    setHasDateDue(initVal.hasDateDue);
+    setDateOpen(initVal.dateOpen);
+    setDateDue(initVal.dateDue);
   }
 
   function toggleHasDateOpen(e) {
@@ -105,16 +122,6 @@ export function AssignmentForm({
   }
 
   useEffect(resetForm, [open]);
-
-  useEffect(() => {
-    if (edit) {
-      setSelItem(selAsgmt);
-      setHasDateOpen(selAsgmt.hasDateOpen);
-      setHasDateDue(selAsgmt.hasDateDue);
-      setDateOpen(selAsgmt.dateOpen);
-      setDateDue(selAsgmt.dateDue);
-    }
-  }, [selAsgmt, edit]);
 
   return (
     <Lightbox
@@ -138,9 +145,11 @@ export function AssignmentForm({
             {/* <MenuItem value="student upload">Student Upload</MenuItem> */}
           </Select>
         </FormControl>
+
         {type === "question set" && (
           <QSetSelect
             edit={edit}
+            selAsgmt={selAsgmt}
             selItem={selItem}
             setSelItem={setSelItem}
             user={user}
@@ -172,7 +181,7 @@ export function AssignmentForm({
   );
 }
 
-function QSetSelect({ edit, selItem, setSelItem, user }) {
+function QSetSelect({ edit, selAsgmt, selItem, setSelItem, user }) {
   const [qSets, setQSets] = useState([]);
 
   function handleItemSelect(e) {
@@ -186,8 +195,7 @@ function QSetSelect({ edit, selItem, setSelItem, user }) {
         return;
       }
 
-      if (edit && selItem) {
-        setQSets([selItem]);
+      if (edit) {
         return;
       }
 
@@ -197,20 +205,25 @@ function QSetSelect({ edit, selItem, setSelItem, user }) {
     [user, edit]
   );
 
-  if (!selItem) {
-    return null;
-  }
-
   if (edit) {
     return (
-      <Select disabled sx={{ minWidth: "180px" }} value={selItem?.id || ""}>
-        <MenuItem value={selItem.id}>{selItem.title}</MenuItem>
+      <Select disabled sx={{ minWidth: "180px" }} value={selAsgmt?.id || ""}>
+        <MenuItem value={selAsgmt.id}>{selAsgmt.title}</MenuItem>
       </Select>
     );
   }
 
   if (qSets.length === 0) {
-    return null;
+    return (
+      <>
+        <br />
+        <br />
+        <Typography color="text.secondary">
+          You haven&apos;t build a question set yet. You can do so by visiting
+          the Question Sets page.
+        </Typography>
+      </>
+    );
   }
 
   return (

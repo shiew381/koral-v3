@@ -32,6 +32,15 @@ export function addAssignment(course, values, handleClose, setSubmitting) {
     });
 }
 
+export function addAnnouncement(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "announcements");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => handleClose())
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
 export function addCourse(values, handleClose, setSubmitting) {
   const ref = collection(db, "courses");
   setSubmitting(true);
@@ -208,6 +217,11 @@ export function autoAddQueston(
   return tidiedValues.id;
 }
 
+export function deleteCourseAnncmt(course, anncmt) {
+  const ref = doc(db, "courses", course.id, "announcements", anncmt.id);
+  deleteDoc(ref);
+}
+
 export function deleteCourseAsgmt(course, asgmt) {
   const ref = doc(db, "courses", course.id, "assignments", asgmt.id);
   deleteDoc(ref);
@@ -255,6 +269,21 @@ export function deleteQuestionSubmissions(selQuestion, docRefParams) {
 export function deleteUserContent(user, colName, docID) {
   const ref = doc(db, "users", user.uid, colName, docID);
   deleteDoc(ref);
+}
+
+export function fetchAnnouncements(courseID, setAnnouncements, setLoading) {
+  const ref = collection(db, "courses", courseID, "announcements");
+  const q = query(ref);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      dateCreated: doc.data().dateCreated?.toDate(),
+    }));
+    setAnnouncements(fetchedItems);
+    setLoading(false);
+  });
+  return unsubscribe;
 }
 
 export function fetchAssignments(courseID, setAssignments, setLoading) {
@@ -652,6 +681,22 @@ export function updateAdaptiveParams(
   setSubmitting(true);
   updateDoc(docRef, values)
     .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function updateAnnouncement(
+  course,
+  selAnncmt,
+  values,
+  handleClose,
+  setSubmitting
+) {
+  const ref = doc(db, "courses", course.id, "announcements", selAnncmt.id);
+
+  setSubmitting(true);
+  updateDoc(ref, values)
+    .then(() => setTimeout(() => handleClose(), 800))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }

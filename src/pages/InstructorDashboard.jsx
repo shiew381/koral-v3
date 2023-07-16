@@ -6,9 +6,11 @@ import { ref, deleteObject } from "firebase/storage";
 import { storage } from "../config/firebaseConfig.js";
 import {
   addPointerToCourseImage,
+  deleteCourseAnncmt,
   deleteCourseAsgmt,
   deleteCourseImage,
   deleteCourseResource,
+  fetchAnnouncements,
   fetchAssignments,
   fetchCourse,
   fetchResources,
@@ -31,6 +33,7 @@ import {
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import AddIcon from "@mui/icons-material/Add";
 import {
   AssignmentIcon,
@@ -40,12 +43,13 @@ import {
   ResourceIcon,
 } from "../components/common/DashboardCpnts";
 import { Page, LoadingIndicator } from "../components/common/Pages";
-import { AssignmentForm } from "../components/forms/AssignmentForm";
-import { ResourceForm } from "../components/forms/ResourceForm";
 import { getFileExtension } from "../utils/fileUtils";
 import "../css/CourseDashboard.css";
 import { MoreOptionsBtn } from "../components/common/Buttons";
 import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
+import { AssignmentForm } from "../components/forms/AssignmentForm";
+import { ResourceForm } from "../components/forms/ResourceForm";
+import { AnnouncementForm } from "../components/forms/AnnouncementForm";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -56,6 +60,8 @@ export default function InstructorDashboard() {
   const [tabIndex, setTabIndex] = useState(0);
   const [asgmtOpen, setAsgmtOpen] = useState(false);
   const [resourceOpen, setResourceOpen] = useState(false);
+  const [anncmtOpen, setAnncmtOpen] = useState(false);
+  const [selAnncmt, setSelAnncmt] = useState(null);
   const [selAsgmt, setSelAsgmt] = useState(null);
   const [edit, setEdit] = useState(false);
 
@@ -65,6 +71,15 @@ export default function InstructorDashboard() {
 
   function selectTab(e, newIndex) {
     setTabIndex(newIndex);
+  }
+
+  function handleAnncmtOpen() {
+    setAnncmtOpen(true);
+  }
+
+  function handleAnncmtClose() {
+    setAnncmtOpen(false);
+    setEdit(false);
   }
 
   function handleAsgmtOpen() {
@@ -131,7 +146,15 @@ export default function InstructorDashboard() {
       </div>
 
       {tabIndex === 0 && <CourseInfo course={course} />}
-      {tabIndex === 1 && <Announcements />}
+      {tabIndex === 1 && (
+        <Announcements
+          course={course}
+          handleOpen={handleAnncmtOpen}
+          selAnncmt={selAnncmt}
+          setSelAnncmt={setSelAnncmt}
+          setEdit={setEdit}
+        />
+      )}
       {tabIndex === 2 && (
         <Assignments
           course={course}
@@ -158,6 +181,15 @@ export default function InstructorDashboard() {
         open={asgmtOpen}
         selAsgmt={selAsgmt}
         setSelAsgmt={setSelAsgmt}
+        user={user}
+      />
+      <AnnouncementForm
+        course={course}
+        edit={edit}
+        handleClose={handleAnncmtClose}
+        open={anncmtOpen}
+        selAnncmt={selAnncmt}
+        setSelAnncmt={setSelAnncmt}
         user={user}
       />
     </div>
@@ -266,8 +298,119 @@ function CourseInfo({ course }) {
   );
 }
 
-function Announcements() {
-  return <Panel center>Announcements</Panel>;
+function Announcements({
+  course,
+  handleOpen,
+  selAnncmt,
+  setSelAnncmt,
+  setEdit,
+}) {
+  const [loading, setLoading] = useState(true);
+  const [anncmts, setAnncmts] = useState([]);
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
+  const listWidth = "600px";
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
+
+  useEffect(
+    () => fetchAnnouncements(course.id, setAnncmts, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  if (anncmts?.length === 0) {
+    return (
+      <Panel center>
+        <div style={{ position: "relative", bottom: "80px" }}>
+          <Typography sx={{ mb: 2 }}>
+            Get started by add your first assignment!
+          </Typography>
+          <div className="flex flex-center">
+            <Button onClick={handleOpen} startIcon={<AddIcon />} size="large">
+              ADD ANNOUNCEMENT
+            </Button>
+          </div>
+        </div>
+      </Panel>
+    );
+  }
+
+  if (anncmts?.length > 0) {
+    return (
+      <Panel>
+        <Box sx={{ width: listWidth, pt: "50px" }}>
+          <Button onClick={handleOpen} startIcon={<AddIcon />}>
+            NEW ANNOUNCEMENT
+          </Button>
+        </Box>
+
+        <Divider sx={{ width: listWidth }} />
+        <List sx={{ width: listWidth }}>
+          {anncmts.map((anncmt) => (
+            <div key={anncmt.id}>
+              <ListItem
+                secondaryAction={
+                  <MoreOptionsBtn
+                    item={anncmt}
+                    setAnchorEl={setAnchorEl}
+                    setSelItem={setSelAnncmt}
+                  />
+                }
+              >
+                <ListItemIcon>
+                  <CampaignIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={anncmt.message}
+                  secondary={formatTimeAndDate(anncmt.dateCreated)}
+                />
+              </ListItem>
+              <Divider />
+            </div>
+          ))}
+        </List>
+        <MoreOptionsMenu
+          anchorEl={anchorEl}
+          handleClose={handleCloseMenu}
+          open={menuOpen}
+        >
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                handleOpen();
+                handleCloseMenu();
+                setEdit(true);
+              }}
+            >
+              Edit
+            </ListItemButton>
+          </MenuOption>
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                deleteCourseAnncmt(course, selAnncmt);
+                handleCloseMenu();
+              }}
+            >
+              Delete
+            </ListItemButton>
+          </MenuOption>
+        </MoreOptionsMenu>
+      </Panel>
+    );
+  }
 }
 
 function Grades() {
