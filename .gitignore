@@ -15,6 +15,7 @@ dist-ssr
 firebase.json
 hosting
 hosting.*
+functions
 
 # Editor directories and files
 .vscode/*

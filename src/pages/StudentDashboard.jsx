@@ -5,6 +5,7 @@ import {
   fetchCourse,
   fetchAssignments,
   fetchResources,
+  fetchAnnouncements,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
@@ -21,6 +22,7 @@ import {
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import {
   AssignmentIcon,
@@ -95,7 +97,7 @@ export function StudentDashboard() {
         </Tabs>
       </div>
       {tabIndex === 0 && <CourseInfo course={course} />}
-      {tabIndex === 1 && <Announcements />}
+      {tabIndex === 1 && <Announcements course={course} />}
       {tabIndex === 3 && <Assignments course={course} />}
       {tabIndex == 4 && <Resources course={course} />}
       {tabIndex === 2 && <Grades />}
@@ -129,8 +131,58 @@ function CourseInfo({ course }) {
   );
 }
 
-function Announcements() {
-  return <Panel center>Announcements</Panel>;
+function Announcements({ course }) {
+  const [loading, setLoading] = useState(true);
+  const [anncmts, setAnncmts] = useState([]);
+
+  const listWidth = "600px";
+
+  useEffect(
+    () => fetchAnnouncements(course.id, setAnncmts, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  if (anncmts?.length === 0) {
+    return (
+      <Panel center>
+        <Typography color="text.secondary">
+          Your instructor has not made any announcements yet!
+        </Typography>
+      </Panel>
+    );
+  }
+
+  if (anncmts?.length > 0) {
+    return (
+      <Panel>
+        <List sx={{ width: listWidth, pt: "50px" }}>
+          {anncmts.map((anncmt) => (
+            <div key={anncmt.id}>
+              <ListItem>
+                <ListItemIcon>
+                  <CampaignIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={anncmt.message}
+                  secondary={"posted " + formatTimeAndDate(anncmt.dateCreated)}
+                />
+              </ListItem>
+              <Divider />
+            </div>
+          ))}
+        </List>
+      </Panel>
+    );
+  }
 }
 
 function Assignments({ course }) {

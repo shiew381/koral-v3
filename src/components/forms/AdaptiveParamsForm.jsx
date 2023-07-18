@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import parse from "html-react-parser";
+import { copyArray } from "../../utils/commonUtils";
 import { Lightbox, LightboxHeader } from "../common/Lightbox";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import {
@@ -16,28 +18,68 @@ import {
   StepLabel,
   Stepper,
 } from "@mui/material";
-import { CompletionValueField, SkillField } from "../common/InputFields";
-import { copyArray } from "../../utils/commonUtils";
+import {
+  CompletionThresholdField,
+  ObjectiveField,
+} from "../common/InputFields";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { updateAdaptiveParams } from "../../utils/firestoreClient";
 
+function getAssignments(qSet, adaptiveParams) {
+  const arr = [];
+  const objectives = adaptiveParams.objectives;
+  objectives.forEach((objective) => {
+    const paired = objective.questionIDs.map((questionID) => ({
+      id: questionID,
+      name: objective.name,
+    }));
+    arr.push(paired);
+  });
+  const pairs = arr.flat();
+
+  console.log(pairs);
+
+  const arr2 = qSet.questions.map((question) =>
+    pairs.find((pair) => pair.id === question.id)
+  );
+
+  const assignments = arr2.map((el) => el?.name || "unassigned");
+
+  return assignments;
+}
+
 export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
-  const initialSkillValues = {
-    completionValue: 0,
-    difficulty: 1,
+  const cleanObjective = {
+    completionThreshold: 0,
     questionIDs: [],
     name: "",
   };
 
-  const steps = ["Define Skills", "Group Questions", "Completion Criteria"];
+  const adaptiveParams = qSet.adaptiveParams || null;
 
-  const initialAssignments = qSet?.questions?.map(() => "unassigned");
-  const initialRule = "unassigned";
+  const initVal = adaptiveParams
+    ? {
+        objectives: adaptiveParams.objectives,
+        assignments: getAssignments(qSet, adaptiveParams),
+        rule: adaptiveParams.completionRule,
+      }
+    : {
+        objectives: [cleanObjective],
+        assignments: qSet?.questions?.map(() => "unassigned"),
+        rule: "in a row",
+      };
+
+  const steps = [
+    "Define Learing Objectives",
+    "Group Questions",
+    "Set Completion Criteria",
+  ];
+
+  const initialRule = "in a row";
   const [activeStep, setActiveStep] = useState(0);
-
-  const [skills, setSkills] = useState([initialSkillValues]);
-  const [skillAssignments, setSkillAssignments] = useState(initialAssignments);
+  const [objectives, setObjectives] = useState(initVal.objectives);
+  const [assignments, setAssignments] = useState(initVal.assignments);
   const [rule, setRule] = useState(initialRule);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
@@ -48,41 +90,42 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
   }
 
   function handleSubmit() {
-    const updatedSkills = mergeSkillsWithIDs(skills, skillAssignments, qSet);
+    const updatedObjectives = mergeObjsWithIDs(objectives, assignments, qSet);
 
     const values = {
-      completionRule: rule,
       adaptiveParams: {
-        skills: updatedSkills,
+        objectives: updatedObjectives,
+        completionRule: rule,
       },
     };
+
     updateAdaptiveParams(user, qSet.id, values, setSubmitting, handleClose);
   }
 
   function handleText(e, ind) {
-    const updated = copyArray(skills);
+    const updated = copyArray(objectives);
     updated[ind].name = e.target.value;
-    setSkills(updated);
+    setObjectives(updated);
     setError(false);
     setErrorMessage("");
   }
 
-  function handleCompletionValue(e, ind) {
-    const updated = copyArray(skills);
-    updated[ind].completionValue = e.target.value;
-    setSkills(updated);
+  function handleCompletionThreshold(e, ind) {
+    const updated = copyArray(objectives);
+    updated[ind].completionThreshold = e.target.value;
+    setObjectives(updated);
   }
 
   function selectSkill(e, qIndex) {
-    const updated = copyArray(skillAssignments);
+    const updated = copyArray(assignments);
     updated[qIndex] = e.target.value;
-    setSkillAssignments(updated);
+    setAssignments(updated);
   }
 
-  function deleteSkill(e, ind) {
-    const updated = copyArray(skills);
+  function deleteObjective(e, ind) {
+    const updated = copyArray(objectives);
     updated.splice(ind, 1);
-    setSkills(updated);
+    setObjectives(updated);
   }
 
   function goBack() {
@@ -90,28 +133,40 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
   }
 
   function goForward() {
-    const skillNames = skills.map((el) => el.name);
-    const noSkillsDefined = skillNames.join("").length === 0;
+    const objectiveNames = objectives.map((el) => el.name.trim());
+    const noSkillsDefined = objectiveNames.join("").length === 0;
 
-    if (noSkillsDefined) {
+    if (activeStep === 0 && noSkillsDefined) {
       setError(true);
       setErrorMessage("Must define at least one learning objective");
-    } else {
+      return;
+    }
+
+    if (activeStep === 0) {
       setError(false);
       setErrorMessage("");
       setActiveStep((prevActiveStep) => prevActiveStep + 1);
-      setSkills(skills.filter((el) => el.name));
+      setObjectives(objectives.filter((el) => el.name));
+
+      return;
+    }
+
+    if (activeStep === 1) {
+      setError(false);
+      setErrorMessage("");
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+      return;
     }
   }
 
-  function addSkill() {
-    setSkills([...skills, initialSkillValues]);
+  function addObjective() {
+    setObjectives([...objectives, cleanObjective]);
   }
 
   function resetForm() {
-    setSkills([initialSkillValues]);
-    setSkillAssignments(initialAssignments);
-    setRule(initialRule);
+    setObjectives(initVal.objectives);
+    setAssignments(initVal.assignments);
+    setRule(initVal.rule);
     setActiveStep(0);
   }
 
@@ -125,7 +180,7 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
     <Lightbox
       open={open}
       onClose={handleClose}
-      customStyle={{ maxWidth: "600px" }}
+      customStyle={{ maxWidth: "1000px" }}
     >
       <LightboxHeader title="Adaptive Parameters" center />
       <Stepper activeStep={activeStep} alternativeLabel>
@@ -136,46 +191,43 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
         ))}
       </Stepper>
       <br />
-
-      <DefineSkills
-        addSkill={addSkill}
+      <DefineObjectives
+        addObjective={addObjective}
         error={error}
         errorMessage={errorMessage}
-        deleteSkill={deleteSkill}
+        deleteObjective={deleteObjective}
         handleText={handleText}
-        skills={skills}
+        objectives={objectives}
         step={activeStep}
       />
-      <SkillGroupTable
-        skills={skills}
-        skillAssignments={skillAssignments}
-        setSkillAssignments={setSkillAssignments}
+      <GroupQuestions
+        objectives={objectives}
+        assignments={assignments}
+        setAssignments={setAssignments}
         questions={qSet.questions}
         selectSkill={selectSkill}
         step={activeStep}
       />
       <GroupSkills
-        rule={rule}
+        assignments={assignments}
+        handleCompletionThreshold={handleCompletionThreshold}
         handleRule={handleRule}
-        handleCompletionValue={handleCompletionValue}
-        skills={skills}
-        skillAssignments={skillAssignments}
+        handleSubmit={handleSubmit}
+        objectives={objectives}
+        rule={rule}
         step={activeStep}
+        submitting={submitting}
       />
-      {activeStep === 3 && (
-        <BtnContainer center>
-          <SubmitBtn
-            disabled={submitting}
-            onClick={handleSubmit}
-            label="SAVE"
-            submitting={submitting}
-          />
-        </BtnContainer>
-      )}
-      <pre>{JSON.stringify(skills, null, 2)}</pre>
+
+      <br />
+      <br />
       <BtnContainer split>
         <BackButton step={activeStep} onClick={goBack} />
-        <NextButton step={activeStep} onClick={goForward} skills={skills} />
+        <NextButton
+          step={activeStep}
+          onClick={goForward}
+          objectives={objectives}
+        />
       </BtnContainer>
     </Lightbox>
   );
@@ -199,37 +251,39 @@ function NextButton({ step, onClick }) {
   );
 }
 
-function DefineSkills({
-  addSkill,
-  deleteSkill,
+function DefineObjectives({
+  addObjective,
+  deleteObjective,
   error,
   errorMessage,
   handleText,
   step,
-  skills,
+  objectives,
 }) {
   if (step !== 0) return null;
 
   return (
-    <Box className="flex flex-col">
-      {skills.map((skill, ind) => (
-        <Stack key={`skill-${ind}`} direction="row">
-          <SkillField
-            index={ind}
-            onChange={(e) => handleText(e, ind)}
-            value={skill.name}
-          />
-          <IconButton
-            disabled={skills.length <= 1}
-            onClick={(e) => deleteSkill(e, ind)}
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Stack>
-      ))}
-      {error && <Alert severity="error">{errorMessage}</Alert>}
+    <Box className="flex flex-col flex-center" sx={{ mt: "20px" }}>
+      <Box sx={{ width: "450px", position: "relative", left: "20px" }}>
+        {objectives.map((skill, ind) => (
+          <Stack key={`skill-${ind}`} direction="row">
+            <ObjectiveField
+              index={ind}
+              onChange={(e) => handleText(e, ind)}
+              value={skill.name}
+            />
+            <IconButton
+              disabled={objectives.length <= 1}
+              onClick={(e) => deleteObjective(e, ind)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+        ))}
+        {error && <Alert severity="error">{errorMessage}</Alert>}
+      </Box>
       <BtnContainer center>
-        <Button startIcon={<AddIcon />} fullWidth onClick={addSkill}>
+        <Button startIcon={<AddIcon />} fullWidth onClick={addObjective}>
           ADD LEARNING OBJECTIVE
         </Button>
       </BtnContainer>
@@ -237,147 +291,158 @@ function DefineSkills({
   );
 }
 
-function SkillGroupTable({
+function GroupQuestions({
   selectSkill,
   questions,
-  skills,
+  objectives,
   step,
-  skillAssignments,
+  assignments,
 }) {
-  const cellStyle = { textAlign: "center", padding: "3px" };
-  if (skills.length === 0) return null;
-  if (step !== 1) return null;
-  return (
-    <table style={{ width: "800px" }}>
-      <thead>
-        <tr>
-          <th style={{ width: "15%" }}>
-            <Typography>Queston #</Typography>
-          </th>
-          <th style={{ width: "60%" }}>
-            <Typography>Prompt / Header</Typography>
-          </th>
-          <th style={{ width: "25%" }}>
-            <Typography>Skill Group</Typography>
-          </th>
-        </tr>
-      </thead>
+  const headerCellStyle = {
+    backgroundColor: "rgba(0,0,0,0.02)",
+    paddingTop: "20px",
+    paddingBottom: "20px",
+  };
+  const cellStyle = { padding: "20px", textAlign: "center" };
 
-      <tbody>
-        {questions?.map((question, qIndex) => (
-          <tr key={question.id}>
-            <td style={cellStyle}>
-              <Typography>{qIndex + 1}</Typography>
-            </td>
-            <td style={cellStyle}>
-              <Typography>
-                {question.prompt || null}
-                {/* {parseHTMLandTeX(question?.prompt || question.header || "")} */}
-              </Typography>
-              <Typography>{question.id}</Typography>
-            </td>
-            <td style={cellStyle}>
-              <FormControl fullWidth>
-                <InputLabel>Skill</InputLabel>
-                <Select
-                  value={skillAssignments[qIndex]}
-                  label="Skill"
-                  onChange={(e) => selectSkill(e, qIndex)}
-                >
-                  <MenuItem value="unassigned">
-                    <Typography color="textSecondary">unassigned</Typography>
-                  </MenuItem>
-                  {skills.map((skill, skillIndex) => (
-                    <MenuItem
-                      key={`skill-${qIndex}-${skillIndex}`}
-                      value={skill.name}
-                    >
-                      {skill.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </td>
+  if (objectives.length === 0) return null;
+  if (step !== 1) return null;
+
+  return (
+    <Box className="flex flex-center flex-col">
+      <table style={{ width: "850px", marginTop: "20px" }}>
+        <thead>
+          <tr>
+            <th style={{ width: "20%", ...headerCellStyle }}>
+              <Typography fontStyle="italic">Question #</Typography>
+            </th>
+            <th style={{ width: "60%", ...headerCellStyle }}>
+              <Typography fontStyle="italic">Prompt </Typography>
+            </th>
+            <th style={{ width: "20%", ...headerCellStyle }}>
+              <Typography fontStyle="italic">Objective</Typography>
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+
+        <tbody>
+          {questions?.map((question, qIndex) => (
+            <tr
+              key={question.id}
+              style={{
+                backgroundColor: qIndex % 2 === 0 ? "rgba(0,0,0,0.02)" : "none",
+              }}
+            >
+              <td style={cellStyle}>
+                <Typography>{qIndex + 1}</Typography>
+              </td>
+              <td style={cellStyle}>
+                <Typography>{parse(question?.prompt)}</Typography>
+              </td>
+              <td style={cellStyle}>
+                <FormControl fullWidth>
+                  <InputLabel>Objective</InputLabel>
+                  <Select
+                    value={assignments[qIndex]}
+                    label="Objective"
+                    onChange={(e) => selectSkill(e, qIndex)}
+                  >
+                    <MenuItem value="unassigned">
+                      <Typography color="textSecondary">unassigned</Typography>
+                    </MenuItem>
+                    {objectives.map((skill, skillIndex) => (
+                      <MenuItem
+                        key={`skill-${qIndex}-${skillIndex}`}
+                        value={skill.name}
+                      >
+                        {skill.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Box>
   );
 }
 
 function GroupSkills({
-  step,
-  rule,
+  assignments,
   handleRule,
-  skills,
-  skillAssignments,
-  handleCompletionValue,
+  handleCompletionThreshold,
+  objectives,
+  rule,
+  step,
+  submitting,
+  handleSubmit,
 }) {
   const cellStyle = { textAlign: "center", padding: "2px" };
   if (step !== 2) return null;
   return (
-    <Box width="800px">
-      <FormControl>
-        <InputLabel>Completion Rule</InputLabel>
-        <Select
-          value={rule}
-          label="Completion Rule"
-          onChange={handleRule}
-          sx={{ width: "200px" }}
-        >
-          <MenuItem value="unassigned">
-            <Typography color="textSecondary">unassigned</Typography>
-          </MenuItem>
-          <MenuItem value="inARow">
-            <Typography>in a row</Typography>
-          </MenuItem>
-          <MenuItem value="totalCorrect">
-            <Typography>total correct</Typography>
-          </MenuItem>
-        </Select>
-      </FormControl>
-      <Box display="inline-block" width="600px" sx={{ pt: 1 }}>
-        <Typography color="primary" sx={{ ml: 2 }}>
+    <Box className="flex flex-col flex-center" sx={{ pt: "20px" }}>
+      <Box className="flex flex-row flex-align-center" sx={{ width: "600px" }}>
+        <Box>
+          <FormControl>
+            <InputLabel>Completion Rule</InputLabel>
+            <Select
+              value={rule}
+              label="Completion Rule"
+              onChange={handleRule}
+              sx={{ minWidth: "200px" }}
+            >
+              <MenuItem value="in a row">
+                <Typography>in a row</Typography>
+              </MenuItem>
+              <MenuItem value="total correct">
+                <Typography>total correct</Typography>
+              </MenuItem>
+              <MenuItem value="chutes and ladders">
+                <Typography>chutes and ladders</Typography>
+              </MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        <Typography color="primary" sx={{ ml: "20px" }}>
           {getHelperText(rule)}
         </Typography>
       </Box>
+      <br />
+      <br />
 
-      <Typography variant="h6" sx={{ mt: 3 }}>
-        Threshold Values
-      </Typography>
-      <table style={{ width: "700px" }}>
+      <table style={{ width: "700px", marginBottom: "20px" }}>
         <thead>
           <tr>
-            <th style={{ width: "50%" }}>
-              <Typography>Skill</Typography>
+            <th style={{ width: "30%" }}>
+              <Typography>Learning Objective</Typography>
             </th>
-            <th style={{ width: "25%" }}>
+            <th style={{ width: "40%" }}>
               <Typography># Questions</Typography>
             </th>
-            <th style={{ width: "25%" }}>
+            <th style={{ width: "35%" }}>
               <Typography>Advance After</Typography>
             </th>
           </tr>
         </thead>
 
-        {skills.map((skill, ind) => (
-          <tr key={skill} className="padding-light">
+        {objectives.map((skill, ind) => (
+          <tr key={skill.name} className="padding-light">
             <td style={cellStyle}>
               <Typography>{skill.name}</Typography>
             </td>
             <td style={cellStyle}>
               <Typography>
-                {countAssignedQuestions(skill.name, skillAssignments)}
+                {countAssignedQuestions(skill.name, assignments)}
               </Typography>
             </td>
             <td style={cellStyle}>
-              <CompletionValueField
-                questionCount={countAssignedQuestions(
-                  skill.name,
-                  skillAssignments
-                )}
-                value={skill.completionValue}
-                onChange={(e) => handleCompletionValue(e, ind)}
+              <CompletionThresholdField
+                questionCount={countAssignedQuestions(skill.name, assignments)}
+                value={skill.completionThreshold}
+                onChange={(e) => handleCompletionThreshold(e, ind)}
               />
             </td>
           </tr>
@@ -387,45 +452,49 @@ function GroupSkills({
             <Typography>unassigned*</Typography>
           </td>
           <td style={cellStyle}>
-            <Typography>
-              {countUnassignedQuestions(skillAssignments)}
-            </Typography>
+            <Typography>{countUnassignedQuestions(assignments)}</Typography>
           </td>
           <td style={cellStyle}></td>
         </tr>
       </table>
+      <SubmitBtn
+        disabled={submitting}
+        onClick={handleSubmit}
+        label="SAVE PARAMETERS"
+        submitting={submitting}
+      />
     </Box>
   );
 }
 
-function countAssignedQuestions(skillTitle, skillAssignments) {
-  if (!Array.isArray(skillAssignments)) return 0;
-  const numAssigned = skillAssignments.filter((skill) => skill === skillTitle);
+function countAssignedQuestions(objective, asgmts) {
+  if (!Array.isArray(asgmts)) return 0;
+  const numAssigned = asgmts.filter((asgmt) => asgmt === objective);
   return numAssigned.length;
 }
 
-function countUnassignedQuestions(skillAssignments) {
-  if (!Array.isArray(skillAssignments)) return 0;
-  const numUnassigned = skillAssignments.filter(
-    (skill) => skill === "placeholder"
-  );
+function countUnassignedQuestions(asgmts) {
+  if (!Array.isArray(asgmts)) return 0;
+  const numUnassigned = asgmts.filter((asgmt) => asgmt === "unassigned");
   return numUnassigned.length;
 }
 
 function getHelperText(completeRule) {
   switch (completeRule) {
-    case "totalCorrect":
-      return "Students must answer a set number of question correctly to advance.";
-    case "inARow":
-      return "Students must correctly answer some number of questions in a row to advance. Progress restarts when the student answer incorrectly.";
+    case "total correct":
+      return "Students must answer a defined number of question correctly.";
+    case "in a row":
+      return "Students must answer a defined number of questions in-a-row correctly. Progress resets whenever the student answer incorrectly.";
+    case "chutes and ladders":
+      return "Student's progress bar advances after each correctly answered question, but regresses after each incorrectly answered question";
     default:
       return "";
   }
 }
 
-function mergeSkillsWithIDs(skills, skillAssignments, qSet) {
+function mergeObjsWithIDs(skills, assignments, qSet) {
   const updatedSkills = skills.map((skill) => {
-    const assignedIDs = skillAssignments.map((skillName, ind) =>
+    const assignedIDs = assignments.map((skillName, ind) =>
       skill.name === skillName ? qSet.questions[ind].id : null
     );
     return {
