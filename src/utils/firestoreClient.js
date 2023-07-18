@@ -462,6 +462,8 @@ export function fetchUserQSets(user, setQSets, setFetching) {
       id: doc.id,
       title: doc.data().title,
       mode: doc.data().mode,
+      adaptiveParams: doc.data().adaptiveParams || null,
+      questions: doc.data().questions,
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));

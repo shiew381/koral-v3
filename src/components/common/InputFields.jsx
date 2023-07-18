@@ -34,7 +34,7 @@ export function AttemptsField({ onChange, value }) {
   );
 }
 
-export function CompletionValueField({ onChange, value, questionCount }) {
+export function CompletionThresholdField({ onChange, value, questionCount }) {
   return (
     <TextField
       autoComplete="off"
@@ -339,13 +339,13 @@ export function ShortTextField({ onChange, value, disabled }) {
   );
 }
 
-export function SkillField({ onChange, value, index }) {
+export function ObjectiveField({ onChange, value, index }) {
   return (
     <TextField
       fullWidth
       autoComplete="off"
       onChange={onChange}
-      label={`skill ${index + 1}`}
+      label={`Objective #${index + 1}`}
       value={value}
       variant="outlined"
       sx={{ mb: 1 }}
