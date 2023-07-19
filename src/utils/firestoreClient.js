@@ -544,10 +544,18 @@ export function getUserQSets(user, setQSets, setSelItem) {
   const ref = collection(db, "users", user.uid, "question-sets");
   const q = query(ref);
 
+  function calcTotalPoints(questions) {
+    if (questions.length === 0) return 0;
+    const arr = [];
+    questions.forEach((question) => arr.push(question.pointsPossible || 0));
+    return arr.reduce((acc, cur) => acc + cur, 0);
+  }
+
   getDocs(q).then((snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       title: doc.data().title,
+      totalPointsPossible: calcTotalPoints(doc.data().questions),
     }));
     setQSets(fetchedItems);
     setSelItem(fetchedItems[0]);

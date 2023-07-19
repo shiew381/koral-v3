@@ -120,7 +120,6 @@ export default function QuestionSetPage() {
       <Page>
         <BackToQSets />
         <PageHeader title={qSet?.title} />
-        <pre>{JSON.stringify(openBuilder)}</pre>
         <GetStarted
           handleAddQuestion={handleAddQuestion}
           loading={loading}

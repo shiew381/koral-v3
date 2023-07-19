@@ -66,6 +66,7 @@ export function AssignmentForm({
   const values = {
     type: type,
     title: getTitle(type, selItem),
+    totalPointsPossible: selItem?.totalPointsPossible || 0,
     source: {
       type: "user content",
       docRef: `users/${user?.uid}/question-sets/${selItem?.id}`,
@@ -157,6 +158,7 @@ export function AssignmentForm({
         )}
         <br />
         <br />
+        <pre>{JSON.stringify(selItem)}</pre>
         <DateSettings
           dateDue={dateDue}
           dateOpen={dateOpen}
