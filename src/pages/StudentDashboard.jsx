@@ -6,6 +6,7 @@ import {
   fetchAssignments,
   fetchResources,
   fetchAnnouncements,
+  fetchGrades,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
@@ -100,7 +101,7 @@ export function StudentDashboard() {
       {tabIndex === 1 && <Announcements course={course} />}
       {tabIndex === 3 && <Assignments course={course} />}
       {tabIndex == 4 && <Resources course={course} />}
-      {tabIndex === 2 && <Grades />}
+      {tabIndex === 2 && <Grades course={course} user={user} />}
     </div>
   );
 }
@@ -262,8 +263,8 @@ function Assignments({ course }) {
 }
 
 function Resources({ course }) {
-  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resources, setResources] = useState([]);
   const listWidth = "600px";
 
   useEffect(
@@ -316,6 +317,60 @@ function Resources({ course }) {
   );
 }
 
-function Grades() {
-  return <Panel center>Grades</Panel>;
+function Grades({ course, user }) {
+  const [loading, setLoading] = useState(true);
+  const [grades, setGrades] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+
+  useEffect(
+    () => {
+      if (!user) return;
+      console.log(user);
+      console.log(course);
+      fetchGrades(course.id, user.uid, setGrades);
+    },
+    //eslint-disable-next-line
+    [user]
+  );
+
+  useEffect(
+    () => fetchAssignments(course.id, setAssignments, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <pre>{JSON.stringify(grades, null, 2)}</pre>
+      <Box sx={{ pt: "50px" }}>
+        <table style={{ width: "300px", textAlign: "center" }}>
+          <thead>
+            <tr>
+              <th style={{ width: "50%" }}>assignment</th>
+              <th style={{ width: "50%" }}>score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assignments.map((asgmt) => (
+              <tr key={asgmt.id}>
+                <td>{asgmt.title}</td>
+                <td>
+                  {grades[asgmt.id].totalPointsAwarded} of{" "}
+                  {grades[asgmt.id].totalPointsPossible}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Box>
+    </Panel>
+  );
 }
