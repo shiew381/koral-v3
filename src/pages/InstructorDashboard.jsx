@@ -13,6 +13,7 @@ import {
   fetchAnnouncements,
   fetchAssignments,
   fetchCourse,
+  fetchGrades,
   fetchResources,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
@@ -167,7 +168,7 @@ export default function InstructorDashboard() {
       {tabIndex == 3 && (
         <Resources course={course} handleOpen={handleResourceOpen} />
       )}
-      {tabIndex === 4 && <Grades />}
+      {tabIndex === 4 && <Grades course={course} />}
       <ResourceForm
         course={course}
         handleClose={handleResourceClose}
@@ -413,10 +414,6 @@ function Announcements({
   }
 }
 
-function Grades() {
-  return <Panel center>Grades</Panel>;
-}
-
 function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
@@ -625,6 +622,77 @@ function Resources({ course, handleOpen }) {
           </ListItemButton>
         </MenuOption>
       </MoreOptionsMenu>
+    </Panel>
+  );
+}
+
+function Grades({ course }) {
+  const [loading, setLoading] = useState(true);
+  const [grades, setGrades] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const cellStyle = { padding: "10px", textAlign: "left" };
+  const cellStyle2 = { padding: "10px", textAlign: "center" };
+
+  useEffect(
+    () => {
+      fetchGrades(course.id, setGrades);
+    },
+    //eslint-disable-next-line
+    []
+  );
+
+  useEffect(
+    () => fetchAssignments(course.id, setAssignments, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <Box sx={{ pt: "50px" }}>
+        <table style={{ width: "300px" }}>
+          <thead>
+            <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
+              <th style={cellStyle}>Student</th>
+              {assignments?.map((asgmt) => (
+                <th key={asgmt.id} style={cellStyle2}>
+                  {asgmt.title}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {grades.map((el, ind) => (
+              <tr
+                key={el.id}
+                style={{
+                  backgroundColor:
+                    ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
+                }}
+              >
+                <td style={cellStyle}>{el.firstName + " " + el.lastName}</td>
+                {assignments?.map((asgmt) => (
+                  <td key={asgmt.id} style={cellStyle2}>
+                    {el[asgmt.id].totalPointsAwarded +
+                      " of " +
+                      el[asgmt.id].totalPointsPossible}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <br />
+        <br />
+      </Box>
     </Panel>
   );
 }

@@ -6,7 +6,7 @@ import {
   fetchAssignments,
   fetchResources,
   fetchAnnouncements,
-  fetchGrades,
+  getUserGrades,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
@@ -83,25 +83,25 @@ export function StudentDashboard() {
         >
           <Tab label="Course Info" />
           <Tab label="Announcements" />
-          <Tab label="Grades" />
           <Tab label="Assignments" />
           <Tab label="Resources" />
+          <Tab label="Grades" />
         </Tabs>
       </div>
       <div className="tabs-horizontal">
         <Tabs value={tabIndex} onChange={selectTab}>
           <Tab label="Course Info" />
           <Tab label="Announcements" />
-          <Tab label="Grades" />
           <Tab label="Assignments" />
           <Tab label="Resources" />
+          <Tab label="Grades" />
         </Tabs>
       </div>
       {tabIndex === 0 && <CourseInfo course={course} />}
       {tabIndex === 1 && <Announcements course={course} />}
-      {tabIndex === 3 && <Assignments course={course} />}
-      {tabIndex == 4 && <Resources course={course} />}
-      {tabIndex === 2 && <Grades course={course} user={user} />}
+      {tabIndex === 2 && <Assignments course={course} />}
+      {tabIndex == 3 && <Resources course={course} />}
+      {tabIndex === 4 && <Grades course={course} user={user} />}
     </div>
   );
 }
@@ -247,9 +247,14 @@ function Assignments({ course }) {
                 primary={asgmt.title}
                 secondary={
                   <>
-                    Open: {formatTimeAndDate(asgmt.dateOpen)}
-                    <br />
-                    Due: {formatTimeAndDate(asgmt.dateDue)}
+                    {!asgmt.hasDateOpen &&
+                      !asgmt.hasDateDue &&
+                      "always available"}
+                    {asgmt.hasDateOpen &&
+                      `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
+                    {asgmt.hasDateOpen && <br />}
+                    {asgmt.hasDateDue &&
+                      `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
                   </>
                 }
               />
@@ -325,9 +330,7 @@ function Grades({ course, user }) {
   useEffect(
     () => {
       if (!user) return;
-      console.log(user);
-      console.log(course);
-      fetchGrades(course.id, user.uid, setGrades);
+      getUserGrades(course.id, user.uid, setGrades);
     },
     //eslint-disable-next-line
     [user]
@@ -349,7 +352,6 @@ function Grades({ course, user }) {
 
   return (
     <Panel>
-      <pre>{JSON.stringify(grades, null, 2)}</pre>
       <Box sx={{ pt: "50px" }}>
         <table style={{ width: "300px", textAlign: "center" }}>
           <thead>

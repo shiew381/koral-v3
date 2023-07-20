@@ -317,13 +317,15 @@ export function fetchCourse(courseID, setCourse, setLoading) {
   return unsubscribe;
 }
 
-export function fetchGrades(courseID, userID, setGrades) {
-  const ref = doc(db, "courses", courseID, "grades", userID);
-  const unsubscribe = onSnapshot(ref, (doc) => {
-    setGrades({
+export function fetchGrades(courseID, setGrades) {
+  const ref = collection(db, "courses", courseID, "grades");
+  const q = query(ref);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    });
+    }));
+    setGrades(fetchedItems);
   });
   return unsubscribe;
 }
@@ -506,6 +508,13 @@ export function getQSet(userID, qSetID, setQSet, setLoading) {
   getDoc(ref).then((doc) => {
     setQSet({ id: doc.id, ...doc.data() });
     setLoading(false);
+  });
+}
+
+export function getUserGrades(courseID, userID, setGrades) {
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  getDoc(ref).then((doc) => {
+    setGrades({ id: doc.id, ...doc.data() });
   });
 }
 
