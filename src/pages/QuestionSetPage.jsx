@@ -107,6 +107,16 @@ export default function QuestionSetPage() {
     [user]
   );
 
+  useEffect(
+    () => {
+      if (!qSet) return;
+      if (qSet.questions?.length === 0) return;
+      setSelQuestion(qSet.questions[0]);
+    },
+    //eslint-disable-next-line
+    []
+  );
+
   if (loading) {
     return (
       <Page>
