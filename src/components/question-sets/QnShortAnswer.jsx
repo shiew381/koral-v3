@@ -44,6 +44,7 @@ export default function ShortAnswer({
       <CorrectIndicator
         attemptsExhausted={attemptsExhausted}
         lastSubmission={lastSubmission}
+        mode={mode}
         submitting={submitting}
       />
       {subtype === "text" && (
@@ -152,14 +153,11 @@ function ShortAnswerText({
 
   if (mode === "preview") {
     return (
-      <div className="flex flex-col flex-grow">
-        <Typography
-          sx={{ position: "relative", top: "50px", left: "100px" }}
-          color="text.secondary"
-        >
+      <div className="correct-answer-preview-area">
+        <Typography color="text.secondary" sx={{ px: "20%" }}>
           Response must match:
         </Typography>
-        <div className="correct-answer-area">
+        <div className="correct-answer-field-area">
           <div className="correct-answer-field-container">
             {parse(question.correctAnswer?.text || "")}
           </div>
@@ -172,11 +170,13 @@ function ShortAnswerText({
     return (
       <>
         <div className="response-area">
-          <div className="response-field-container">
-            <ShortTextField
-              onChange={handleResponse}
-              value={currentResponse?.text || ""}
-            />
+          <div className="response-field-area">
+            <div className="response-field-container">
+              <ShortTextField
+                onChange={handleResponse}
+                value={currentResponse?.text || ""}
+              />
+            </div>
           </div>
         </div>
 
@@ -288,14 +288,11 @@ function ShortAnswerNumber({
 
   if (mode === "preview") {
     return (
-      <div className="flex flex-col flex-grow">
-        <Typography
-          sx={{ position: "relative", top: "50px", left: "100px" }}
-          color="text.secondary"
-        >
+      <div className="correct-answer-preview-area">
+        <Typography color="text.secondary" sx={{ px: "20%" }}>
           Response must match:
         </Typography>
-        <div className="correct-answer-area">
+        <div className="correct-answer-field-area">
           <div className="correct-answer-field-container">
             {parse(question.correctAnswer?.number || "")}
           </div>
@@ -308,13 +305,15 @@ function ShortAnswerNumber({
     return (
       <>
         <div className="response-area">
-          <div className="response-field-container">
-            <NumberField
-              id={question?.id}
-              currentResponse={currentResponse}
-              numberRef={numberRef}
-              setCurrentResponse={setCurrentResponse}
-            />
+          <div className="response-field-area">
+            <div className="response-field-container">
+              <NumberField
+                id={question?.id}
+                currentResponse={currentResponse}
+                numberRef={numberRef}
+                setCurrentResponse={setCurrentResponse}
+              />
+            </div>
           </div>
         </div>
 
@@ -447,14 +446,11 @@ function ShortAnswerMeasurement({
 
   if (mode === "preview") {
     return (
-      <div className="flex flex-col flex-grow">
-        <Typography
-          sx={{ position: "relative", top: "70px", left: "100px" }}
-          color="text.secondary"
-        >
+      <div className="correct-answer-preview-area">
+        <Typography color="text.secondary" sx={{ px: "20%" }}>
           Response must match:
         </Typography>
-        <div className="correct-answer-area">
+        <div className="correct-answer-field-area">
           <div className="correct-answer-field-container">
             {parse(question.correctAnswer?.number || "")}
           </div>
@@ -470,21 +466,23 @@ function ShortAnswerMeasurement({
     return (
       <>
         <div className="response-area">
-          <div className="response-field-container">
-            <NumberField
-              id={`${question?.id}-number`}
-              currentResponse={currentResponse}
-              setCurrentResponse={setCurrentResponse}
-              numberRef={numberRef}
-            />
-          </div>
-          <div className="response-field-container">
-            <UnitField
-              id={`${question?.id}-unit`}
-              currentResponse={currentResponse}
-              setCurrentResponse={setCurrentResponse}
-              unitRef={unitRef}
-            />
+          <div className="response-field-area">
+            <div className="response-field-container">
+              <NumberField
+                id={`${question?.id}-number`}
+                currentResponse={currentResponse}
+                setCurrentResponse={setCurrentResponse}
+                numberRef={numberRef}
+              />
+            </div>
+            <div className="response-field-container">
+              <UnitField
+                id={`${question?.id}-unit`}
+                currentResponse={currentResponse}
+                setCurrentResponse={setCurrentResponse}
+                unitRef={unitRef}
+              />
+            </div>
           </div>
         </div>
 

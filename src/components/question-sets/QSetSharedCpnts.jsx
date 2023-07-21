@@ -51,9 +51,14 @@ export function ClearSubmissions({ handleClick }) {
 export function CorrectIndicator({
   attemptsExhausted,
   lastSubmission,
+  mode,
   submitting,
 }) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
+
+  if (mode === "preview") {
+    return null;
+  }
 
   if (submitting || !lastSubmission) {
     return <div style={{ height: "37px" }}></div>;
