@@ -6,6 +6,7 @@ import {
   fetchAssignments,
   fetchResources,
   fetchAnnouncements,
+  getUserGrades,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import {
@@ -82,25 +83,25 @@ export function StudentDashboard() {
         >
           <Tab label="Course Info" />
           <Tab label="Announcements" />
-          <Tab label="Grades" />
           <Tab label="Assignments" />
           <Tab label="Resources" />
+          <Tab label="Grades" />
         </Tabs>
       </div>
       <div className="tabs-horizontal">
         <Tabs value={tabIndex} onChange={selectTab}>
           <Tab label="Course Info" />
           <Tab label="Announcements" />
-          <Tab label="Grades" />
           <Tab label="Assignments" />
           <Tab label="Resources" />
+          <Tab label="Grades" />
         </Tabs>
       </div>
       {tabIndex === 0 && <CourseInfo course={course} />}
       {tabIndex === 1 && <Announcements course={course} />}
-      {tabIndex === 3 && <Assignments course={course} />}
-      {tabIndex == 4 && <Resources course={course} />}
-      {tabIndex === 2 && <Grades />}
+      {tabIndex === 2 && <Assignments course={course} />}
+      {tabIndex == 3 && <Resources course={course} />}
+      {tabIndex === 4 && <Grades course={course} user={user} />}
     </div>
   );
 }
@@ -246,9 +247,14 @@ function Assignments({ course }) {
                 primary={asgmt.title}
                 secondary={
                   <>
-                    Open: {formatTimeAndDate(asgmt.dateOpen)}
-                    <br />
-                    Due: {formatTimeAndDate(asgmt.dateDue)}
+                    {!asgmt.hasDateOpen &&
+                      !asgmt.hasDateDue &&
+                      "always available"}
+                    {asgmt.hasDateOpen &&
+                      `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
+                    {asgmt.hasDateOpen && <br />}
+                    {asgmt.hasDateDue &&
+                      `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
                   </>
                 }
               />
@@ -262,8 +268,8 @@ function Assignments({ course }) {
 }
 
 function Resources({ course }) {
-  const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [resources, setResources] = useState([]);
   const listWidth = "600px";
 
   useEffect(
@@ -316,6 +322,57 @@ function Resources({ course }) {
   );
 }
 
-function Grades() {
-  return <Panel center>Grades</Panel>;
+function Grades({ course, user }) {
+  const [loading, setLoading] = useState(true);
+  const [grades, setGrades] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+
+  useEffect(
+    () => {
+      if (!user) return;
+      getUserGrades(course.id, user.uid, setGrades);
+    },
+    //eslint-disable-next-line
+    [user]
+  );
+
+  useEffect(
+    () => fetchAssignments(course.id, setAssignments, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel>
+      <Box sx={{ pt: "50px" }}>
+        <table style={{ width: "300px", textAlign: "center" }}>
+          <thead>
+            <tr>
+              <th style={{ width: "50%" }}>assignment</th>
+              <th style={{ width: "50%" }}>score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assignments.map((asgmt) => (
+              <tr key={asgmt.id}>
+                <td>{asgmt.title}</td>
+                <td>
+                  {grades[asgmt.id].totalPointsAwarded} of{" "}
+                  {grades[asgmt.id].totalPointsPossible}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Box>
+    </Panel>
+  );
 }

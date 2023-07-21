@@ -333,11 +333,11 @@ function Number({
 
   return (
     <>
-      <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: "100px" }} color="text.secondary">
-          Response must match:
-        </Typography>
-        <div className="response-area">
+      <Typography color="text.secondary" sx={{ px: "5%", mb: "20px" }}>
+        Response must match:
+      </Typography>
+      <div className="response-area">
+        <div className="response-field-area">
           <div className="response-field-container">
             <NumberField
               id={`${selQuestion?.id}-number`}
@@ -346,21 +346,21 @@ function Number({
             />
           </div>
         </div>
-      </Box>
-      <br />
-      <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: 2 }} color="text.secondary">
-          Options
-        </Typography>
-        <Box sx={{ px: "35px" }}>
-          {!loading && (
-            <PercentToleranceField
-              value={scoring?.percentTolerance}
-              onChange={handlePercentTolerance}
-            />
-          )}
-        </Box>
-      </Box>
+      </div>
+
+      <Typography color="text.secondary" sx={{ px: "5%", mb: "5px" }}>
+        Options
+      </Typography>
+
+      <div className="percent-tolerance-field-container">
+        {!loading && (
+          <PercentToleranceField
+            value={scoring?.percentTolerance}
+            onChange={handlePercentTolerance}
+          />
+        )}
+      </div>
+
       <BtnContainer right>
         <SubmitBtn
           disabled={submitting}
@@ -424,11 +424,11 @@ function Measurement({
 
   return (
     <>
-      <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: "100px" }} color="text.secondary">
-          Response must match:
-        </Typography>
-        <div className="response-area">
+      <Typography color="text.secondary" sx={{ px: "5%", mb: "20px" }}>
+        Response must match:
+      </Typography>
+      <div className="response-area">
+        <div className="response-field-area">
           <div className="response-field-container">
             <NumberField
               id={`${selQuestion?.id}-number`}
@@ -444,24 +444,21 @@ function Measurement({
             />
           </div>
         </div>
-        <br />
-        <br />
-      </Box>
-      <br />
-      <Box sx={{ px: "5%" }}>
-        <Typography sx={{ mb: 2 }} color="text.secondary">
-          Options
-        </Typography>
+      </div>
 
-        <Box sx={{ px: "35px" }}>
-          {!loading && (
-            <PercentToleranceField
-              value={scoring?.percentTolerance}
-              onChange={handlePercentTolerance}
-            />
-          )}
-        </Box>
-      </Box>
+      <Typography color="text.secondary" sx={{ px: "5%" }}>
+        Options
+      </Typography>
+
+      <div className="percent-tolerance-field-container">
+        {!loading && (
+          <PercentToleranceField
+            value={scoring?.percentTolerance}
+            onChange={handlePercentTolerance}
+          />
+        )}
+      </div>
+
       <BtnContainer right>
         <SubmitBtn
           disabled={submitting}

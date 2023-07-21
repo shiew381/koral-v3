@@ -17,6 +17,14 @@
   margin-bottom: 15px;
 }
 
+.percent-tolerance-field-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  padding-bottom: 20px;
+  padding-top: 20px;
+}
+
 .question-card {
   display: flex;
   flex-direction: column;
@@ -74,12 +82,31 @@
   padding-bottom: 50px;
 }
 
-.correct-answer-area,
-.response-area {
-  align-items: center;
+.correct-answer-field-area {
   display: flex;
-  flex-grow: 1;
+  flex-direction: row;
   justify-content: center;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.correct-answer-preview-area {
+  display: flex;
+  flex-direction: column;
+  padding-top: 30px;
+}
+
+.response-field-area {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.response-area {
+  display: flex;
+  flex-direction: column;
+  padding-top: 75px;
+  padding-bottom: 30px;
 }
 
 .correct-answer-field-container {

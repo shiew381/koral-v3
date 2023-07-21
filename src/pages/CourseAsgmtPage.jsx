@@ -101,6 +101,15 @@ function QuestionSetDisplay({
     [user]
   );
 
+  useEffect(
+    () => {
+      if (questions?.length === 0) return;
+      setSelQuestion(questions[0]);
+    },
+    //eslint-disable-next-line
+    []
+  );
+
   return (
     <QSetContainer>
       <Box className="question-list-container">
@@ -155,7 +164,7 @@ function QuestionCard({
 
   if (question) {
     const { type } = question;
-    const submissions = submissionHistory[question.id] || [];
+    const submissions = submissionHistory ? submissionHistory[question.id] : [];
 
     return (
       <Card

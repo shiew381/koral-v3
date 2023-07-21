@@ -303,6 +303,33 @@ export function fetchAssignments(courseID, setAssignments, setLoading) {
   return unsubscribe;
 }
 
+export function fetchCourse(courseID, setCourse, setLoading) {
+  //TODO: restrict access to instructor
+  const ref = doc(db, "courses", courseID);
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    setCourse({
+      id: doc.id,
+      ...doc.data(),
+      dateCreated: doc.data().dateCreated.toDate(),
+    });
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchGrades(courseID, setGrades) {
+  const ref = collection(db, "courses", courseID, "grades");
+  const q = query(ref);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setGrades(fetchedItems);
+  });
+  return unsubscribe;
+}
+
 export function fetchInstructorCourses(user, setInstructorCourses, setLoading) {
   const colRef = collection(db, "courses");
   const q = query(colRef, where("instructorIDs", "array-contains", user.uid));
@@ -326,20 +353,6 @@ export function fetchStudentCourses(user, setStudentCourses, setLoading) {
       ...doc.data(),
     }));
     setStudentCourses(fetchedItems);
-    setLoading(false);
-  });
-  return unsubscribe;
-}
-
-export function fetchCourse(courseID, setCourse, setLoading) {
-  //TODO: restrict access to instructor
-  const ref = doc(db, "courses", courseID);
-  const unsubscribe = onSnapshot(ref, (doc) => {
-    setCourse({
-      id: doc.id,
-      ...doc.data(),
-      dateCreated: doc.data().dateCreated.toDate(),
-    });
     setLoading(false);
   });
   return unsubscribe;
@@ -495,6 +508,13 @@ export function getQSet(userID, qSetID, setQSet, setLoading) {
   getDoc(ref).then((doc) => {
     setQSet({ id: doc.id, ...doc.data() });
     setLoading(false);
+  });
+}
+
+export function getUserGrades(courseID, userID, setGrades) {
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  getDoc(ref).then((doc) => {
+    setGrades({ id: doc.id, ...doc.data() });
   });
 }
 

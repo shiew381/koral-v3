@@ -278,8 +278,16 @@ export function OpenTimePicker({ disabled, onChange, value }) {
 export function PercentToleranceField({ onChange, value }) {
   return (
     <TextField
-      onChange={onChange}
+      InputProps={{
+        inputProps: {
+          min: 0,
+          max: 100,
+          step: 1,
+          style: { textAlign: "center" },
+        },
+      }}
       label="percent tolerance"
+      onChange={onChange}
       sx={{ width: "120px" }}
       type="number"
       value={value}
@@ -330,7 +338,7 @@ export function ShortTextField({ onChange, value, disabled }) {
     <TextField
       autoComplete="off"
       fullWidth
-      placeholder="type answer here"
+      label="word / phrase"
       onChange={onChange}
       value={value}
       variant="filled"
