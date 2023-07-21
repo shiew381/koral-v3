@@ -310,6 +310,17 @@ function FoundCourse({ course, registerStudent, user }) {
     );
   }
 
+  if (course.studentIDs.includes(user.uid)) {
+    return (
+      <ListItem>
+        <ListItemText
+          primary={course.title}
+          secondary="You're registered for this course."
+        />
+      </ListItem>
+    );
+  }
+
   return (
     <>
       <ListItem

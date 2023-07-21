@@ -655,6 +655,16 @@ function Grades({ course }) {
     );
   }
 
+  if (grades?.length === 0) {
+    return (
+      <Panel center>
+        <Typography color="text.secondary">
+          No assignment submissions yet.
+        </Typography>
+      </Panel>
+    );
+  }
+
   return (
     <Panel>
       <Box sx={{ pt: "50px" }}>

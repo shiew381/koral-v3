@@ -299,7 +299,7 @@ function GroupQuestions({
   assignments,
 }) {
   const headerCellStyle = {
-    backgroundColor: "rgba(0,0,0,0.02)",
+    backgroundColor: "rgba(95,161,181,0.3)",
     paddingTop: "20px",
     paddingBottom: "20px",
   };
@@ -313,13 +313,13 @@ function GroupQuestions({
       <table style={{ width: "850px", marginTop: "20px" }}>
         <thead>
           <tr>
-            <th style={{ width: "20%", ...headerCellStyle }}>
-              <Typography fontStyle="italic">Question #</Typography>
+            <th style={{ width: "5%", ...headerCellStyle }}>
+              <Typography fontStyle="italic">#</Typography>
             </th>
             <th style={{ width: "60%", ...headerCellStyle }}>
               <Typography fontStyle="italic">Prompt </Typography>
             </th>
-            <th style={{ width: "20%", ...headerCellStyle }}>
+            <th style={{ width: "35%", ...headerCellStyle }}>
               <Typography fontStyle="italic">Objective</Typography>
             </th>
           </tr>
@@ -330,7 +330,8 @@ function GroupQuestions({
             <tr
               key={question.id}
               style={{
-                backgroundColor: qIndex % 2 === 0 ? "rgba(0,0,0,0.02)" : "none",
+                backgroundColor:
+                  qIndex % 2 === 0 ? "rgba(95,161,181,0.1)" : "transparent",
               }}
             >
               <td style={cellStyle}>
@@ -415,7 +416,7 @@ function GroupSkills({
 
       <table style={{ width: "700px", marginBottom: "20px" }}>
         <thead>
-          <tr>
+          <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
             <th style={{ width: "30%" }}>
               <Typography>Learning Objective</Typography>
             </th>
@@ -428,8 +429,15 @@ function GroupSkills({
           </tr>
         </thead>
 
-        {objectives.map((skill, ind) => (
-          <tr key={skill.name} className="padding-light">
+        {[...objectives, { name: "unassigned" }].map((skill, ind) => (
+          <tr
+            key={skill.name}
+            className="padding-light"
+            style={{
+              backgroundColor:
+                ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "transparent",
+            }}
+          >
             <td style={cellStyle}>
               <Typography>{skill.name}</Typography>
             </td>
@@ -439,23 +447,21 @@ function GroupSkills({
               </Typography>
             </td>
             <td style={cellStyle}>
-              <CompletionThresholdField
-                questionCount={countAssignedQuestions(skill.name, assignments)}
-                value={skill.completionThreshold}
-                onChange={(e) => handleCompletionThreshold(e, ind)}
-              />
+              {skill.name == "unassigned" ? (
+                "N/A"
+              ) : (
+                <CompletionThresholdField
+                  questionCount={countAssignedQuestions(
+                    skill.name,
+                    assignments
+                  )}
+                  value={skill.completionThreshold}
+                  onChange={(e) => handleCompletionThreshold(e, ind)}
+                />
+              )}
             </td>
           </tr>
         ))}
-        <tr className="padding-light" style={{ height: "45px" }}>
-          <td style={cellStyle}>
-            <Typography>unassigned*</Typography>
-          </td>
-          <td style={cellStyle}>
-            <Typography>{countUnassignedQuestions(assignments)}</Typography>
-          </td>
-          <td style={cellStyle}></td>
-        </tr>
       </table>
       <SubmitBtn
         disabled={submitting}
@@ -471,12 +477,6 @@ function countAssignedQuestions(objective, asgmts) {
   if (!Array.isArray(asgmts)) return 0;
   const numAssigned = asgmts.filter((asgmt) => asgmt === objective);
   return numAssigned.length;
-}
-
-function countUnassignedQuestions(asgmts) {
-  if (!Array.isArray(asgmts)) return 0;
-  const numUnassigned = asgmts.filter((asgmt) => asgmt === "unassigned");
-  return numUnassigned.length;
 }
 
 function getHelperText(completeRule) {

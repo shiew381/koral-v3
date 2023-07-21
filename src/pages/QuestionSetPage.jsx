@@ -114,7 +114,7 @@ export default function QuestionSetPage() {
       setSelQuestion(qSet.questions[0]);
     },
     //eslint-disable-next-line
-    []
+    [qSet?.id]
   );
 
   if (loading) {
