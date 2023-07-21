@@ -21,6 +21,12 @@ export function AttemptCounter({ question, submissions }) {
 
   if (!attemptsPossible) return null;
 
+  // if (submissions?.length === 0) {
+  //   <Typography color="text.secondary" display="inline" sx={{ mb: 1 }}>
+  //     {`0 of ${attemptsPossible} ${label}`}
+  //   </Typography>;
+  // }
+
   return (
     <Typography color="text.secondary" display="inline" sx={{ mb: 1 }}>
       {`${attemptsUsed} of ${attemptsPossible} ${label}`}

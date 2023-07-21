@@ -375,9 +375,13 @@ export function fetchQSetSubmissionHistory(
   );
 
   const unsubscribe = onSnapshot(ref, (doc) => {
-    setSubmissionHistory({
-      ...doc.data(),
-    });
+    if (!doc.data()) {
+      setSubmissionHistory(null);
+    } else {
+      setSubmissionHistory({
+        ...doc.data(),
+      });
+    }
   });
   return unsubscribe;
 }

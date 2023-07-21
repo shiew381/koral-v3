@@ -309,7 +309,8 @@ function QuestionCard({
 
   if (question) {
     const { type } = question;
-    const submissions = getSubmissions(qSet, question) || [];
+    const submissionHistory = qSet.submissionHistory;
+    const submissions = getSubmissions(submissionHistory, question);
 
     return (
       <Card className="question-card" sx={{ bgcolor: "rgba(255,255,255,0.2)" }}>

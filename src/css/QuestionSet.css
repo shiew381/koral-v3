@@ -25,6 +25,20 @@
   padding-top: 20px;
 }
 
+.adaptive-progress-card {
+  margin: 15px;
+  max-width: 630px;
+  min-width: 600px;
+  padding: 10px;
+}
+
+.adaptive-card {
+  margin: 15px;
+  max-width: 630px;
+  min-width: 600px;
+  padding: 10px;
+}
+
 .question-card {
   display: flex;
   flex-direction: column;

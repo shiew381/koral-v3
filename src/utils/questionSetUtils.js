@@ -7,8 +7,9 @@ export function cleanEditorHTML(elem) {
   return elem.innerHTML;
 }
 
-export function getSubmissions(qSet, question) {
-  const submissionHistory = qSet?.submissionHistory || {};
-  const submissions = submissionHistory[question.id];
-  return submissions;
+export function getSubmissions(submissionHistory, question) {
+  if (!question?.id) return [];
+  if (!submissionHistory) return [];
+
+  return submissionHistory[question.id] || [];
 }
