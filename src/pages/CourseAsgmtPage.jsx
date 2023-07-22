@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DoneIcon from "@mui/icons-material/Done";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import {
   QSetContainer,
@@ -166,95 +167,93 @@ function QuestionSetDisplay({
   );
 }
 
+function ruleDescription(rule) {
+  if (rule === "total correct") {
+    return "the total number of question answered correctly.";
+  }
+
+  return "";
+}
+
 function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
-  const [currentObjective, setCurrentObjective] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [objIndex, setObjIndex] = useState(-1);
   const [selQuestion, setSelQuestion] = useState(null);
   const params = qSet.adaptiveParams;
   const objectives = params.objectives;
+  const currentObjective = objectives[objIndex];
   const questions = qSet.questions;
   const rule = params.completionRule;
   const progress = calculateProgress(rule, currentObjective, submissionHistory);
 
-  function pickObjective() {
-    if (!submissionHistory) {
-      setCurrentObjective(objectives[0]);
+  function handlePickQuestion() {
+    if (progress.percentage === 100) {
+      setSelQuestion(null);
       return;
     }
-
-    for (let i = 0; i < objectives.length; i++) {
-      const objective = objectives[i];
-      const threshold = objective.completionThreshold;
-      const objectiveIDs = objective.questionIDs;
-      const touchedIDs = objectiveIDs.filter((id) =>
-        Object.hasOwn(submissionHistory, id)
-      );
-
-      if (rule == "total correct") {
-        const lastSubmissions = touchedIDs.map((id) =>
-          submissionHistory[id]?.at(-1)
-        );
-        const correctSubmissions = lastSubmissions.filter(
-          (lastSubmission) => lastSubmission.answeredCorrectly
-        );
-
-        const numCorrect = correctSubmissions.length;
-
-        if (numCorrect < threshold) {
-          setCurrentObjective(objective);
-          return;
-        }
-      }
-    }
-  }
-
-  function handlePickQuestion() {
     const picked = pickQuestion(currentObjective, questions, submissionHistory);
     setSelQuestion(picked);
   }
 
-  useEffect(
-    () => {
-      //pick objective when component mounts
-      pickObjective();
-    },
-    //eslint-disable-next-line
-    []
-  );
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 1800);
+  }, []);
 
-  useEffect(
-    () => {
-      if (!selQuestion?.id) return;
-      if (progress.percentage == 100) return;
+  useEffect(() => {
+    handlePickQuestion();
+  }, [objIndex]);
 
-      pickObjective();
-      handlePickQuestion();
-    },
-    //eslint-disable-next-line
-    [progress.percentage]
-  );
-
-  if (progress.percentage === 0 && !selQuestion)
+  if (loading) {
     return (
-      <>
-        <ProgressMeters
-          currentObjective={currentObjective}
-          qSet={qSet}
-          submissionHistory={submissionHistory}
-        />
-        <Card className="adaptive-progress-card" sx={{ p: 3 }}>
-          <Button
-            onClick={() => {
-              pickObjective();
-              handlePickQuestion();
-            }}
-          >
-            GET STARTED
-          </Button>
-        </Card>
-      </>
+      <Page>
+        <LoadingIndicator />
+      </Page>
+    );
+  }
+
+  if (objIndex === -1)
+    return (
+      <Card className="adaptive-progress-card flex" sx={{ minHeight: "400px" }}>
+        <Box className="flex flex-col flex-grow flex-center">
+          <>
+            <Typography align="center">
+              This adaptive question set covers the following learning
+              objectives:
+            </Typography>
+            <br />
+            {objectives.map((objective, ind) => (
+              <Typography
+                key={objective.name}
+                align="center"
+                color="primary"
+                sx={{ mb: 1 }}
+              >
+                Objective #{ind + 1}: {objective.name}
+              </Typography>
+            ))}
+            <br />
+            <Typography align="center">Progress will be based on</Typography>
+            <Typography align="center">{ruleDescription(rule)}</Typography>
+            <br />
+            <Button
+              onClick={() => {
+                setObjIndex((curIndex) => curIndex + 1);
+                // handlePickQuestion();
+              }}
+              variant="contained"
+            >
+              LET&apos;S BEGIN!
+            </Button>
+          </>
+        </Box>
+      </Card>
     );
 
-  if (progress.percentage === 100) {
+  if (
+    progress.percentage >= 100 &&
+    objIndex < objectives.length - 1 &&
+    !selQuestion
+  ) {
     return (
       <>
         <ProgressMeters
@@ -264,22 +263,60 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
         />
         <Card
           className="adaptive-progress-card flex"
-          sx={{ p: 3, minHeight: "400px" }}
+          sx={{ minHeight: "400px" }}
         >
           <Box className="flex flex-col flex-grow flex-center">
-            <Typography>Learning objective completed!</Typography>
-            <Typography color="text.secondary">
-              {currentObjective.name}
+            <Typography align="center" sx={{ mb: "2px" }}>
+              Nice job! You completed
+            </Typography>
+            <Typography align="center" color="primary">
+              Objective #{objIndex + 1 + ": " + objectives[objIndex]?.name}
+            </Typography>
+            <br />
+            <Typography align="center" sx={{ mb: "2px" }}>
+              Next up
+            </Typography>
+            <Typography
+              align="center"
+              color="primary"
+              sx={{ fontWeight: "bold" }}
+            >
+              Objective #{objIndex + 2 + ": " + objectives[objIndex + 1]?.name}
             </Typography>
             <br />
             <Button
-              onClick={() => {
-                pickObjective();
-                handlePickQuestion();
-              }}
+              onClick={() => setObjIndex((curIndex) => curIndex + 1)}
+              variant="contained"
             >
-              START NEXT OBJECTIVE
+              BEGIN NEXT OBJECTIVE
             </Button>
+          </Box>
+        </Card>
+      </>
+    );
+  }
+
+  if (progress.percentage >= 100 && objIndex === objectives.length - 1) {
+    return (
+      <>
+        <ProgressMeters
+          currentObjective={currentObjective}
+          qSet={qSet}
+          submissionHistory={submissionHistory}
+        />
+        <Card
+          className="adaptive-progress-card flex"
+          sx={{ minHeight: "400px" }}
+        >
+          <Box className="flex flex-col flex-grow flex-center">
+            {objIndex < objectives.length - 1 && (
+              <Typography>Learning objective completed!</Typography>
+            )}
+            <Typography>
+              You completed all the objectives. Nicely done!
+            </Typography>
+            <br />
+            {/* <Button>RESET</Button> */}
           </Box>
         </Card>
       </>
@@ -313,7 +350,6 @@ function ProgressMeters({ currentObjective, qSet, submissionHistory }) {
 
   return (
     <Card className="adaptive-progress-card" sx={{ p: 3 }}>
-      <Typography sx={{ px: 2 }}>Learning objectives</Typography>
       <table style={{ paddingLeft: "50px" }}>
         <tbody>
           {objectives?.map((objective) => (
@@ -342,14 +378,9 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
 
   return (
     <tr>
-      <td>
+      <td style={{ width: "50px" }}>
         <Box className="adaptive-progress-container">
-          {progress.percentage === 100 && (
-            <Box sx={{ position: "relative", bottom: "2px", left: "7px" }}>
-              <DoneIcon color="primary" />
-            </Box>
-          )}
-          {progress.percentage < 100 && (
+          {progress.percentage < 100 ? (
             <>
               <Box className="adaptive-progress-label">
                 <Typography
@@ -365,6 +396,10 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
                 value={progress.percentage}
               />
             </>
+          ) : (
+            <Box sx={{ position: "relative", bottom: "2px", left: "7px" }}>
+              <DoneIcon color="primary" />
+            </Box>
           )}
         </Box>
       </td>
@@ -372,7 +407,7 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
         <Typography
           color="primary"
           sx={{
-            p: 2,
+            p: 1,
             position: "relative",
             bottom: "3px",
             fontWeight: active ? "bold" : "normal",
@@ -383,53 +418,6 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
       </td>
     </tr>
   );
-}
-
-function pickQuestion(objective, questions, submissionHistory) {
-  console.log("watchaa");
-  const objectiveIDs = objective?.questionIDs || [];
-
-  const touchedIDs = submissionHistory
-    ? objectiveIDs.filter((id) => Object.hasOwn(submissionHistory, id))
-    : [];
-
-  const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
-
-  console.log(untouchedIDs);
-
-  const qIndex = pickRandomInt(0, untouchedIDs.length);
-
-  const pickedID = untouchedIDs[qIndex];
-  const foundQuestion = questions.find((question) => question.id === pickedID);
-
-  return foundQuestion;
-}
-
-function calculateProgress(rule, objective, submissionHistory) {
-  if (!submissionHistory) return { percentage: 0, numCorrect: 0 };
-  if (!objective) return { percentage: 0, numCorrect: 0 };
-
-  const objectiveIDs = objective.questionIDs;
-  const touchedIDs = objectiveIDs.filter((id) =>
-    Object.hasOwn(submissionHistory, id)
-  );
-
-  if (rule == "total correct") {
-    const lastSubmissions = touchedIDs.map((id) =>
-      submissionHistory[id]?.at(-1)
-    );
-
-    const correctSubmissions = lastSubmissions.filter(
-      (lastSubmission) => lastSubmission.answeredCorrectly
-    );
-
-    const numCorrect = correctSubmissions.length;
-    const percentage = 100 * (numCorrect / objective.completionThreshold);
-
-    return { percentage, numCorrect };
-  }
-
-  return 0;
 }
 
 function AdaptiveQuestionCard({
@@ -457,7 +445,12 @@ function AdaptiveQuestionCard({
     <Card className="adaptive-card" sx={cardColor}>
       <BtnContainer right>
         {lastSubmission?.answeredCorrectly ? (
-          <Button>Next</Button>
+          <Box
+            className="flex flex-center"
+            sx={{ width: "40px", height: "40px" }}
+          >
+            <RefreshIcon color="disabled" />
+          </Box>
         ) : (
           <Tooltip title="pick another question">
             <IconButton onClick={handlePickQuestion}>
@@ -475,6 +468,21 @@ function AdaptiveQuestionCard({
           submissions={submissions}
         />
       )}
+
+      <Box
+        className="flex flex-end"
+        sx={{ position: "relative", bottom: "20px", right: "10px" }}
+      >
+        {lastSubmission?.answeredCorrectly && (
+          <Button
+            onClick={handlePickQuestion}
+            endIcon={<NavigateNextIcon />}
+            sx={{ width: "120px" }}
+          >
+            Next
+          </Button>
+        )}
+      </Box>
     </Card>
   );
 }
@@ -556,4 +564,48 @@ export function BackToStudentDashboard() {
       </Button>
     </div>
   );
+}
+
+function pickQuestion(objective, questions, submissionHistory) {
+  const objectiveIDs = objective?.questionIDs || [];
+
+  const touchedIDs = submissionHistory
+    ? objectiveIDs.filter((id) => Object.hasOwn(submissionHistory, id))
+    : [];
+
+  const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
+
+  const qIndex = pickRandomInt(0, untouchedIDs.length);
+
+  const pickedID = untouchedIDs[qIndex];
+  const foundQuestion = questions.find((question) => question.id === pickedID);
+
+  return foundQuestion;
+}
+
+function calculateProgress(rule, objective, submissionHistory) {
+  if (!submissionHistory) return { percentage: 0, numCorrect: 0 };
+  if (!objective) return { percentage: 0, numCorrect: 0 };
+
+  const objectiveIDs = objective.questionIDs;
+  const touchedIDs = objectiveIDs.filter((id) =>
+    Object.hasOwn(submissionHistory, id)
+  );
+
+  if (rule == "total correct") {
+    const lastSubmissions = touchedIDs.map((id) =>
+      submissionHistory[id]?.at(-1)
+    );
+
+    const correctSubmissions = lastSubmissions.filter(
+      (lastSubmission) => lastSubmission.answeredCorrectly
+    );
+
+    const numCorrect = correctSubmissions.length;
+    const percentage = 100 * (numCorrect / objective.completionThreshold);
+
+    return { percentage, numCorrect };
+  }
+
+  return 0;
 }

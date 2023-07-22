@@ -173,6 +173,7 @@ function ShortAnswerText({
           <div className="response-field-area">
             <div className="response-field-container">
               <ShortTextField
+                disabled={answeredCorrectly}
                 onChange={handleResponse}
                 value={currentResponse?.text || ""}
               />
