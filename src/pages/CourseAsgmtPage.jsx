@@ -33,6 +33,7 @@ import "../css/QuestionSet.css";
 import { BtnContainer } from "../components/common/Buttons";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { pickRandomInt } from "../utils/commonUtils";
+import { formatTimeAndDate } from "../utils/dateUtils";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,8 @@ export default function CourseAsgmtPage() {
   const [qSet, setQSet] = useState(null);
   const [selQuestion, setSelQuestion] = useState(null);
   const { courseID, asgmtID } = useParams();
+  const currentDate = new Date();
+  const currentDateMillis = currentDate.getTime();
 
   useEffect(
     () => {
@@ -71,6 +74,74 @@ export default function CourseAsgmtPage() {
     return (
       <Page>
         <LoadingIndicator />
+      </Page>
+    );
+  }
+
+  function beforeDateOpen() {
+    const dateOpen = asgmt.dateOpen.toDate();
+    const dateOpenMillis = dateOpen.getTime();
+
+    if (!asgmt.hasDateOpen) {
+      return false;
+    }
+
+    if (currentDateMillis > dateOpenMillis) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function afterDateDue() {
+    const dateDue = asgmt.dateDue.toDate();
+    const dateDueMillis = dateDue.getTime();
+
+    if (!asgmt.hasDateDue) {
+      return false;
+    }
+
+    if (currentDateMillis < dateDueMillis) {
+      return false;
+    }
+
+    return true;
+  }
+
+  if (beforeDateOpen()) {
+    return (
+      <Page>
+        <BackToStudentDashboard />
+        <Box className="flex flex-center" sx={{ height: "80vh" }}>
+          <Box>
+            <Typography align="center">assignment will open</Typography>
+            <Typography color="primary" variant="h6">
+              {formatTimeAndDate(asgmt.dateOpen?.toDate())}
+            </Typography>
+          </Box>
+        </Box>
+      </Page>
+    );
+  }
+
+  if (afterDateDue()) {
+    return (
+      <Page>
+        <BackToStudentDashboard />
+        <Box className="flex flex-center" sx={{ height: "80vh" }}>
+          <Box>
+            <Typography align="center" color="text.secondary">
+              due date
+            </Typography>
+            <Typography color="primary" variant="h6">
+              {formatTimeAndDate(asgmt.dateDue?.toDate())}
+            </Typography>
+            <br />
+            <Typography align="center">
+              This assignment is now closed
+            </Typography>
+          </Box>
+        </Box>
       </Page>
     );
   }
