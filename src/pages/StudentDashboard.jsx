@@ -69,15 +69,15 @@ export function StudentDashboard() {
           All Courses
         </Button>
       </div>
-      <div className="tabs-vertical">
+      <div className="tabs-vert-container">
         <Tabs
+          className="tabs-vert"
           onChange={selectTab}
           orientation="vertical"
           sx={{
             borderRight: 1,
             borderColor: "divider",
             minHeight: "50vh",
-            pt: "80px",
           }}
           value={tabIndex}
         >
@@ -88,8 +88,8 @@ export function StudentDashboard() {
           <Tab label="Grades" />
         </Tabs>
       </div>
-      <div className="tabs-horizontal">
-        <Tabs value={tabIndex} onChange={selectTab}>
+      <div className="tabs-horiz-container">
+        <Tabs value={tabIndex} onChange={selectTab} variant="scrollable">
           <Tab label="Course Info" />
           <Tab label="Announcements" />
           <Tab label="Assignments" />
@@ -111,21 +111,21 @@ function CourseInfo({ course }) {
 
   return (
     <Panel center>
-      <Box sx={{ maxWidth: "640px" }}>
-        <Box className="flex flex-row flex-wrap">
-          <Box className="flex flex-justify-center flex-grow relative">
-            <Box className="relative" sx={{ mb: 2, width: "300px" }}>
-              <CourseImage url={courseImage?.url} />
-            </Box>
+      <Box>
+        <Box className="flex flex-row flex-center flex-wrap">
+          <Box className="relative" sx={{ maxWidth: "400px" }}>
+            <CourseImage url={courseImage?.url} />
           </Box>
           <Box className="course-title-and-description">
-            <Typography color="primary" sx={{ mb: "10px" }} variant="h4">
+            <Typography color="primary" sx={{ my: "8px" }} variant="h4">
               {course.title}
             </Typography>
             <Typography>{course.description}</Typography>
           </Box>
         </Box>
-        <Divider sx={{ mb: 3 }} />
+        <Box sx={{ px: 3, my: 3 }}>
+          <Divider />
+        </Box>
       </Box>
       <CourseSummary course={course} />
     </Panel>
@@ -135,8 +135,6 @@ function CourseInfo({ course }) {
 function Announcements({ course }) {
   const [loading, setLoading] = useState(true);
   const [anncmts, setAnncmts] = useState([]);
-
-  const listWidth = "600px";
 
   useEffect(
     () => fetchAnnouncements(course.id, setAnncmts, setLoading),
@@ -165,7 +163,7 @@ function Announcements({ course }) {
   if (anncmts?.length > 0) {
     return (
       <Panel>
-        <List sx={{ width: listWidth, pt: "50px" }}>
+        <List className="course-item-list" sx={{ pt: "60px" }}>
           {anncmts.map((anncmt) => (
             <div key={anncmt.id}>
               <ListItem>
@@ -190,7 +188,6 @@ function Assignments({ course }) {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const listWidth = "600px";
 
   function redirectToAsgmt(asgmt) {
     const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
@@ -227,7 +224,7 @@ function Assignments({ course }) {
 
   return (
     <Panel>
-      <List sx={{ width: listWidth, pt: "50px" }}>
+      <List className="course-item-list" sx={{ pt: "60px" }}>
         {assignments.map((asgmt, ind) => (
           <div key={asgmt.id}>
             <ListItem
@@ -270,7 +267,6 @@ function Assignments({ course }) {
 function Resources({ course }) {
   const [loading, setLoading] = useState(true);
   const [resources, setResources] = useState([]);
-  const listWidth = "600px";
 
   useEffect(
     () => fetchResources(course.id, setResources, setLoading),
@@ -298,7 +294,7 @@ function Resources({ course }) {
 
   return (
     <Panel>
-      <List sx={{ width: listWidth, pt: "50px" }}>
+      <List className="course-item-list" sx={{ pt: "60px" }}>
         {resources.map((resource, ind) => (
           <div key={resource.id}>
             <ListItem

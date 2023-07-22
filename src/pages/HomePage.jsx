@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, Box, Button, Link, Stack, Typography } from "@mui/material";
 import { SignUpForm } from "../components/forms/SignUpForm";
 import { EmailField, PasswordField } from "../components/common/InputFields";
@@ -9,10 +9,12 @@ import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useNavigate } from "react-router-dom";
 import { authErrorMessage } from "../utils/errorMsgs";
 import { SubmitBtn } from "../components/common/Buttons";
+import { LoadingIndicator } from "../components/common/Pages";
 
 export default function HomePage() {
   const imgURL = import.meta.env.VITE_HOME_PAGE_IMG;
 
+  const [loading, setLoading] = useState(true);
   const [signupOpen, setSignupOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
 
@@ -37,13 +39,27 @@ export default function HomePage() {
     setResetOpen(false);
   }
 
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 1000);
+  }, []);
+
+  if (loading) {
+    return (
+      <Box height="100vh" className="flex flex-center">
+        <LoadingIndicator />
+      </Box>
+    );
+  }
+
   return (
     <Box height="100vh" className="flex flex-center">
-      <Box
-        className="flex flex-center flex-wrap flex-space-between"
-        width="750px"
-      >
-        <img src={imgURL} alt="app logo" width="300px" />
+      <Box className="flex flex-center flex-wrap" width="750px">
+        <img
+          src={imgURL}
+          alt="app logo"
+          width="300px"
+          style={{ margin: "20px" }}
+        />
         {user ? (
           <ContinueToCoursesPanel
             user={user}

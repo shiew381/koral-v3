@@ -117,15 +117,15 @@ export default function InstructorDashboard() {
           All Courses
         </Button>
       </div>
-      <div className="tabs-vertical">
+      <div className="tabs-vert-container">
         <Tabs
+          className="tabs-vert"
           onChange={selectTab}
           orientation="vertical"
           sx={{
             borderRight: 1,
             borderColor: "divider",
             minHeight: "50vh",
-            pt: "80px",
           }}
           value={tabIndex}
         >
@@ -136,8 +136,8 @@ export default function InstructorDashboard() {
           <Tab label="Grades" />
         </Tabs>
       </div>
-      <div className="tabs-horizontal">
-        <Tabs value={tabIndex} onChange={selectTab}>
+      <div className="tabs-horiz-container">
+        <Tabs value={tabIndex} onChange={selectTab} variant="scrollable">
           <Tab label="Course Info" />
           <Tab label="Announcements" />
           <Tab label="Assignments" />
@@ -244,55 +244,53 @@ function CourseInfo({ course }) {
 
   return (
     <Panel center>
-      <Box sx={{ maxWidth: "640px" }}>
-        <Box className="flex flex-row flex-wrap">
-          <Box className="flex flex-justify-center flex-grow relative">
-            <Box className="relative" sx={{ mb: 2, width: "300px" }}>
-              <CourseImage url={courseImage?.url} />
-              {!file && !courseImage && (
-                <Button
-                  fullWidth
-                  component="label"
-                  startIcon={<CloudUploadIcon />}
+      <Box>
+        <Box className="flex flex-row flex-center flex-wrap">
+          <Box className="relative" sx={{ width: "400px" }}>
+            <CourseImage url={courseImage?.url} />
+            {!file && !courseImage && (
+              <Button
+                fullWidth
+                component="label"
+                startIcon={<CloudUploadIcon />}
+              >
+                UPLOAD CUSTOM IMAGE
+                <input type="file" hidden onChange={handleSelectFile} />
+              </Button>
+            )}
+            {!file && courseImage && (
+              <Box className="flex flex-row flex-center">
+                <Typography color="text.secondary" display="inline">
+                  {courseImage?.name}
+                </Typography>
+                <Typography
+                  color="text.secondary"
+                  display="inline"
+                  sx={{ ml: "8px" }}
                 >
-                  UPLOAD CUSTOM IMAGE
-                  <input type="file" hidden onChange={handleSelectFile} />
-                </Button>
-              )}
-              {!file && courseImage && (
-                <Box className="flex flex-row flex-center">
-                  <Typography color="text.secondary" display="inline">
-                    {courseImage?.name}
-                  </Typography>
-                  <Typography
-                    color="text.secondary"
-                    display="inline"
-                    sx={{ ml: "8px" }}
-                  >
-                    |
-                  </Typography>
-                  <Button onClick={handleDeleteCourseImage}>DELETE</Button>
-                </Box>
-              )}
-              {file && (
-                <Box className="course-img-upload-progress">
-                  <LinearProgress
-                    variant="determinate"
-                    value={uploadProgress}
-                  />
-                </Box>
-              )}
-              {error && <Alert severity="warning">{errorMessage}</Alert>}
-            </Box>
+                  |
+                </Typography>
+                <Button onClick={handleDeleteCourseImage}>DELETE</Button>
+              </Box>
+            )}
+            {file && (
+              <Box className="course-img-upload-progress">
+                <LinearProgress variant="determinate" value={uploadProgress} />
+              </Box>
+            )}
+            {error && <Alert severity="warning">{errorMessage}</Alert>}
           </Box>
+
           <Box className="course-title-and-description">
-            <Typography color="primary" sx={{ mb: "10px" }} variant="h4">
+            <Typography color="primary" sx={{ my: "8px" }} variant="h4">
               {course.title}
             </Typography>
-            <Typography>{course.description}</Typography>
+            <Typography sx={{ mb: "30px" }}>{course.description}</Typography>
           </Box>
         </Box>
-        <Divider sx={{ mb: 3 }} />
+        <Box sx={{ px: 3, my: 3 }}>
+          <Divider />
+        </Box>
       </Box>
       <CourseSummary course={course} instructor />
     </Panel>
@@ -311,7 +309,6 @@ function Announcements({
 
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
-  const listWidth = "600px";
 
   function handleCloseMenu() {
     setAnchorEl(null);
@@ -351,14 +348,16 @@ function Announcements({
   if (anncmts?.length > 0) {
     return (
       <Panel>
-        <Box sx={{ width: listWidth, pt: "50px" }}>
+        <Box className="course-list-actions-container">
           <Button onClick={handleOpen} startIcon={<AddIcon />}>
             NEW ANNOUNCEMENT
           </Button>
         </Box>
+        <Box className="course-divider-container">
+          <Divider sx={{ px: 3 }} />
+        </Box>
 
-        <Divider sx={{ width: listWidth }} />
-        <List sx={{ width: listWidth }}>
+        <List className="course-item-list">
           {anncmts.map((anncmt) => (
             <div key={anncmt.id}>
               <ListItem
@@ -420,7 +419,6 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
-  const listWidth = "600px";
 
   function handleCloseMenu() {
     setAnchorEl(null);
@@ -457,78 +455,82 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
     );
   }
 
-  return (
-    <Panel>
-      <Box sx={{ width: listWidth, pt: "50px" }}>
-        <Button onClick={handleOpen} startIcon={<AddIcon />}>
-          ADD ASSIGNMENT
-        </Button>
-      </Box>
-      <Divider sx={{ width: listWidth }} />
-      <List sx={{ width: listWidth }}>
-        {assignments.map((asgmt) => (
-          <div key={asgmt.id}>
-            <ListItem
-              secondaryAction={
-                <MoreOptionsBtn
-                  item={asgmt}
-                  setAnchorEl={setAnchorEl}
-                  setSelItem={setSelAsgmt}
-                />
-              }
-            >
-              <ListItemIcon>
-                <AssignmentIcon type={asgmt.type} />
-              </ListItemIcon>
-              <ListItemText
-                primary={asgmt.title}
-                secondary={
-                  <>
-                    {!asgmt.hasDateOpen &&
-                      !asgmt.hasDateDue &&
-                      "always available"}
-                    {asgmt.hasDateOpen &&
-                      `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
-                    {asgmt.hasDateOpen && <br />}
-                    {asgmt.hasDateDue &&
-                      `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
-                  </>
+  if (assignments?.length > 0) {
+    return (
+      <Panel>
+        <Box className="course-list-actions-container">
+          <Button onClick={handleOpen} startIcon={<AddIcon />}>
+            ADD ASSIGNMENT
+          </Button>
+        </Box>
+        <Box className="course-divider-container">
+          <Divider sx={{ px: 3 }} />
+        </Box>
+        <List className="course-item-list">
+          {assignments.map((asgmt) => (
+            <div key={asgmt.id}>
+              <ListItem
+                secondaryAction={
+                  <MoreOptionsBtn
+                    item={asgmt}
+                    setAnchorEl={setAnchorEl}
+                    setSelItem={setSelAsgmt}
+                  />
                 }
-              />
-            </ListItem>
-            <Divider />
-          </div>
-        ))}
-      </List>
-      <MoreOptionsMenu
-        anchorEl={anchorEl}
-        handleClose={handleCloseMenu}
-        open={menuOpen}
-      >
-        <MenuOption>
-          <ListItemButton
-            onClick={() => {
-              handleOpen();
-              handleCloseMenu();
-              setEdit(true);
-            }}
-          >
-            Edit
-          </ListItemButton>
-        </MenuOption>
-        <MenuOption>
-          <ListItemButton
-            onClick={() => {
-              deleteCourseAsgmt(course, selAsgmt);
-              handleCloseMenu();
-            }}
-          >
-            Delete
-          </ListItemButton>
-        </MenuOption>
-      </MoreOptionsMenu>
-    </Panel>
-  );
+              >
+                <ListItemIcon>
+                  <AssignmentIcon type={asgmt.type} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={asgmt.title}
+                  secondary={
+                    <>
+                      {!asgmt.hasDateOpen &&
+                        !asgmt.hasDateDue &&
+                        "always available"}
+                      {asgmt.hasDateOpen &&
+                        `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
+                      {asgmt.hasDateOpen && <br />}
+                      {asgmt.hasDateDue &&
+                        `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
+                    </>
+                  }
+                />
+              </ListItem>
+              <Divider />
+            </div>
+          ))}
+        </List>
+        <MoreOptionsMenu
+          anchorEl={anchorEl}
+          handleClose={handleCloseMenu}
+          open={menuOpen}
+        >
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                handleOpen();
+                handleCloseMenu();
+                setEdit(true);
+              }}
+            >
+              Edit
+            </ListItemButton>
+          </MenuOption>
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                deleteCourseAsgmt(course, selAsgmt);
+                handleCloseMenu();
+              }}
+            >
+              Delete
+            </ListItemButton>
+          </MenuOption>
+        </MoreOptionsMenu>
+      </Panel>
+    );
+  }
 }
 
 function Resources({ course, handleOpen }) {
@@ -537,7 +539,6 @@ function Resources({ course, handleOpen }) {
   const [selResource, setSelResource] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
-  const listWidth = "600px";
 
   function handleCloseMenu() {
     setAnchorEl(null);
@@ -574,56 +575,60 @@ function Resources({ course, handleOpen }) {
     );
   }
 
-  return (
-    <Panel>
-      <Box sx={{ width: listWidth, pt: "50px" }}>
-        <Button onClick={handleOpen} startIcon={<AddIcon />}>
-          Add Resource
-        </Button>
-      </Box>
-      <Divider sx={{ width: listWidth }} />
-      <List sx={{ width: listWidth }}>
-        {resources.map((resource) => (
-          <div key={resource.id}>
-            <ListItem
-              secondaryAction={
-                <MoreOptionsBtn
-                  item={resource}
-                  setAnchorEl={setAnchorEl}
-                  setSelItem={setSelResource}
+  if (resources?.length > 0) {
+    return (
+      <Panel>
+        <Box className="course-list-actions-container">
+          <Button onClick={handleOpen} startIcon={<AddIcon />}>
+            Add Resource
+          </Button>
+        </Box>
+        <Box className="course-divider-container">
+          <Divider sx={{ px: 3 }} />
+        </Box>
+        <List className="course-item-list">
+          {resources.map((resource) => (
+            <div key={resource.id}>
+              <ListItem
+                secondaryAction={
+                  <MoreOptionsBtn
+                    item={resource}
+                    setAnchorEl={setAnchorEl}
+                    setSelItem={setSelResource}
+                  />
+                }
+              >
+                <ListItemIcon>
+                  <ResourceIcon type={resource.type} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={resource.title}
+                  secondary={"added: " + formatDate(resource.dateCreated)}
                 />
-              }
+              </ListItem>
+              <Divider />
+            </div>
+          ))}
+        </List>
+        <MoreOptionsMenu
+          anchorEl={anchorEl}
+          handleClose={handleCloseMenu}
+          open={menuOpen}
+        >
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                deleteCourseResource(course, selResource);
+                handleCloseMenu();
+              }}
             >
-              <ListItemIcon>
-                <ResourceIcon type={resource.type} />
-              </ListItemIcon>
-              <ListItemText
-                primary={resource.title}
-                secondary={"added: " + formatDate(resource.dateCreated)}
-              />
-            </ListItem>
-            <Divider />
-          </div>
-        ))}
-      </List>
-      <MoreOptionsMenu
-        anchorEl={anchorEl}
-        handleClose={handleCloseMenu}
-        open={menuOpen}
-      >
-        <MenuOption>
-          <ListItemButton
-            onClick={() => {
-              deleteCourseResource(course, selResource);
-              handleCloseMenu();
-            }}
-          >
-            Delete
-          </ListItemButton>
-        </MenuOption>
-      </MoreOptionsMenu>
-    </Panel>
-  );
+              Delete
+            </ListItemButton>
+          </MenuOption>
+        </MoreOptionsMenu>
+      </Panel>
+    );
+  }
 }
 
 function Grades({ course }) {
@@ -691,9 +696,8 @@ function Grades({ course }) {
                 <td style={cellStyle}>{el.firstName + " " + el.lastName}</td>
                 {assignments?.map((asgmt) => (
                   <td key={asgmt.id} style={cellStyle2}>
-                    {el[asgmt.id].totalPointsAwarded +
-                      " of " +
-                      el[asgmt.id].totalPointsPossible}
+                    {el[asgmt.id]?.totalPointsAwarded ||
+                      0 + " of " + el[asgmt.id]?.totalPointsPossible}
                   </td>
                 ))}
               </tr>
