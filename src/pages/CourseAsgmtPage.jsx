@@ -17,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-
+import DoneIcon from "@mui/icons-material/Done";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import {
   QSetContainer,
@@ -172,9 +172,14 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
   const params = qSet.adaptiveParams;
   const objectives = params.objectives;
   const questions = qSet.questions;
+  const rule = params.completionRule;
+  const progress = calculateProgress(rule, currentObjective, submissionHistory);
 
   function pickObjective() {
-    const rule = params.completionRule;
+    if (!submissionHistory) {
+      setCurrentObjective(objectives[0]);
+      return;
+    }
 
     for (let i = 0; i < objectives.length; i++) {
       const objective = objectives[i];
@@ -194,10 +199,7 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
 
         const numCorrect = correctSubmissions.length;
 
-        console.log(objective.name);
-
         if (numCorrect < threshold) {
-          console.log("picked " + objective.name);
           setCurrentObjective(objective);
           return;
         }
@@ -206,35 +208,91 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
   }
 
   function handlePickQuestion() {
-    console.log(currentObjective);
     const picked = pickQuestion(currentObjective, questions, submissionHistory);
     setSelQuestion(picked);
   }
 
   useEffect(
     () => {
-      //pick first question to display on mount
-      if (!selQuestion) {
-        handlePickQuestion();
-        pickObjective();
-      }
+      //pick objective when component mounts
+      pickObjective();
     },
     //eslint-disable-next-line
-    [submissionHistory]
+    []
   );
 
   useEffect(
     () => {
-      //pick first question when starting new objective
+      if (!selQuestion?.id) return;
+      if (progress.percentage == 100) return;
+
+      pickObjective();
       handlePickQuestion();
     },
     //eslint-disable-next-line
-    [currentObjective?.name]
+    [progress.percentage]
   );
+
+  if (progress.percentage === 0 && !selQuestion)
+    return (
+      <>
+        <ProgressMeters
+          currentObjective={currentObjective}
+          qSet={qSet}
+          submissionHistory={submissionHistory}
+        />
+        <Card className="adaptive-progress-card" sx={{ p: 3 }}>
+          <Button
+            onClick={() => {
+              pickObjective();
+              handlePickQuestion();
+            }}
+          >
+            GET STARTED
+          </Button>
+        </Card>
+      </>
+    );
+
+  if (progress.percentage === 100) {
+    return (
+      <>
+        <ProgressMeters
+          currentObjective={currentObjective}
+          qSet={qSet}
+          submissionHistory={submissionHistory}
+        />
+        <Card
+          className="adaptive-progress-card flex"
+          sx={{ p: 3, minHeight: "400px" }}
+        >
+          <Box className="flex flex-col flex-grow flex-center">
+            <Typography>Learning objective completed!</Typography>
+            <Typography color="text.secondary">
+              {currentObjective.name}
+            </Typography>
+            <br />
+            <Button
+              onClick={() => {
+                pickObjective();
+                handlePickQuestion();
+              }}
+            >
+              START NEXT OBJECTIVE
+            </Button>
+          </Box>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>
-      <ProgressMeters qSet={qSet} submissionHistory={submissionHistory} />
+      <ProgressMeters
+        currentObjective={currentObjective}
+        qSet={qSet}
+        submissionHistory={submissionHistory}
+      />
       <AdaptiveQuestionCard
         asgmtID={asgmtID}
         courseID={courseID}
@@ -248,23 +306,20 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
   );
 }
 
-function ProgressMeters({ qSet, submissionHistory }) {
+function ProgressMeters({ currentObjective, qSet, submissionHistory }) {
   const params = qSet.adaptiveParams;
   const rule = params.completionRule;
   const objectives = params.objectives;
 
-  if (!submissionHistory) return null;
-
   return (
     <Card className="adaptive-progress-card" sx={{ p: 3 }}>
-      <Typography sx={{ p: 2 }}>
-        Progress based on total number of questions answered correctly
-      </Typography>
+      <Typography sx={{ px: 2 }}>Learning objectives</Typography>
       <table style={{ paddingLeft: "50px" }}>
         <tbody>
-          {objectives.map((objective) => (
+          {objectives?.map((objective) => (
             <ProgressRow
-              key={objective.name}
+              key={objective?.name}
+              currentObjective={currentObjective}
               objective={objective}
               rule={rule}
               submissionHistory={submissionHistory}
@@ -276,37 +331,54 @@ function ProgressMeters({ qSet, submissionHistory }) {
   );
 }
 
-function ProgressRow({ rule, objective, submissionHistory }) {
-  const objectiveName = objective.name;
+function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
+  const name = objective.name;
+  const active = currentObjective?.name === name;
+
+  const progress = calculateProgress(rule, objective, submissionHistory);
 
   const threshold = objective.completionThreshold;
-
-  const progress = calculateProgress(
-    rule,
-    threshold,
-    objective,
-    submissionHistory
-  );
   const progressLabel = progress.numCorrect + "/" + threshold;
+
   return (
     <tr>
       <td>
         <Box className="adaptive-progress-container">
-          <CircularProgress variant="determinate" value={progress.percentage} />
-          <Box className="adaptive-progress-label">
-            <Typography
-              variant="caption"
-              component="div"
-              color="text.secondary"
-            >
-              {progressLabel}
-            </Typography>
-          </Box>
+          {progress.percentage === 100 && (
+            <Box sx={{ position: "relative", bottom: "2px", left: "7px" }}>
+              <DoneIcon color="primary" />
+            </Box>
+          )}
+          {progress.percentage < 100 && (
+            <>
+              <Box className="adaptive-progress-label">
+                <Typography
+                  color="text.secondary"
+                  component="div"
+                  variant="caption"
+                >
+                  {progressLabel}
+                </Typography>
+              </Box>
+              <CircularProgress
+                variant="determinate"
+                value={progress.percentage}
+              />
+            </>
+          )}
         </Box>
       </td>
       <td>
-        <Typography sx={{ p: 2 }} align="center">
-          {objectiveName}
+        <Typography
+          color="primary"
+          sx={{
+            p: 2,
+            position: "relative",
+            bottom: "3px",
+            fontWeight: active ? "bold" : "normal",
+          }}
+        >
+          {name}
         </Typography>
       </td>
     </tr>
@@ -314,15 +386,16 @@ function ProgressRow({ rule, objective, submissionHistory }) {
 }
 
 function pickQuestion(objective, questions, submissionHistory) {
-  if (!submissionHistory) return;
-
+  console.log("watchaa");
   const objectiveIDs = objective?.questionIDs || [];
 
-  const touchedIDs = objectiveIDs.filter((id) =>
-    Object.hasOwn(submissionHistory, id)
-  );
+  const touchedIDs = submissionHistory
+    ? objectiveIDs.filter((id) => Object.hasOwn(submissionHistory, id))
+    : [];
 
   const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
+
+  console.log(untouchedIDs);
 
   const qIndex = pickRandomInt(0, untouchedIDs.length);
 
@@ -332,8 +405,9 @@ function pickQuestion(objective, questions, submissionHistory) {
   return foundQuestion;
 }
 
-function calculateProgress(rule, threshold, objective, submissionHistory) {
-  if (!submissionHistory) return 0;
+function calculateProgress(rule, objective, submissionHistory) {
+  if (!submissionHistory) return { percentage: 0, numCorrect: 0 };
+  if (!objective) return { percentage: 0, numCorrect: 0 };
 
   const objectiveIDs = objective.questionIDs;
   const touchedIDs = objectiveIDs.filter((id) =>
@@ -350,7 +424,7 @@ function calculateProgress(rule, threshold, objective, submissionHistory) {
     );
 
     const numCorrect = correctSubmissions.length;
-    const percentage = 100 * (numCorrect / threshold);
+    const percentage = 100 * (numCorrect / objective.completionThreshold);
 
     return { percentage, numCorrect };
   }
