@@ -375,9 +375,15 @@ export function fetchQSetSubmissionHistory(
   );
 
   const unsubscribe = onSnapshot(ref, (doc) => {
-    setSubmissionHistory({
-      ...doc.data(),
-    });
+    if (!doc.data()) {
+      setSubmissionHistory(null);
+    } else {
+      setTimeout(() => {
+        setSubmissionHistory({
+          ...doc.data(),
+        });
+      }, 1000);
+    }
   });
   return unsubscribe;
 }
@@ -692,8 +698,9 @@ export function saveQResponseFromCourse(
     newSubmission.answeredCorrectly = grade.answeredCorrectly;
     newSubmission.pointsAwarded = grade.pointsAwarded;
     setSubmitting(true);
+
     setDoc(ref, { [question.id]: updatedSubmissions }, { merge: true }).finally(
-      () => setTimeout(() => setSubmitting(false), 500)
+      () => setTimeout(() => setSubmitting(false), 200)
     );
   }
 

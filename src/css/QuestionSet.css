@@ -1,3 +1,21 @@
+.adaptive-progress-container {
+  display: inline-flex;
+  position: relative;
+}
+
+.adaptive-progress-label {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: solid 3px gainsboro;
+  border-radius: 50%;
+}
+
 .add-question-container {
   margin-top: 10px;
   width: 210px;
@@ -23,6 +41,20 @@
   justify-content: center;
   padding-bottom: 20px;
   padding-top: 20px;
+}
+
+.adaptive-progress-card {
+  margin: 15px;
+  max-width: 630px;
+  min-width: 600px;
+  padding: 10px;
+}
+
+.adaptive-card {
+  margin: 15px;
+  max-width: 630px;
+  min-width: 600px;
+  padding: 10px;
 }
 
 .question-card {

@@ -32,7 +32,7 @@
 }
 
 .flex-row {
-  display: row;
+  flex-direction: row;
 }
 
 .flex-space-around {

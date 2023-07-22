@@ -7,9 +7,12 @@
 }
 
 .course-title-and-description {
-  padding-left: 30px;
-  padding-right: 30px;
-  max-width: 250px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 20px;
+  padding-right: 20px;
+  max-width: 300px;
+  width: 280px;
 }
 
 .dashboard-container {
@@ -21,30 +24,63 @@
   min-height: calc(100vh - 70px);
 }
 
-.tabs-vertical {
+.course-divider-container {
+  width: 90%;
+  max-width: 500px;
+}
+
+.course-list-actions-container {
+  padding-top: 60px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.course-item-list {
+  width: 90%;
+  min-width: 400px;
+  max-width: 500px;
+}
+
+.tabs-vert-container {
   display: block;
+  max-height: 60vh;
   min-width: 200px;
   position: relative;
   top: 50px;
-  max-height: 60vh;
 }
 
-.tabs-horizontal {
+.tabs-vert {
+  padding-top: 80px;
+}
+
+.tabs-horiz-container {
   display: none;
   margin-top: 30px;
   margin-bottom: 30px;
 }
 
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 920px) {
   .dashboard-container {
     flex-direction: column;
   }
-  .tabs-vertical {
+  .tabs-vert-container {
     display: none;
   }
 
-  .tabs-horizontal {
+  .tabs-horiz-container {
     display: flex;
     flex-direction: row;
+  }
+}
+
+@media only screen and (max-width: 720px) {
+  .course-title-and-description {
+    display: block;
+    padding-top: 8px;
+    padding-bottom: 5px;
+    padding-left: 0px;
+    padding-right: 0px;
+    max-width: 100vw;
+    min-width: 340px;
   }
 }

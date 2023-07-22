@@ -31,6 +31,13 @@ export function compareBases(a, b) {
   return 0;
 }
 
+export function pickRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  // The maximum is exclusive and the minimum is inclusive
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
 export function searchifyStr(str) {
   if (typeof str !== "string") return [];
 

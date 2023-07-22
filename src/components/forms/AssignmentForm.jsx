@@ -158,7 +158,6 @@ export function AssignmentForm({
         )}
         <br />
         <br />
-        <pre>{JSON.stringify(selItem)}</pre>
         <DateSettings
           dateDue={dateDue}
           dateOpen={dateOpen}
