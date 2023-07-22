@@ -38,8 +38,6 @@ function getAssignments(qSet, adaptiveParams) {
   });
   const pairs = arr.flat();
 
-  console.log(pairs);
-
   const arr2 = qSet.questions.map((question) =>
     pairs.find((pair) => pair.id === question.id)
   );

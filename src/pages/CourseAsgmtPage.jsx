@@ -31,6 +31,7 @@ import FreeResponse from "../components/question-sets/QnFreeResponse";
 import "../css/QuestionSet.css";
 import { BtnContainer } from "../components/common/Buttons";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import { pickRandomInt } from "../utils/commonUtils";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -97,7 +98,6 @@ function QuestionSetDisplay({
   user,
 }) {
   const [submissionHistory, setSubmissionHistory] = useState(null);
-  const [progress, setProgress] = useState(0);
 
   const questions = qSet?.questions || [];
   const qIndex = questions.findIndex((el) =>
@@ -126,16 +126,10 @@ function QuestionSetDisplay({
     return (
       <QSetContainer>
         <QuestionCardPanel>
-          <AdaptiveProgress
-            progress={progress}
-            qSet={qSet}
-            submissionHistory={submissionHistory}
-          />
-          <AdaptiveCard
+          <AdaptiveDisplay
             asgmtID={asgmtID}
             courseID={courseID}
             qSet={qSet}
-            setProgress={setProgress}
             submissionHistory={submissionHistory}
             user={user}
           />
@@ -172,197 +166,216 @@ function QuestionSetDisplay({
   );
 }
 
-function AdaptiveProgress({ qSet, progress, submissionHistory }) {
-  //TODO: extract component for single row of table, based on one objective, then map through....
+function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
+  const [currentObjective, setCurrentObjective] = useState(null);
+  const [selQuestion, setSelQuestion] = useState(null);
   const params = qSet.adaptiveParams;
-  const objective = params.objectives[0];
-  const objectiveName = objective.name;
-  const threshold = objective.completionThreshold;
+  const objectives = params.objectives;
+  const questions = qSet.questions;
 
-  const numCorrect = Math.round((progress / 100) * threshold);
-  const progressLabel = numCorrect + "/" + threshold;
+  function pickObjective() {
+    const rule = params.completionRule;
+
+    for (let i = 0; i < objectives.length; i++) {
+      const objective = objectives[i];
+      const threshold = objective.completionThreshold;
+      const objectiveIDs = objective.questionIDs;
+      const touchedIDs = objectiveIDs.filter((id) =>
+        Object.hasOwn(submissionHistory, id)
+      );
+
+      if (rule == "total correct") {
+        const lastSubmissions = touchedIDs.map((id) =>
+          submissionHistory[id]?.at(-1)
+        );
+        const correctSubmissions = lastSubmissions.filter(
+          (lastSubmission) => lastSubmission.answeredCorrectly
+        );
+
+        const numCorrect = correctSubmissions.length;
+
+        console.log(objective.name);
+
+        if (numCorrect < threshold) {
+          console.log("picked " + objective.name);
+          setCurrentObjective(objective);
+          return;
+        }
+      }
+    }
+  }
+
+  function handlePickQuestion() {
+    console.log(currentObjective);
+    const picked = pickQuestion(currentObjective, questions, submissionHistory);
+    setSelQuestion(picked);
+  }
+
+  useEffect(
+    () => {
+      //pick first question to display on mount
+      if (!selQuestion) {
+        handlePickQuestion();
+        pickObjective();
+      }
+    },
+    //eslint-disable-next-line
+    [submissionHistory]
+  );
+
+  useEffect(
+    () => {
+      //pick first question when starting new objective
+      handlePickQuestion();
+    },
+    //eslint-disable-next-line
+    [currentObjective?.name]
+  );
+
+  return (
+    <>
+      <ProgressMeters qSet={qSet} submissionHistory={submissionHistory} />
+      <AdaptiveQuestionCard
+        asgmtID={asgmtID}
+        courseID={courseID}
+        handlePickQuestion={handlePickQuestion}
+        qSet={qSet}
+        selQuestion={selQuestion}
+        submissionHistory={submissionHistory}
+        user={user}
+      />
+    </>
+  );
+}
+
+function ProgressMeters({ qSet, submissionHistory }) {
+  const params = qSet.adaptiveParams;
+  const rule = params.completionRule;
+  const objectives = params.objectives;
 
   if (!submissionHistory) return null;
 
   return (
     <Card className="adaptive-progress-card" sx={{ p: 3 }}>
-      <Typography>
-        Progress is based on the total number of questions answered correctly
+      <Typography sx={{ p: 2 }}>
+        Progress based on total number of questions answered correctly
       </Typography>
-      <table>
+      <table style={{ paddingLeft: "50px" }}>
         <tbody>
-          <tr>
-            <td>
-              <Box sx={{ position: "relative", display: "inline-flex" }}>
-                <CircularProgress variant="determinate" value={progress} />
-                <Box
-                  sx={{
-                    top: 0,
-                    left: 0,
-                    bottom: 0,
-                    right: 0,
-                    position: "absolute",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    component="div"
-                    color="text.secondary"
-                  >
-                    {progressLabel}
-                  </Typography>
-                </Box>
-              </Box>
-            </td>
-            <td>
-              <Typography sx={{ p: 2 }} align="center">
-                {objectiveName}
-              </Typography>
-            </td>
-          </tr>
+          {objectives.map((objective) => (
+            <ProgressRow
+              key={objective.name}
+              objective={objective}
+              rule={rule}
+              submissionHistory={submissionHistory}
+            />
+          ))}
         </tbody>
       </table>
     </Card>
   );
 }
 
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  // The maximum is exclusive and the minimum is inclusive
-  return Math.floor(Math.random() * (max - min) + min);
+function ProgressRow({ rule, objective, submissionHistory }) {
+  const objectiveName = objective.name;
+
+  const threshold = objective.completionThreshold;
+
+  const progress = calculateProgress(
+    rule,
+    threshold,
+    objective,
+    submissionHistory
+  );
+  const progressLabel = progress.numCorrect + "/" + threshold;
+  return (
+    <tr>
+      <td>
+        <Box className="adaptive-progress-container">
+          <CircularProgress variant="determinate" value={progress.percentage} />
+          <Box className="adaptive-progress-label">
+            <Typography
+              variant="caption"
+              component="div"
+              color="text.secondary"
+            >
+              {progressLabel}
+            </Typography>
+          </Box>
+        </Box>
+      </td>
+      <td>
+        <Typography sx={{ p: 2 }} align="center">
+          {objectiveName}
+        </Typography>
+      </td>
+    </tr>
+  );
 }
 
-//TODO: write pickObjective function
-
-function pickQuestion(params, questions, submissionHistory) {
+function pickQuestion(objective, questions, submissionHistory) {
   if (!submissionHistory) return;
 
-  // determine hi
-  const objective1 = params?.objectives[0];
-  const objective1IDs = objective1.questionIDs;
-  const touchedIDs = Object.keys(submissionHistory);
-  const untouchedIDs = objective1IDs.filter((id) => !touchedIDs.includes(id));
+  const objectiveIDs = objective?.questionIDs || [];
 
-  const correctIDs = touchedIDs.filter(
-    (id) => submissionHistory[id].at(-1).answeredCorrectly
+  const touchedIDs = objectiveIDs.filter((id) =>
+    Object.hasOwn(submissionHistory, id)
   );
-  //questions attempted but answered incorrectly
-  const incorrectIDs = touchedIDs.filter((id) => !correctIDs.includes(id));
 
-  console.log("SUBMISSION HISTORY");
+  const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
 
-  console.log("==============");
-  // console.log("ADAPTIVE PARAMETERS");
-  // console.table({
-  //   completionRule: completionRule,
-  //   objective1: objective1Name,
-  // });
+  const qIndex = pickRandomInt(0, untouchedIDs.length);
 
-  console.log("objective 1 IDs: ");
-  console.log(objective1IDs);
-  console.log("");
-  console.log("touched IDs");
-  console.log(touchedIDs);
-  console.log("");
-  console.log("unspentIDs");
-  console.log(untouchedIDs);
-  console.log("");
-  console.log("answered correctly: ");
-  console.log(correctIDs);
-  console.log("");
-  console.log("answered incorrectly: ");
-  console.log(incorrectIDs);
-
-  if (incorrectIDs.length > 0) {
-    return questions.find((question) => question.id === incorrectIDs[0]);
-  }
-
-  const randomIndex = getRandomInt(0, untouchedIDs.length);
-
-  const pickedID = untouchedIDs[randomIndex];
+  const pickedID = untouchedIDs[qIndex];
   const foundQuestion = questions.find((question) => question.id === pickedID);
 
-  console.log(foundQuestion);
-
-  if (questions.length === 0) return null;
   return foundQuestion;
 }
 
-function calculateProgress(params, objIndex, submissionHistory) {
-  const completionRule = params.completionRule;
-  const objectives = params.objectives;
-  const objective = objectives[objIndex];
-  const completionThreshold = Number(objective.completionThreshold);
-  const objectiveIDs = objective.questionIDs;
-
+function calculateProgress(rule, threshold, objective, submissionHistory) {
   if (!submissionHistory) return 0;
 
-  const touchedIDs = Object.keys(submissionHistory);
-  //question answered correctly across all objectives
-  const correctIDs = touchedIDs.filter(
-    (id) => submissionHistory[id].at(-1).answeredCorrectly
+  const objectiveIDs = objective.questionIDs;
+  const touchedIDs = objectiveIDs.filter((id) =>
+    Object.hasOwn(submissionHistory, id)
   );
 
-  if (completionRule === "total correct") {
-    // ids that count towards fulfilling the objective completion rule
-    const qualifyingIDs = objectiveIDs.filter((id) => correctIDs.includes(id));
-    console.log("qualifying IDs:");
-    console.log(qualifyingIDs);
+  if (rule == "total correct") {
+    const lastSubmissions = touchedIDs.map((id) =>
+      submissionHistory[id]?.at(-1)
+    );
 
-    const progress = 100 * (qualifyingIDs.length / completionThreshold);
+    const correctSubmissions = lastSubmissions.filter(
+      (lastSubmission) => lastSubmission.answeredCorrectly
+    );
 
-    return progress;
+    const numCorrect = correctSubmissions.length;
+    const percentage = 100 * (numCorrect / threshold);
+
+    return { percentage, numCorrect };
   }
 
   return 0;
 }
 
-function AdaptiveCard({
+function AdaptiveQuestionCard({
   asgmtID,
   courseID,
-  qSet,
-  setProgress,
+  handlePickQuestion,
+  selQuestion,
   submissionHistory,
   user,
 }) {
-  const [selQuestion, setSelQuestion] = useState(null);
-  const questions = qSet.questions;
+  const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
   const type = selQuestion?.type;
   const submissions = getSubmissions(submissionHistory, selQuestion);
   const lastSubmission = submissions?.at(-1) || null;
-  const params = qSet.adaptiveParams;
+
   const docRefParams = {
     asgmtID: asgmtID,
     courseID: courseID,
     userID: user.uid,
   };
-
-  const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
-
-  function handlePickQuestion() {
-    const picked = pickQuestion(params, questions, submissionHistory);
-    setSelQuestion(picked);
-  }
-
-  function updateProgress() {
-    const updated = calculateProgress(params, 0, submissionHistory);
-    setProgress(updated);
-  }
-
-  useEffect(() => {
-    if (!selQuestion) {
-      //pick first question to display on mount
-      handlePickQuestion();
-      console.log("use effect triggerred");
-    }
-    setTimeout(updateProgress, 1200);
-  }, [submissionHistory]);
-
-  // useEffect(() => {}, [selQuestion?.id]);
 
   if (!selQuestion) return null;
 
