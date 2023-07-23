@@ -125,94 +125,82 @@ export default function QuestionSetPage() {
     );
   }
 
-  if (questions.length === 0) {
-    return (
-      <Page>
-        <BackToQSets />
-        <PageHeader title={qSet?.title} />
+  return (
+    <Page>
+      <BackToQSets />
+      <PageHeader title={qSet?.title} />
+      {questions.length === 0 && (
         <GetStarted
           handleAddQuestion={handleAddQuestion}
           loading={loading}
           questions={questions}
         />
-        <QuestionBuilder
-          edit={edit}
-          handleClose={handleCloseBuilder}
-          open={openBuilder}
-          qSet={qSet}
-          selQuestion={edit ? selQuestion : null}
-          setEdit={setEdit}
-          setSelQuestion={setSelQuestion}
-          user={user}
-        />
-      </Page>
-    );
-  }
-
-  return (
-    <Page>
-      <BackToQSets />
-      <Box sx={{ px: 2 }}>
-        <PageHeader title={qSet?.title} />
-        <Divider />
-        <QSetContainer>
-          <Box className="question-list-container">
-            <QuestionList
-              questions={questions}
-              selQuestion={selQuestion}
-              setSelQuestion={setSelQuestion}
-              submissionHistory={submissionHistory}
-            />
-            <Box className="add-question-container">
-              <Divider sx={{ mb: 2 }} />
-              <Button
-                fullWidth
-                startIcon={<AddIcon />}
-                onClick={handleAddQuestion}
-                sx={{ borderRadius: 0 }}
-              >
-                ADD QUESTION
-              </Button>
-            </Box>
-          </Box>
-          <QuestionNav
-            qIndex={qIndex}
-            questions={questions}
-            setSelQuestion={setSelQuestion}
-          />
-
-          <QuestionCardPanel>
-            {questions.length > 0 && (
-              <ToggleButtonGroup
-                color="primary"
-                exclusive
-                onChange={handleMode}
-                size="small"
-                sx={{ position: "absolute", top: -35, right: 15 }}
-                value={mode}
-              >
-                <ToggleButton value="preview">Preview</ToggleButton>
-                <ToggleButton value="test">Test</ToggleButton>
-              </ToggleButtonGroup>
-            )}
-            <QuestionCard
-              handleOpenPoints={handleOpenPoints}
-              handleOpenAttempts={handleOpenAttempts}
-              handleEditQuestion={handleEditQuestion}
-              mode={mode}
-              qSet={qSet}
-              question={selQuestion}
-              user={user}
-            />
-            <br />
-            {selQuestion && (
-              <Box align="center">
-                <Button onClick={handleDeleteQuestion}>Delete Question</Button>
+      )}
+      {questions.length > 0 && (
+        <Box sx={{ px: 2 }}>
+          <Divider />
+          <QSetContainer>
+            <Box className="question-list-container">
+              <QuestionList
+                questions={questions}
+                selQuestion={selQuestion}
+                setSelQuestion={setSelQuestion}
+                submissionHistory={submissionHistory}
+              />
+              <Box className="add-question-container">
+                <Divider sx={{ mb: 2 }} />
+                <Button
+                  fullWidth
+                  startIcon={<AddIcon />}
+                  onClick={handleAddQuestion}
+                  sx={{ borderRadius: 0 }}
+                >
+                  ADD QUESTION
+                </Button>
               </Box>
-            )}
-          </QuestionCardPanel>
-        </QSetContainer>
-      </Box>
+            </Box>
+            <QuestionNav
+              qIndex={qIndex}
+              questions={questions}
+              setSelQuestion={setSelQuestion}
+            />
+
+            <QuestionCardPanel>
+              {questions.length > 0 && (
+                <ToggleButtonGroup
+                  color="primary"
+                  exclusive
+                  onChange={handleMode}
+                  size="small"
+                  sx={{ position: "absolute", top: -35, right: 15 }}
+                  value={mode}
+                >
+                  <ToggleButton value="preview">Preview</ToggleButton>
+                  <ToggleButton value="test">Test</ToggleButton>
+                </ToggleButtonGroup>
+              )}
+              <QuestionCard
+                handleOpenPoints={handleOpenPoints}
+                handleOpenAttempts={handleOpenAttempts}
+                handleEditQuestion={handleEditQuestion}
+                mode={mode}
+                qSet={qSet}
+                question={selQuestion}
+                user={user}
+              />
+              <br />
+              {selQuestion && (
+                <Box align="center">
+                  <Button onClick={handleDeleteQuestion}>
+                    Delete Question
+                  </Button>
+                </Box>
+              )}
+            </QuestionCardPanel>
+          </QSetContainer>
+        </Box>
+      )}
+
       <QuestionBuilder
         edit={edit}
         handleClose={handleCloseBuilder}
