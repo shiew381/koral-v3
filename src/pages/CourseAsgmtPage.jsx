@@ -379,14 +379,20 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
           className="adaptive-progress-card flex"
           sx={{ minHeight: "400px" }}
         >
-          <Box className="flex flex-col flex-grow flex-center">
-            {objIndex < objectives.length - 1 && (
-              <Typography>Learning objective completed!</Typography>
-            )}
-            <Typography>
-              You completed all the objectives. Nicely done!
-            </Typography>
-            <br />
+          <Box
+            className="adaptive-qset-complete-container"
+            sx={{ backgroundImage: `url(${import.meta.env.VITE_CONFETTI})` }}
+          >
+            <Box sx={{ bgcolor: "rgba(255,255,255,0.5)", p: 3 }}>
+              <Typography
+                color="primary"
+                sx={{ bgcolor: "white", p: 3 }}
+                variant="h6"
+              >
+                You completed all the objectives. Nicely done!
+              </Typography>
+            </Box>
+
             {/* <Button>RESET</Button> */}
           </Box>
         </Card>
@@ -420,7 +426,7 @@ function ProgressMeters({ currentObjective, qSet, submissionHistory }) {
   const objectives = params.objectives;
 
   return (
-    <Card className="adaptive-progress-card" sx={{ p: 3 }}>
+    <Card className="adaptive-progress-card" sx={{ px: 3, pt: 2, pb: 1 }}>
       <table style={{ paddingLeft: "50px" }}>
         <tbody>
           {objectives?.map((objective) => (
@@ -531,6 +537,14 @@ function AdaptiveQuestionCard({
         )}
       </BtnContainer>
 
+      {type === "multiple choice" && (
+        <MultipleChoice
+          docRefParams={docRefParams}
+          mode="course"
+          question={selQuestion}
+          submissions={submissions}
+        />
+      )}
       {type === "short answer" && (
         <ShortAnswer
           docRefParams={docRefParams}
