@@ -92,10 +92,10 @@ export default function QuestionSetsPage() {
     );
   }
 
-  if (qSets.length === 0) {
-    return (
-      <Page>
-        <PageHeader title="Question Sets" />
+  return (
+    <Page>
+      <PageHeader title="Question Sets" />
+      {qSets.length === 0 && (
         <div className="flex flex-center" style={{ height: "50vh" }}>
           <BuildFirstItem
             handleOpen={handleOpen}
@@ -103,15 +103,8 @@ export default function QuestionSetsPage() {
             message="Welcome to your question sets! Build quizzes, exams, and other assessments here."
           />
         </div>
-        <AddQSetForm open={open} handleClose={handleClose} user={user} />
-      </Page>
-    );
-  }
-
-  if (qSets.length > 0) {
-    return (
-      <Page>
-        <PageHeader title="Question Sets" />
+      )}
+      {qSets.length > 0 && (
         <Box sx={{ px: 3 }}>
           <Box
             className="flex flex-align-center flex-space-between flex-wrap"
@@ -120,13 +113,6 @@ export default function QuestionSetsPage() {
           >
             <SearchField onChange={handleSearchTerm} value={searchTerm} />
             <AddQSetBtn onClick={handleOpen} />
-            <AddQSetForm open={open} handleClose={handleClose} user={user} />
-            <AdaptiveParamsForm
-              qSet={selQSet}
-              open={adaptiveFormOpen}
-              handleClose={closeAdaptiveForm}
-              user={user}
-            />
           </Box>
           {filtered.length === 0 && (
             <Box sx={{ p: 2 }}>
@@ -147,9 +133,17 @@ export default function QuestionSetsPage() {
               ))}
           </Box>
         </Box>
-      </Page>
-    );
-  }
+      )}
+
+      <AddQSetForm open={open} handleClose={handleClose} user={user} />
+      <AdaptiveParamsForm
+        qSet={selQSet}
+        open={adaptiveFormOpen}
+        handleClose={closeAdaptiveForm}
+        user={user}
+      />
+    </Page>
+  );
 }
 
 function AddQSetBtn({ onClick }) {

@@ -22,37 +22,27 @@ export function addAssignment(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "assignments");
   setSubmitting(true);
   addDoc(ref, { ...values, dateCreated: serverTimestamp() })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 500);
-      setTimeout(() => handleClose(), 500);
-    })
-    .catch((error) => {
-      console.log(error);
-      setTimeout(() => setSubmitting(false), 500);
-    });
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addAnnouncement(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "announcements");
   setSubmitting(true);
   addDoc(ref, { ...values, dateCreated: serverTimestamp() })
-    .then(() => handleClose())
+    .then(() => setTimeout(() => handleClose(), 600))
     .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 500));
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addCourse(values, handleClose, setSubmitting) {
   const ref = collection(db, "courses");
   setSubmitting(true);
   addDoc(ref, { dateCreated: serverTimestamp(), ...values })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 500);
-      setTimeout(() => handleClose(), 500);
-    })
-    .catch((error) => {
-      console.log(error);
-      setTimeout(() => setSubmitting(false), 500);
-    });
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addQuestion(
@@ -79,9 +69,9 @@ export function addQuestion(
   })
     .then(() => {
       setSelQuestion(tidiedValues);
-      setTimeout(() => handleClose(), 800);
+      setTimeout(() => handleClose(), 600);
     })
-    .finally(() => setTimeout(() => setSubmitting(false), 500));
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addPointerToFile(user, file, url, colName) {
@@ -116,14 +106,9 @@ export function addResource(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "resources");
   setSubmitting(true);
   addDoc(ref, { ...values, dateCreated: serverTimestamp() })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 500);
-      setTimeout(() => handleClose(), 500);
-    })
-    .catch((error) => {
-      console.log(error);
-      setTimeout(() => setSubmitting(false), 500);
-    });
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addStudentToCourse(
@@ -143,12 +128,9 @@ export function addStudentToCourse(
   updateDoc(ref1, {
     studentIDs: arrayUnion(studentInfo.id),
   })
-    .then(() => {
-      setTimeout(() => setSubmitting(false), 400);
-      setTimeout(() => handleClose(), 500);
-    })
+    .then(() => setTimeout(() => handleClose(), 600))
     .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 500));
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addUser({ userCredentials, values }) {
@@ -159,20 +141,18 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "links");
   setSubmitting(true);
   addDoc(ref, { ...values, dateCreated: serverTimestamp() })
-    .then(() => {
-      setSubmitting(false);
-      handleClose();
-    })
-    .catch((error) => console.log(error));
+    .then(() => setTimeout(() => handleClose(), 500))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
 }
 
 export function addUserQSet(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
   addDoc(ref, { ...values, questions: [], dateCreated: serverTimestamp() })
-    .then(() => setTimeout(() => handleClose(), 600))
+    .then(() => setTimeout(() => handleClose(), 500))
     .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 500));
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
 }
 
 export function autoSaveQuestion(
@@ -456,8 +436,10 @@ export function fetchUserLinks(user, setLinks, setFetching) {
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
-    setLinks(fetchedItems);
-    setFetching(false);
+    setTimeout(() => {
+      setLinks(fetchedItems);
+      setFetching(false);
+    }, 1000);
   });
   return unsubscribe;
 }
@@ -486,8 +468,10 @@ export function fetchUserQSets(user, setQSets, setFetching) {
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
-    setQSets(fetchedItems);
-    setFetching(false);
+    setTimeout(() => {
+      setQSets(fetchedItems);
+      setFetching(false);
+    }, 1000);
   });
   return unsubscribe;
 }
@@ -495,11 +479,14 @@ export function fetchUserQSets(user, setQSets, setFetching) {
 export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
   const ref = doc(db, "users", user.uid, "question-sets", qSetID);
   const unsubscribe = onSnapshot(ref, (doc) => {
-    setQSet({
+    const values = {
       id: doc.id,
       ...doc.data(),
-    });
-    setFetching(false);
+    };
+    setTimeout(() => {
+      setQSet(values);
+      setFetching(false);
+    }, 1000);
   });
   return unsubscribe;
 }

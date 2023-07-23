@@ -72,10 +72,10 @@ export default function LinksPage() {
     );
   }
 
-  if (links.length === 0) {
-    return (
-      <Page>
-        <PageHeader title="Links" />
+  return (
+    <Page>
+      <PageHeader title="Links" />
+      {links.length === 0 && (
         <div className="flex flex-center" style={{ height: "50vh" }}>
           <BuildFirstItem
             handleOpen={handleOpen}
@@ -83,15 +83,8 @@ export default function LinksPage() {
             message="Welcome to your links! Embed content from other websites here."
           />
         </div>
-        <AddLinkForm open={open} handleClose={handleClose} user={user} />
-      </Page>
-    );
-  }
-
-  if (links.length > 0) {
-    return (
-      <Page>
-        <PageHeader title="Links" />
+      )}
+      {links.length > 0 && (
         <Box className="flex flex-row" sx={{ px: 2 }}>
           <Box className="flex-col" sx={{ width: "300px", mx: "15px" }}>
             <Box
@@ -113,16 +106,16 @@ export default function LinksPage() {
             />
             <Divider />
             <AddLinkBtn onClick={handleOpen} />
-            <AddLinkForm open={open} handleClose={handleClose} user={user} />
           </Box>
           <Box className="flexflex-col flex-align-center flex-grow relative">
             <LinkEmbed link={selLink} />
             <LinkDetails link={selLink} />
           </Box>
         </Box>
-      </Page>
-    );
-  }
+      )}
+      <AddLinkForm open={open} handleClose={handleClose} user={user} />
+    </Page>
+  );
 }
 
 function LinkList({ links, searchTerm, selLink, setSelLink }) {
