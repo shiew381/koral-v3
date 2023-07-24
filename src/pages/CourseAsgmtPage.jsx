@@ -214,6 +214,7 @@ function QuestionSetDisplay({
     <QSetContainer>
       <Box className="question-list-container">
         <QuestionList
+          draggable={false}
           questions={questions}
           selQuestion={selQuestion}
           setSelQuestion={setSelQuestion}

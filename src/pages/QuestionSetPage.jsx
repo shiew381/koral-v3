@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
+  deleteQuestion,
+  fetchUserQSet,
+  updateUserQSet,
+} from "../utils/firestoreClient";
+import { getSubmissions } from "../utils/questionSetUtils";
+import { copyArray } from "../utils/commonUtils";
+import {
   Box,
   Button,
   Card,
@@ -14,7 +21,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { deleteQuestion, fetchUserQSet } from "../utils/firestoreClient";
+
 import { VertDivider } from "../components/common/Dividers";
 import { Page, PageHeader, LoadingIndicator } from "../components/common/Pages";
 import {
@@ -32,7 +39,6 @@ import {
   QuestionNav,
   QuestionList,
 } from "../components/question-sets/QSetSharedCpnts";
-import { getSubmissions } from "../utils/questionSetUtils";
 
 export default function QuestionSetPage() {
   const { user } = useAuth();
@@ -98,6 +104,23 @@ export default function QuestionSetPage() {
     }
   }
 
+  function handleDragEnd(result) {
+    const { destination, source } = result;
+    const reordered = destination.index !== source.index;
+
+    if (!reordered) {
+      return;
+    } else if (reordered) {
+      const updated = copyArray(questions);
+      const draggedQuestion = updated.splice(source.index, 1);
+
+      updated.splice(destination.index, 0, ...draggedQuestion);
+
+      setQSet({ ...qSet, questions: updated });
+      updateUserQSet(user, qSet, { questions: updated });
+    }
+  }
+
   useEffect(
     () => {
       if (!user) return;
@@ -142,6 +165,8 @@ export default function QuestionSetPage() {
           <QSetContainer>
             <Box className="question-list-container">
               <QuestionList
+                draggable
+                handleDragEnd={handleDragEnd}
                 questions={questions}
                 selQuestion={selQuestion}
                 setSelQuestion={setSelQuestion}

@@ -11,6 +11,7 @@ import {
 import parse from "html-react-parser";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 export function AttemptCounter({ question, submissions }) {
   if (!question) return;
@@ -92,6 +93,8 @@ export function QuestionCardPanel({ children }) {
 }
 
 export function QuestionList({
+  draggable,
+  handleDragEnd,
   questions,
   selQuestion,
   setSelQuestion,
@@ -101,6 +104,87 @@ export function QuestionList({
     padding: 0,
   };
 
+  // function pointsAwarded(question, submissionHistory) {
+  //   if (!submissionHistory) {
+  //     return 0;
+  //   }
+
+  //   const submissions = submissionHistory[question.id] || [];
+  //   const lastSubmission = submissions?.at(-1) || null;
+  //   const pointsAwarded = lastSubmission?.pointsAwarded || 0;
+  //   return pointsAwarded;
+  // }
+
+  // function pointsPossible(question) {
+  //   if (!question) {
+  //     return "";
+  //   } else {
+  //     return question.pointsPossible > 1
+  //       ? `${question.pointsPossible} points`
+  //       : `${question.pointsPossible} point`;
+  //   }
+  // }
+
+  if (questions?.length == 0) {
+    return null;
+  }
+
+  if (draggable) {
+    return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="droppable-questions" type="question">
+          {(provided) => (
+            <List
+              sx={listStyle}
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {questions?.map((question, index) => (
+                <QuestionListItem
+                  draggable
+                  handleClick={() => setSelQuestion(question)}
+                  key={question.id}
+                  question={question}
+                  index={index}
+                  selected={question.id === selQuestion?.id}
+                  submissionHistory={submissionHistory}
+                />
+              ))}
+              {provided.placeholder}
+            </List>
+          )}
+        </Droppable>
+      </DragDropContext>
+    );
+  }
+
+  if (!draggable) {
+    return (
+      <List className="question-list" sx={listStyle}>
+        {questions?.map((question, index) => (
+          <QuestionListItem
+            draggable={false}
+            handleClick={() => setSelQuestion(question)}
+            key={question.id}
+            question={question}
+            index={index}
+            selected={question.id === selQuestion?.id}
+            submissionHistory={submissionHistory}
+          />
+        ))}
+      </List>
+    );
+  }
+}
+
+function QuestionListItem({
+  draggable,
+  question,
+  index,
+  selected,
+  handleClick,
+  submissionHistory,
+}) {
   function pointsAwarded(question, submissionHistory) {
     if (!submissionHistory) {
       return 0;
@@ -122,35 +206,55 @@ export function QuestionList({
     }
   }
 
-  if (questions?.length == 0) {
-    return null;
+  if (draggable) {
+    return (
+      <Draggable draggableId={question.id} index={index}>
+        {(provided) => (
+          <ListItemButton
+            key={question?.id}
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+            onClick={handleClick}
+            sx={{
+              bgcolor: selected ? "rgba(0,0,0,0.05)" : "transparent",
+            }}
+          >
+            <ListItemText
+              primary={`Question ${index + 1}`}
+              secondary={
+                pointsAwarded(question, submissionHistory) +
+                " of " +
+                pointsPossible(question)
+              }
+            />
+            {provided.placeholder}
+          </ListItemButton>
+        )}
+      </Draggable>
+    );
   }
 
-  return (
-    <List className="question-list" sx={listStyle}>
-      {questions?.map((question, index) => (
-        <ListItemButton
-          key={question?.id}
-          onClick={() => setSelQuestion(question)}
-          sx={{
-            bgcolor:
-              question?.id === selQuestion?.id
-                ? "rgba(0,180,235,0.1)"
-                : "transparent",
-          }}
-        >
-          <ListItemText
-            primary={`Question ${index + 1}`}
-            secondary={
-              pointsAwarded(question, submissionHistory) +
-              " of " +
-              pointsPossible(question)
-            }
-          />
-        </ListItemButton>
-      ))}
-    </List>
-  );
+  if (!draggable) {
+    return (
+      <ListItemButton
+        key={question?.id}
+        onClick={handleClick}
+        sx={{
+          bgcolor: selected ? "rgba(0,0,0,0.05)" : "transparent",
+        }}
+      >
+        <ListItemText
+          primary={`Question ${index + 1}`}
+          secondary={
+            pointsAwarded(question, submissionHistory) +
+            " of " +
+            pointsPossible(question)
+          }
+        />
+      </ListItemButton>
+    );
+  }
 }
 
 export function QuestionNav({ qIndex, questions, setSelQuestion }) {
