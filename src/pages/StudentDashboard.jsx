@@ -190,8 +190,12 @@ function Assignments({ course }) {
   const [loading, setLoading] = useState(true);
 
   function redirectToAsgmt(asgmt) {
-    const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
-    const asgmtTitle = encodeURI(asgmt.title.replace(/\s/g, "-"));
+    const courseTitle = encodeURI(
+      course.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
+    const asgmtTitle = encodeURI(
+      asgmt.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
 
     const path = `/classroom/courses/${courseTitle}/${course.id}/assignment/${asgmtTitle}/${asgmt.id}`;
 
@@ -265,8 +269,22 @@ function Assignments({ course }) {
 }
 
 function Resources({ course }) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [resources, setResources] = useState([]);
+
+  function redirectToResource(resource) {
+    const courseTitle = encodeURI(
+      course.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
+    const resourceTitle = encodeURI(
+      resource.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
+
+    const path = `/classroom/courses/${courseTitle}/${course.id}/resource/${resourceTitle}/${resource.id}`;
+
+    navigate(path, { replace: true });
+  }
 
   useEffect(
     () => fetchResources(course.id, setResources, setLoading),
@@ -299,7 +317,12 @@ function Resources({ course }) {
           <div key={resource.id}>
             <ListItem
               secondaryAction={
-                <Button endIcon={<NavigateNextIcon />}>VIEW</Button>
+                <Button
+                  endIcon={<NavigateNextIcon />}
+                  onClick={() => redirectToResource(resource)}
+                >
+                  VIEW
+                </Button>
               }
             >
               <ListItemIcon>

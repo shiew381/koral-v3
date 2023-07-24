@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
   fetchQSetSubmissionHistory,
@@ -16,7 +16,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DoneIcon from "@mui/icons-material/Done";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { LoadingIndicator, Page } from "../components/common/Pages";
@@ -34,6 +33,7 @@ import { BtnContainer } from "../components/common/Buttons";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { pickRandomInt } from "../utils/commonUtils";
 import { formatTimeAndDate } from "../utils/dateUtils";
+import { BackToStudentDashboard } from "../components/common/CourseCpnts";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -629,26 +629,6 @@ function QuestionCard({
       </Card>
     );
   }
-}
-
-export function BackToStudentDashboard() {
-  const navigate = useNavigate();
-  const { courseID, title } = useParams();
-
-  function redirectToStudentDashboard() {
-    navigate(`/classroom/courses/${title}/${courseID}/student/dashboard`);
-  }
-
-  return (
-    <div className="page-actions">
-      <Button
-        startIcon={<ChevronLeftIcon />}
-        onClick={redirectToStudentDashboard}
-      >
-        Course Dashboard
-      </Button>
-    </div>
-  );
 }
 
 function pickQuestion(objective, questions, submissionHistory) {

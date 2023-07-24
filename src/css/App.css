@@ -137,6 +137,10 @@
   min-height: calc(100vh - 60px);
 }
 
+.page-main {
+  height: calc(100vh - 100px);
+}
+
 .example-free-response {
   min-height: 80px;
   font-family: Lato;

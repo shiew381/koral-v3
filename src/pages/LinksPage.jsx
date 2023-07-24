@@ -194,7 +194,7 @@ function LinkDetails({ link }) {
     <Box width="95%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
       <Typography variant="h6">{link.title}</Typography>
       <Typography display="inline" variant="subtitle1">
-        created: {formatDate(link.created)}
+        added: {formatDate(link.dateCreated)}
       </Typography>
       <VertDivider />
 

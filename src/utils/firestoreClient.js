@@ -496,6 +496,35 @@ export function getAssignment(courseID, asgmtID, setAsgmt) {
   getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
 }
 
+export function getResource(courseID, resourceID, setResource) {
+  const ref = doc(db, "courses", courseID, "resources", resourceID);
+  getDoc(ref).then((doc) => setResource({ id: doc.id, ...doc.data() }));
+}
+
+export function getImage(userID, imageID, setImage, setLoading) {
+  const ref = doc(db, "users", userID, "images", imageID);
+  getDoc(ref).then((doc) => {
+    setImage({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
+export function getDocument(userID, documentID, setDocument, setLoading) {
+  const ref = doc(db, "users", userID, "documents", documentID);
+  getDoc(ref).then((doc) => {
+    setDocument({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
+export function getLink(userID, linkID, setLink, setLoading) {
+  const ref = doc(db, "users", userID, "links", linkID);
+  getDoc(ref).then((doc) => {
+    setLink({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
 export function getQSet(userID, qSetID, setQSet, setLoading) {
   const ref = doc(db, "users", userID, "question-sets", qSetID);
   getDoc(ref).then((doc) => {
