@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   fetchCourse,
   fetchAssignments,
@@ -9,6 +9,7 @@ import {
   getUserGrades,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
+import { truncateString } from "../utils/commonUtils";
 import {
   Box,
   Button,
@@ -35,6 +36,7 @@ import {
 
 export function StudentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { courseID } = useParams();
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,20 @@ export function StudentDashboard() {
   }
 
   useEffect(() => fetchCourse(courseID, setCourse, setLoading), [courseID]);
+
+  useEffect(
+    () => {
+      if (location.state === "resources") {
+        setTabIndex(3);
+      }
+
+      if (location.state === "assignments") {
+        setTabIndex(2);
+      }
+    },
+    //eslint-disable-next-line
+    []
+  );
 
   if (!user) {
     return null;
@@ -329,7 +345,7 @@ function Resources({ course }) {
                 <ResourceIcon type={resource.type} />
               </ListItemIcon>
               <ListItemText
-                primary={resource.title}
+                primary={truncateString(resource.title, 40)}
                 secondary={"Added: " + formatDate(resource.dateCreated)}
               />
             </ListItem>

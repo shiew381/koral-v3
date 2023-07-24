@@ -47,3 +47,14 @@ export function searchifyStr(str) {
 
   return normalizedArr.filter((el) => el); // removes undefined elements from array
 }
+
+export function truncateString(str, maxLength) {
+  if (typeof str !== "string") {
+    return "error parsing string";
+  }
+  if (str.length < maxLength) {
+    return str;
+  } else {
+    return str.slice(0, maxLength - 3) + "...";
+  }
+}

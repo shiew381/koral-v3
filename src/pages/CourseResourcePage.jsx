@@ -63,7 +63,7 @@ export default function CourseResourcePage() {
 
   return (
     <Page>
-      <BackToStudentDashboard />
+      <BackToStudentDashboard location="resources" />
       <Box className="page-main flex flex-column flex-justify-center">
         {resource.type === "document" && (
           <Box className="flex flex-col flex-align-center" sx={{ px: 2 }}>

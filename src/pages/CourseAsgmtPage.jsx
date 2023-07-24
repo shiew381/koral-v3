@@ -111,7 +111,7 @@ export default function CourseAsgmtPage() {
   if (beforeDateOpen()) {
     return (
       <Page>
-        <BackToStudentDashboard />
+        <BackToStudentDashboard location="assignments" />
         <Box className="flex flex-center" sx={{ height: "80vh" }}>
           <Box>
             <Typography align="center">assignment will open</Typography>
@@ -127,7 +127,7 @@ export default function CourseAsgmtPage() {
   if (afterDateDue()) {
     return (
       <Page>
-        <BackToStudentDashboard />
+        <BackToStudentDashboard location="assignments" />
         <Box className="flex flex-center" sx={{ height: "80vh" }}>
           <Box>
             <Typography align="center" color="text.secondary">
@@ -148,7 +148,7 @@ export default function CourseAsgmtPage() {
 
   return (
     <Page>
-      <BackToStudentDashboard />
+      <BackToStudentDashboard location="assignments" />
       <QuestionSetDisplay
         asgmtID={asgmtID}
         courseID={courseID}
