@@ -23,6 +23,10 @@
   flex-grow: 1;
 }
 
+.flex-start {
+  justify-content: flex-start;
+}
+
 .flex-end {
   justify-content: end;
 }

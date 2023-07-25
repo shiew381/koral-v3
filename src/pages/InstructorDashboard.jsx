@@ -635,8 +635,12 @@ function Grades({ course }) {
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const cellStyle = { padding: "10px", textAlign: "left" };
-  const cellStyle2 = { padding: "10px", textAlign: "center" };
+  const cellStyle = { padding: "10px", textAlign: "left", maxWidth: "200px" };
+  const cellStyle2 = {
+    padding: "10px",
+    textAlign: "center",
+    maxWidth: "140px",
+  };
 
   useEffect(
     () => {
@@ -673,7 +677,7 @@ function Grades({ course }) {
   return (
     <Panel>
       <Box sx={{ pt: "50px" }}>
-        <table style={{ width: "300px" }}>
+        <table>
           <thead>
             <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
               <th style={cellStyle}>Student</th>
@@ -685,19 +689,20 @@ function Grades({ course }) {
             </tr>
           </thead>
           <tbody>
-            {grades.map((el, ind) => (
+            {grades.map((userGrades, ind) => (
               <tr
-                key={el.id}
+                key={userGrades.id}
                 style={{
                   backgroundColor:
                     ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
                 }}
               >
-                <td style={cellStyle}>{el.firstName + " " + el.lastName}</td>
+                <td style={cellStyle}>
+                  {userGrades.firstName + " " + userGrades.lastName}
+                </td>
                 {assignments?.map((asgmt) => (
                   <td key={asgmt.id} style={cellStyle2}>
-                    {el[asgmt.id]?.totalPointsAwarded ||
-                      0 + " of " + el[asgmt.id]?.totalPointsPossible}
+                    {formatGrade(asgmt, userGrades)}
                   </td>
                 ))}
               </tr>
@@ -709,4 +714,17 @@ function Grades({ course }) {
       </Box>
     </Panel>
   );
+}
+
+function formatGrade(asgmt, userGrades) {
+  const asgmtGrade = userGrades[asgmt.id];
+
+  const totalPointsAwarded = asgmtGrade?.totalPointsAwarded;
+  const totalPointsPossible = asgmtGrade?.totalPointsPossible;
+
+  if (!asgmtGrade) {
+    return "N/A";
+  }
+
+  return totalPointsAwarded + " of " + totalPointsPossible;
 }

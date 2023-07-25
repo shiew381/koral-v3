@@ -21,6 +21,7 @@ import {
 import {
   CompletionThresholdField,
   ObjectiveField,
+  PointsField,
 } from "../common/InputFields";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -61,11 +62,13 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
         objectives: adaptiveParams.objectives,
         assignments: getAssignments(qSet, adaptiveParams),
         rule: adaptiveParams.completionRule,
+        totalPointsPossible: adaptiveParams.totalPointsPossible,
       }
     : {
         objectives: [cleanObjective],
         assignments: qSet?.questions?.map(() => "unassigned"),
-        rule: "consecutive correct",
+        rule: "total correct",
+        totalPointsPossible: 10,
       };
 
   const steps = [
@@ -74,17 +77,21 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
     "Set Completion Criteria",
   ];
 
-  const initialRule = "consecutive correct";
   const [activeStep, setActiveStep] = useState(0);
   const [objectives, setObjectives] = useState(initVal.objectives);
   const [assignments, setAssignments] = useState(initVal.assignments);
-  const [rule, setRule] = useState(initialRule);
+  const [rule, setRule] = useState(initVal.rule);
+  const [points, setPoints] = useState(initVal.totalPointsPossible);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   function handleRule(e) {
     setRule(e.target.value);
+  }
+
+  function handlePoints(e) {
+    setPoints(e.target.value);
   }
 
   function handleSubmit() {
@@ -94,6 +101,7 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
       adaptiveParams: {
         objectives: updatedObjectives,
         completionRule: rule,
+        totalPointsPossible: Number(points),
       },
     };
 
@@ -206,17 +214,18 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
         selectSkill={selectSkill}
         step={activeStep}
       />
-      <GroupSkills
+      <CompletionCriteria
         assignments={assignments}
         handleCompletionThreshold={handleCompletionThreshold}
         handleRule={handleRule}
+        handlePoints={handlePoints}
         handleSubmit={handleSubmit}
         objectives={objectives}
+        points={points}
         rule={rule}
         step={activeStep}
         submitting={submitting}
       />
-
       <br />
       <br />
       <BtnContainer split>
@@ -264,7 +273,7 @@ function DefineObjectives({
     <Box className="flex flex-col flex-center" sx={{ mt: "20px" }}>
       <Box sx={{ width: "450px", position: "relative", left: "20px" }}>
         {objectives.map((skill, ind) => (
-          <Stack key={`skill-${ind}`} direction="row">
+          <Stack key={`skill-${ind}`} direction="row" sx={{ mb: 2 }}>
             <ObjectiveField
               index={ind}
               onChange={(e) => handleText(e, ind)}
@@ -369,60 +378,77 @@ function GroupQuestions({
   );
 }
 
-function GroupSkills({
+function CompletionCriteria({
   assignments,
+  handlePoints,
   handleRule,
   handleCompletionThreshold,
   objectives,
+  points,
   rule,
   step,
   submitting,
   handleSubmit,
 }) {
-  const cellStyle = { textAlign: "center", padding: "2px" };
+  const cellStyle = { textAlign: "center", padding: "8px" };
   if (step !== 2) return null;
   return (
     <Box className="flex flex-col flex-center" sx={{ pt: "20px" }}>
-      <Box className="flex flex-row flex-align-center" sx={{ width: "600px" }}>
-        <Box>
-          <FormControl>
-            <InputLabel>Completion Rule</InputLabel>
-            <Select
-              value={rule}
-              label="Completion Rule"
-              onChange={handleRule}
-              sx={{ minWidth: "200px" }}
-            >
-              <MenuItem value="consecutive correct">
-                <Typography>consecutive correct</Typography>
-              </MenuItem>
-              <MenuItem value="total correct">
-                <Typography>total correct</Typography>
-              </MenuItem>
-              <MenuItem value="chutes and ladders">
-                <Typography>chutes and ladders</Typography>
-              </MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-
-        <Typography color="primary" sx={{ ml: "20px" }}>
-          {getHelperText(rule)}
-        </Typography>
-      </Box>
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <FormControl>
+                <InputLabel>Completion Rule</InputLabel>
+                <Select
+                  value={rule}
+                  label="Completion Rule"
+                  onChange={handleRule}
+                  sx={{ minWidth: "230px" }}
+                >
+                  <MenuItem value="total correct">
+                    <Typography>total correct</Typography>
+                  </MenuItem>
+                  <MenuItem value="consecutive correct">
+                    <Typography>consecutive correct</Typography>
+                  </MenuItem>
+                  <MenuItem value="chutes and ladders">
+                    <Typography>chutes and ladders</Typography>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+            </td>
+            <td style={{ maxWidth: "30vw", paddingLeft: "20px" }}>
+              <Typography color="primary">{getHelperText(rule)}</Typography>
+            </td>
+          </tr>
+          <tr>
+            <td style={{ paddingTop: "15px" }}>
+              <PointsField onChange={handlePoints} value={points} />
+            </td>
+            <td style={{ maxWidth: "30vw", paddingLeft: "20px" }}>
+              <Typography
+                color="primary"
+                sx={{ position: "relative", bottom: "10px" }}
+              >
+                Overides total possible points set in non-adaptive mode
+              </Typography>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       <br />
       <br />
-
       <table style={{ width: "700px", marginBottom: "20px" }}>
         <thead>
           <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
-            <th style={{ width: "30%" }}>
+            <th style={{ width: "60%", padding: "8px" }}>
               <Typography>Learning Objective</Typography>
             </th>
-            <th style={{ width: "40%" }}>
+            <th style={{ width: "20%", padding: "8px" }}>
               <Typography># Questions</Typography>
             </th>
-            <th style={{ width: "35%" }}>
+            <th style={{ width: "20%", padding: "8px" }}>
               <Typography>Advance After</Typography>
             </th>
           </tr>
@@ -431,7 +457,6 @@ function GroupSkills({
         {[...objectives, { name: "unassigned" }].map((skill, ind) => (
           <tr
             key={skill.name}
-            className="padding-light"
             style={{
               backgroundColor:
                 ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "transparent",
