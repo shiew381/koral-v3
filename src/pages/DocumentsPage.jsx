@@ -37,7 +37,7 @@ import { deleteUserContent } from "../utils/firestoreClient.js";
 export default function DocumentsPage() {
   const { user } = useAuth();
 
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState([]);
   const [selDocument, setSelDocument] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,7 +102,7 @@ export default function DocumentsPage() {
   useEffect(
     () => {
       if (!user) return;
-      fetchUserDocuments(user, setDocuments, setFetching);
+      fetchUserDocuments(user, setDocuments, setLoading);
     },
     //eslint-disable-next-line
     [user]
@@ -112,7 +112,7 @@ export default function DocumentsPage() {
 
   if (!user) return null;
 
-  if (fetching)
+  if (loading)
     return (
       <Page>
         <LoadingIndicator />

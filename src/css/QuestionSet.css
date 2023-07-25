@@ -16,6 +16,15 @@
   border-radius: 50%;
 }
 
+.adaptive-qset-complete-container {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  justify-content: center;
+  align-items: center;
+  background-size: cover;
+}
+
 .add-question-container {
   margin-top: 10px;
   width: 210px;

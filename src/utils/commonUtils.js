@@ -1,16 +1,3 @@
-export function generateRandomCode(length) {
-  let randomCode = "";
-  // removed 'I' and 'l' from characters list, since these look identical with the website font and may cause confusion
-  const characters = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  const charactersLength = characters.length;
-  for (var i = 0; i < length; i++) {
-    randomCode += characters.charAt(
-      Math.floor(Math.random() * charactersLength)
-    );
-  }
-  return randomCode;
-}
-
 export function copyArray(arr) {
   return JSON.parse(JSON.stringify(arr));
 }
@@ -23,6 +10,19 @@ export function formatInstructorNames(instructors) {
   );
 
   return instructorNames.join(", ");
+}
+
+export function generateRandomCode(length) {
+  let randomCode = "";
+  // removed 'I' and 'l' from characters list, since these look identical with the website font and may cause confusion
+  const characters = "ABCDEFGHJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  const charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    randomCode += characters.charAt(
+      Math.floor(Math.random() * charactersLength)
+    );
+  }
+  return randomCode;
 }
 
 export function compareBases(a, b) {
@@ -46,4 +46,15 @@ export function searchifyStr(str) {
   const normalizedArr = [...new Set(lowercaseArr)]; // removes duplicate elements from array
 
   return normalizedArr.filter((el) => el); // removes undefined elements from array
+}
+
+export function truncateString(str, maxLength) {
+  if (typeof str !== "string") {
+    return "error parsing string";
+  }
+  if (str.length < maxLength) {
+    return str;
+  } else {
+    return str.slice(0, maxLength - 3) + "...";
+  }
 }

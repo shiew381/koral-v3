@@ -30,7 +30,7 @@ import {
 import { AddLinkForm } from "../components/forms/AddLinkForm";
 
 export default function LinksPage() {
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [links, setLinks] = useState([]);
   const [open, setOpen] = useState(false);
   const [selLink, setSelLink] = useState("");
@@ -54,7 +54,7 @@ export default function LinksPage() {
   useEffect(
     () => {
       if (!user) return;
-      fetchUserLinks(user, setLinks, setFetching);
+      fetchUserLinks(user, setLinks, setLoading);
     },
     //eslint-disable-next-line
     [user]
@@ -64,7 +64,7 @@ export default function LinksPage() {
     return null;
   }
 
-  if (fetching) {
+  if (loading) {
     return (
       <Page>
         <LoadingIndicator />
@@ -194,7 +194,7 @@ function LinkDetails({ link }) {
     <Box width="95%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
       <Typography variant="h6">{link.title}</Typography>
       <Typography display="inline" variant="subtitle1">
-        created: {formatDate(link.created)}
+        added: {formatDate(link.dateCreated)}
       </Typography>
       <VertDivider />
 

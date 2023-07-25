@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
   fetchQSetSubmissionHistory,
@@ -7,18 +7,17 @@ import {
   getQSet,
 } from "../utils/firestoreClient";
 import { getSubmissions } from "../utils/questionSetUtils";
+import { pickRandomInt } from "../utils/commonUtils";
+import { formatTimeAndDate } from "../utils/dateUtils";
 import {
   Box,
   Button,
   Card,
   CircularProgress,
-  IconButton,
   Tooltip,
   Typography,
 } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import DoneIcon from "@mui/icons-material/Done";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import {
   QSetContainer,
@@ -29,11 +28,9 @@ import {
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
-import "../css/QuestionSet.css";
 import { BtnContainer } from "../components/common/Buttons";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import { pickRandomInt } from "../utils/commonUtils";
-import { formatTimeAndDate } from "../utils/dateUtils";
+import { BackToStudentDashboard } from "../components/common/CourseCpnts";
+import "../css/QuestionSet.css";
 
 export default function CourseAsgmtPage() {
   const [loading, setLoading] = useState(true);
@@ -111,7 +108,7 @@ export default function CourseAsgmtPage() {
   if (beforeDateOpen()) {
     return (
       <Page>
-        <BackToStudentDashboard />
+        <BackToStudentDashboard location="assignments" />
         <Box className="flex flex-center" sx={{ height: "80vh" }}>
           <Box>
             <Typography align="center">assignment will open</Typography>
@@ -127,7 +124,7 @@ export default function CourseAsgmtPage() {
   if (afterDateDue()) {
     return (
       <Page>
-        <BackToStudentDashboard />
+        <BackToStudentDashboard location="assignments" />
         <Box className="flex flex-center" sx={{ height: "80vh" }}>
           <Box>
             <Typography align="center" color="text.secondary">
@@ -148,7 +145,7 @@ export default function CourseAsgmtPage() {
 
   return (
     <Page>
-      <BackToStudentDashboard />
+      <BackToStudentDashboard location="assignments" />
       <QuestionSetDisplay
         asgmtID={asgmtID}
         courseID={courseID}
@@ -170,11 +167,21 @@ function QuestionSetDisplay({
   user,
 }) {
   const [submissionHistory, setSubmissionHistory] = useState(null);
-
   const questions = qSet?.questions || [];
   const qIndex = questions.findIndex((el) =>
     selQuestion ? el.id === selQuestion.id : 0
   );
+
+  const backDisabled = qIndex <= 0;
+  const nextDisabled = qIndex + 1 >= questions.length;
+
+  function goBack() {
+    setSelQuestion(() => questions[qIndex - 1]);
+  }
+
+  function goForward() {
+    setSelQuestion(() => questions[qIndex + 1]);
+  }
 
   useEffect(
     () => {
@@ -214,6 +221,7 @@ function QuestionSetDisplay({
     <QSetContainer>
       <Box className="question-list-container">
         <QuestionList
+          draggable={false}
           questions={questions}
           selQuestion={selQuestion}
           setSelQuestion={setSelQuestion}
@@ -221,13 +229,18 @@ function QuestionSetDisplay({
         />
       </Box>
       <QuestionNav
+        backDisabled={backDisabled}
+        goBack={goBack}
+        goForward={goForward}
+        nextDisabled={nextDisabled}
         qIndex={qIndex}
         questions={questions}
-        setSelQuestion={setSelQuestion}
       />
       <QuestionCardPanel>
         <QuestionCard
           asgmtID={asgmtID}
+          goForward={goForward}
+          nextDisabled={nextDisabled}
           courseID={courseID}
           question={selQuestion}
           submissionHistory={submissionHistory}
@@ -240,7 +253,15 @@ function QuestionSetDisplay({
 
 function ruleDescription(rule) {
   if (rule === "total correct") {
-    return "the total number of question answered correctly.";
+    return "the number of question answered correctly.";
+  }
+
+  if (rule === "consecutive correct") {
+    return "the number of consecutive questions answered correctly. Answering incorrectly will reset the progress meter back to zero.";
+  }
+
+  if (rule === "chutes and ladders") {
+    return "the number of questions answered correctly minus the number of questions answered incorrectly.";
   }
 
   return "";
@@ -307,10 +328,7 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
             <Typography align="center">{ruleDescription(rule)}</Typography>
             <br />
             <Button
-              onClick={() => {
-                setObjIndex((curIndex) => curIndex + 1);
-                // handlePickQuestion();
-              }}
+              onClick={() => setObjIndex((curIndex) => curIndex + 1)}
               variant="contained"
             >
               LET&apos;S BEGIN!
@@ -379,14 +397,20 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
           className="adaptive-progress-card flex"
           sx={{ minHeight: "400px" }}
         >
-          <Box className="flex flex-col flex-grow flex-center">
-            {objIndex < objectives.length - 1 && (
-              <Typography>Learning objective completed!</Typography>
-            )}
-            <Typography>
-              You completed all the objectives. Nicely done!
-            </Typography>
-            <br />
+          <Box
+            className="adaptive-qset-complete-container"
+            sx={{ backgroundImage: `url(${import.meta.env.VITE_CONFETTI})` }}
+          >
+            <Box sx={{ bgcolor: "rgba(255,255,255,0.5)", p: 3 }}>
+              <Typography
+                color="primary"
+                sx={{ bgcolor: "white", p: 3 }}
+                variant="h6"
+              >
+                You completed all the objectives. Nicely done!
+              </Typography>
+            </Box>
+
             {/* <Button>RESET</Button> */}
           </Box>
         </Card>
@@ -420,7 +444,7 @@ function ProgressMeters({ currentObjective, qSet, submissionHistory }) {
   const objectives = params.objectives;
 
   return (
-    <Card className="adaptive-progress-card" sx={{ p: 3 }}>
+    <Card className="adaptive-progress-card" sx={{ px: 3, pt: 2, pb: 1 }}>
       <table style={{ paddingLeft: "50px" }}>
         <tbody>
           {objectives?.map((objective) => (
@@ -445,7 +469,7 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
   const progress = calculateProgress(rule, objective, submissionHistory);
 
   const threshold = objective.completionThreshold;
-  const progressLabel = progress.numCorrect + "/" + threshold;
+  const progressLabel = progress.count + "/" + threshold;
 
   return (
     <tr>
@@ -520,48 +544,45 @@ function AdaptiveQuestionCard({
             className="flex flex-center"
             sx={{ width: "40px", height: "40px" }}
           >
-            <RefreshIcon color="disabled" />
+            <Button disabled>SKIP</Button>
           </Box>
         ) : (
           <Tooltip title="pick another question">
-            <IconButton onClick={handlePickQuestion}>
-              <RefreshIcon />
-            </IconButton>
+            <Button onClick={handlePickQuestion}>SKIP</Button>
           </Tooltip>
         )}
       </BtnContainer>
 
-      {type === "short answer" && (
-        <ShortAnswer
+      {type === "multiple choice" && (
+        <MultipleChoice
           docRefParams={docRefParams}
+          goForward={handlePickQuestion}
           mode="course"
+          nextDisabled={false}
           question={selQuestion}
           submissions={submissions}
         />
       )}
-
-      <Box
-        className="flex flex-end"
-        sx={{ position: "relative", bottom: "20px", right: "10px" }}
-      >
-        {lastSubmission?.answeredCorrectly && (
-          <Button
-            onClick={handlePickQuestion}
-            endIcon={<NavigateNextIcon />}
-            sx={{ width: "120px" }}
-          >
-            Next
-          </Button>
-        )}
-      </Box>
+      {type === "short answer" && (
+        <ShortAnswer
+          docRefParams={docRefParams}
+          goForward={handlePickQuestion}
+          mode="course"
+          nextDisabled={false}
+          question={selQuestion}
+          submissions={submissions}
+        />
+      )}
     </Card>
   );
 }
 
 function QuestionCard({
   asgmtID,
+  goForward,
   courseID,
   question,
+  nextDisabled,
   submissionHistory,
   user,
 }) {
@@ -591,7 +612,9 @@ function QuestionCard({
         {type === "multiple choice" && (
           <MultipleChoice
             docRefParams={docRefParams}
+            goForward={goForward}
             mode="course"
+            nextDisabled={nextDisabled}
             question={question}
             submissions={submissions}
           />
@@ -599,7 +622,9 @@ function QuestionCard({
         {type === "short answer" && (
           <ShortAnswer
             docRefParams={docRefParams}
+            goForward={goForward}
             mode="course"
+            nextDisabled={nextDisabled}
             question={question}
             submissions={submissions}
           />
@@ -607,7 +632,9 @@ function QuestionCard({
         {type === "free response" && (
           <FreeResponse
             docRefParams={docRefParams}
+            goForward={goForward}
             mode="course"
+            nextDisabled={nextDisabled}
             question={question}
             submissions={submissions}
           />
@@ -615,26 +642,6 @@ function QuestionCard({
       </Card>
     );
   }
-}
-
-export function BackToStudentDashboard() {
-  const navigate = useNavigate();
-  const { courseID, title } = useParams();
-
-  function redirectToStudentDashboard() {
-    navigate(`/classroom/courses/${title}/${courseID}/student/dashboard`);
-  }
-
-  return (
-    <div className="page-actions">
-      <Button
-        startIcon={<ChevronLeftIcon />}
-        onClick={redirectToStudentDashboard}
-      >
-        Course Dashboard
-      </Button>
-    </div>
-  );
 }
 
 function pickQuestion(objective, questions, submissionHistory) {
@@ -655,28 +662,67 @@ function pickQuestion(objective, questions, submissionHistory) {
 }
 
 function calculateProgress(rule, objective, submissionHistory) {
-  if (!submissionHistory) return { percentage: 0, numCorrect: 0 };
-  if (!objective) return { percentage: 0, numCorrect: 0 };
+  const zeroScore = { percentage: 0, count: 0 };
+  if (!submissionHistory || !objective) {
+    return zeroScore;
+  }
 
   const objectiveIDs = objective.questionIDs;
   const touchedIDs = objectiveIDs.filter((id) =>
     Object.hasOwn(submissionHistory, id)
   );
 
-  if (rule == "total correct") {
-    const lastSubmissions = touchedIDs.map((id) =>
-      submissionHistory[id]?.at(-1)
-    );
+  const lastSubmissions = touchedIDs.map((id) => submissionHistory[id]?.at(-1));
 
-    const correctSubmissions = lastSubmissions.filter(
-      (lastSubmission) => lastSubmission.answeredCorrectly
-    );
+  const correctSubmissions = lastSubmissions.filter(
+    (lastSubmission) => lastSubmission.answeredCorrectly
+  );
 
-    const numCorrect = correctSubmissions.length;
-    const percentage = 100 * (numCorrect / objective.completionThreshold);
+  const numCorrect = correctSubmissions.length;
 
-    return { percentage, numCorrect };
+  if (rule === "total correct") {
+    const count = numCorrect;
+    const percentage = 100 * (count / objective.completionThreshold);
+    return { percentage, count };
   }
 
+  if (rule === "chutes and ladders") {
+    const count = 2 * numCorrect - touchedIDs.length;
+
+    const percentage = 100 * (count / objective.completionThreshold);
+    return { percentage, count };
+  }
+
+  if (rule === "consecutive correct") {
+    const count = correctStreak(lastSubmissions);
+    const percentage = 100 * (count / objective.completionThreshold);
+    return { percentage, count };
+  }
+
+  return zeroScore;
+}
+
+function correctStreak(lastSubmissions) {
+  const sorted = lastSubmissions.sort(compareDates);
+
+  let count = 0;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const lastSubmission = sorted[i];
+    if (lastSubmission.answeredCorrectly) {
+      count = count + 1;
+    } else {
+      count = 0;
+    }
+  }
+
+  return count;
+}
+
+function compareDates(a, b) {
+  const dateA = a.dateSubmitted;
+  const dateB = b.dateSubmitted;
+  if (dateA.seconds < dateB.seconds) return -1;
+  if (dateA.seconds > dateB.seconds) return 1;
   return 0;
 }

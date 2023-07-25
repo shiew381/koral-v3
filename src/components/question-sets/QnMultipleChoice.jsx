@@ -7,26 +7,30 @@ import {
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
 import {
-  AttemptCounter,
-  PromptPreview,
-  CorrectIndicator,
-  ClearSubmissions,
-} from "./QSetSharedCpnts";
-import {
   Alert,
   Box,
+  Button,
   CardContent,
   Checkbox,
   Divider,
   Radio,
   Stack,
 } from "@mui/material";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { VertDivider } from "../common/Dividers";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
+import {
+  AttemptCounter,
+  PromptPreview,
+  CorrectIndicator,
+  ClearSubmissions,
+} from "./QSetSharedCpnts";
 
 export default function MultipleChoice({
   docRefParams,
+  goForward,
   mode,
+  nextDisabled,
   question,
   submissions,
 }) {
@@ -36,6 +40,8 @@ export default function MultipleChoice({
   const lastResponse = lastSubmission?.response || [];
   const attemptsExhausted = submissions?.length >= question?.attemptsPossible;
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
+  const showSubmitBtn = !answeredCorrectly && !attemptsExhausted;
+  const showNextBtn = answeredCorrectly || attemptsExhausted;
 
   const [currentResponse, setCurrentResponse] = useState(lastResponse);
   const [submitting, setSubmitting] = useState(false);
@@ -105,7 +111,7 @@ export default function MultipleChoice({
   }
 
   const responseChanged = detectChange();
-  const disabled = !responseChanged || submitting;
+  const disabled = !responseChanged || submitting || attemptsExhausted;
 
   useEffect(
     () => setCurrentResponse(lastResponse),
@@ -182,13 +188,22 @@ export default function MultipleChoice({
               )}
             </Box>
 
-            {(submitting || !answeredCorrectly) && (
+            {showSubmitBtn && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}
                 submitting={submitting}
                 disabled={disabled}
               />
+            )}
+            {showNextBtn && (
+              <Button
+                endIcon={<NavigateNextIcon />}
+                disabled={nextDisabled}
+                onClick={goForward}
+              >
+                NEXT
+              </Button>
             )}
           </Stack>
         </BtnContainer>

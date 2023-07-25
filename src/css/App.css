@@ -77,7 +77,8 @@
 
 .build-first-item {
   width: 80vw;
-  background-color: whitesmoke;
+
+  border: 1px solid #026c8c;
   border-radius: 10px;
   padding-left: 40px;
   padding-right: 40px;
@@ -135,6 +136,10 @@
 .page-container {
   padding-top: 60px;
   min-height: calc(100vh - 60px);
+}
+
+.page-main {
+  height: calc(100vh - 100px);
 }
 
 .example-free-response {

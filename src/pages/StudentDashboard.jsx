@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   fetchCourse,
   fetchAssignments,
@@ -9,6 +9,7 @@ import {
   getUserGrades,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
+import { truncateString } from "../utils/commonUtils";
 import {
   Box,
   Button,
@@ -35,6 +36,7 @@ import {
 
 export function StudentDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { courseID } = useParams();
   const [loading, setLoading] = useState(true);
@@ -50,6 +52,20 @@ export function StudentDashboard() {
   }
 
   useEffect(() => fetchCourse(courseID, setCourse, setLoading), [courseID]);
+
+  useEffect(
+    () => {
+      if (location.state === "resources") {
+        setTabIndex(3);
+      }
+
+      if (location.state === "assignments") {
+        setTabIndex(2);
+      }
+    },
+    //eslint-disable-next-line
+    []
+  );
 
   if (!user) {
     return null;
@@ -190,8 +206,12 @@ function Assignments({ course }) {
   const [loading, setLoading] = useState(true);
 
   function redirectToAsgmt(asgmt) {
-    const courseTitle = encodeURI(course.title.replace(/\s/g, "-"));
-    const asgmtTitle = encodeURI(asgmt.title.replace(/\s/g, "-"));
+    const courseTitle = encodeURI(
+      course.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
+    const asgmtTitle = encodeURI(
+      asgmt.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
 
     const path = `/classroom/courses/${courseTitle}/${course.id}/assignment/${asgmtTitle}/${asgmt.id}`;
 
@@ -265,8 +285,22 @@ function Assignments({ course }) {
 }
 
 function Resources({ course }) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [resources, setResources] = useState([]);
+
+  function redirectToResource(resource) {
+    const courseTitle = encodeURI(
+      course.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
+    const resourceTitle = encodeURI(
+      resource.title.replace(/\s/g, "-").replace(/\?/g, "")
+    );
+
+    const path = `/classroom/courses/${courseTitle}/${course.id}/resource/${resourceTitle}/${resource.id}`;
+
+    navigate(path, { replace: true });
+  }
 
   useEffect(
     () => fetchResources(course.id, setResources, setLoading),
@@ -299,14 +333,19 @@ function Resources({ course }) {
           <div key={resource.id}>
             <ListItem
               secondaryAction={
-                <Button endIcon={<NavigateNextIcon />}>VIEW</Button>
+                <Button
+                  endIcon={<NavigateNextIcon />}
+                  onClick={() => redirectToResource(resource)}
+                >
+                  VIEW
+                </Button>
               }
             >
               <ListItemIcon>
                 <ResourceIcon type={resource.type} />
               </ListItemIcon>
               <ListItemText
-                primary={resource.title}
+                primary={truncateString(resource.title, 40)}
                 secondary={"Added: " + formatDate(resource.dateCreated)}
               />
             </ListItem>

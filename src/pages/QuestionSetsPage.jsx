@@ -34,7 +34,7 @@ import AdaptiveParamsForm from "../components/forms/AdaptiveParamsForm";
 export default function QuestionSetsPage() {
   const { user } = useAuth();
 
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [qSets, setQSets] = useState([]);
   const [open, setOpen] = useState(false);
   const [adaptiveFormOpen, setAdaptiveFormOpen] = useState(false);
@@ -74,7 +74,7 @@ export default function QuestionSetsPage() {
   useEffect(
     () => {
       if (!user) return;
-      fetchUserQSets(user, setQSets, setFetching);
+      fetchUserQSets(user, setQSets, setLoading);
     },
     //eslint-disable-next-line
     [user]
@@ -84,7 +84,7 @@ export default function QuestionSetsPage() {
     return null;
   }
 
-  if (fetching) {
+  if (loading) {
     return (
       <Page>
         <LoadingIndicator />

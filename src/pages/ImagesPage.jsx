@@ -30,7 +30,7 @@ import "../css/ImagesPage.css";
 export default function ImagesPage() {
   const { user } = useAuth();
 
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [images, setImages] = useState([]);
   const [selImage, setSelImage] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -93,7 +93,7 @@ export default function ImagesPage() {
   useEffect(
     () => {
       if (!user) return;
-      fetchUserImages(user, setImages, setFetching);
+      fetchUserImages(user, setImages, setLoading);
     },
     //eslint-disable-next-line
     [user]
@@ -103,7 +103,7 @@ export default function ImagesPage() {
 
   if (!user) return null;
 
-  if (fetching)
+  if (loading)
     return (
       <Page>
         <LoadingIndicator />
@@ -198,9 +198,9 @@ export default function ImagesPage() {
             handleClose={handleCloseMenu}
             open={menuOpen}
           >
-            <MenuOption>
+            {/* <MenuOption>
               <ListItemButton>Download</ListItemButton>
-            </MenuOption>
+            </MenuOption> */}
             <MenuOption>
               <ListItemButton href={selImage?.url} target="_blank">
                 Open in new tab

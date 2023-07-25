@@ -5,7 +5,15 @@ import {
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
-import { Box, CardContent, Divider, Stack, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CardContent,
+  Divider,
+  Stack,
+  Typography,
+} from "@mui/material";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { ShortTextField } from "../common/InputFields";
 import { VertDivider } from "../common/Dividers";
@@ -21,7 +29,9 @@ import parse from "html-react-parser";
 
 export default function ShortAnswer({
   docRefParams,
+  goForward,
   mode,
+  nextDisabled,
   question,
   submissions,
 }) {
@@ -50,9 +60,12 @@ export default function ShortAnswer({
       {subtype === "text" && (
         <ShortAnswerText
           answeredCorrectly={answeredCorrectly}
+          attemptsExhausted={attemptsExhausted}
           docRefParams={docRefParams}
+          goForward={goForward}
           lastResponse={lastResponse}
           mode={mode}
+          nextDisabled={nextDisabled}
           question={question}
           submissions={submissions}
           submitting={submitting}
@@ -63,9 +76,12 @@ export default function ShortAnswer({
       {subtype === "number" && (
         <ShortAnswerNumber
           answeredCorrectly={answeredCorrectly}
+          attemptsExhausted={attemptsExhausted}
           docRefParams={docRefParams}
+          goForward={goForward}
           lastResponse={lastResponse}
           mode={mode}
+          nextDisabled={nextDisabled}
           question={question}
           submissions={submissions}
           submitting={submitting}
@@ -75,9 +91,12 @@ export default function ShortAnswer({
       {subtype === "measurement" && (
         <ShortAnswerMeasurement
           answeredCorrectly={answeredCorrectly}
+          attemptsExhausted={attemptsExhausted}
           docRefParams={docRefParams}
+          goForward={goForward}
           lastResponse={lastResponse}
           mode={mode}
+          nextDisabled={nextDisabled}
           question={question}
           submissions={submissions}
           submitting={submitting}
@@ -90,7 +109,9 @@ export default function ShortAnswer({
 
 function ShortAnswerText({
   answeredCorrectly,
+  attemptsExhausted,
   docRefParams,
+  goForward,
   lastResponse,
   mode,
   question,
@@ -100,7 +121,9 @@ function ShortAnswerText({
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const responseChanged = currentResponse?.text !== lastResponse?.text;
-  const disabled = !responseChanged || submitting;
+  const disabled = !responseChanged || submitting || attemptsExhausted;
+  const showSubmitBtn = !answeredCorrectly && !attemptsExhausted;
+  const showNextBtn = answeredCorrectly || attemptsExhausted;
 
   function handleClearSubmissions() {
     deleteQuestionSubmissions(question, docRefParams);
@@ -190,13 +213,18 @@ function ShortAnswerText({
                 <ClearSubmissions handleClick={handleClearSubmissions} />
               )}
             </Box>
-            {(submitting || !answeredCorrectly) && (
+            {showSubmitBtn && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}
                 submitting={submitting}
                 disabled={disabled}
               />
+            )}
+            {showNextBtn && (
+              <Button endIcon={<NavigateNextIcon />} onClick={goForward}>
+                NEXT
+              </Button>
             )}
           </Stack>
         </BtnContainer>
@@ -207,7 +235,9 @@ function ShortAnswerText({
 
 function ShortAnswerNumber({
   answeredCorrectly,
+  attemptsExhausted,
   docRefParams,
+  goForward,
   lastResponse,
   mode,
   question,
@@ -218,7 +248,9 @@ function ShortAnswerNumber({
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
   const responseChanged = detectChange();
-  const disabled = !responseChanged || submitting;
+  const disabled = !responseChanged || submitting || attemptsExhausted;
+  const showSubmitBtn = !answeredCorrectly && !attemptsExhausted;
+  const showNextBtn = answeredCorrectly || attemptsExhausted;
 
   function detectChange() {
     if (currentResponse?.number === "") return false;
@@ -327,13 +359,18 @@ function ShortAnswerNumber({
                 <ClearSubmissions handleClick={handleClearSubmissions} />
               )}
             </Box>
-            {(submitting || !answeredCorrectly) && (
+            {showSubmitBtn && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}
                 submitting={submitting}
                 disabled={disabled}
               />
+            )}
+            {showNextBtn && (
+              <Button endIcon={<NavigateNextIcon />} onClick={goForward}>
+                NEXT
+              </Button>
             )}
           </Stack>
         </BtnContainer>
@@ -344,7 +381,9 @@ function ShortAnswerNumber({
 
 function ShortAnswerMeasurement({
   answeredCorrectly,
+  attemptsExhausted,
   docRefParams,
+  goForward,
   lastResponse,
   mode,
   question,
@@ -357,7 +396,9 @@ function ShortAnswerMeasurement({
   const unitRef = useRef();
 
   const responseChanged = detectChange();
-  const disabled = !responseChanged || submitting;
+  const disabled = !responseChanged || submitting || attemptsExhausted;
+  const showSubmitBtn = !answeredCorrectly && !attemptsExhausted;
+  const showNextBtn = answeredCorrectly || attemptsExhausted;
 
   function detectChange() {
     if (currentResponse?.number === "") return false;
@@ -496,13 +537,18 @@ function ShortAnswerMeasurement({
                 <ClearSubmissions handleClick={handleClearSubmissions} />
               )}
             </Box>
-            {(submitting || !answeredCorrectly) && (
+            {showSubmitBtn && (
               <SubmitBtn
                 label="SUBMIT"
                 onClick={handleSubmit}
                 submitting={submitting}
                 disabled={disabled}
               />
+            )}
+            {showNextBtn && (
+              <Button endIcon={<NavigateNextIcon />} onClick={goForward}>
+                NEXT
+              </Button>
             )}
           </Stack>
         </BtnContainer>

@@ -310,7 +310,7 @@ export function fetchGrades(courseID, setGrades) {
   return unsubscribe;
 }
 
-export function fetchInstructorCourses(user, setInstructorCourses, setLoading) {
+export function fetchInstructorCourses(user, setInstructorCourses) {
   const colRef = collection(db, "courses");
   const q = query(colRef, where("instructorIDs", "array-contains", user.uid));
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -319,7 +319,6 @@ export function fetchInstructorCourses(user, setInstructorCourses, setLoading) {
       ...doc.data(),
     }));
     setInstructorCourses(fetchedItems);
-    setLoading(false);
   });
   return unsubscribe;
 }
@@ -362,7 +361,7 @@ export function fetchQSetSubmissionHistory(
         setSubmissionHistory({
           ...doc.data(),
         });
-      }, 1000);
+      }, 200);
     }
   });
   return unsubscribe;
@@ -383,7 +382,7 @@ export function fetchResources(courseID, setResources, setLoading) {
   return unsubscribe;
 }
 
-export function fetchUserDocuments(user, setDocuments, setFetching) {
+export function fetchUserDocuments(user, setDocuments, setLoading) {
   function compareNames(a, b) {
     if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
     if (a.name.toLowerCase() > b.name.toLowerCase()) return 1;
@@ -402,12 +401,12 @@ export function fetchUserDocuments(user, setDocuments, setFetching) {
       searchHandle: doc.data().name.toLowerCase(),
     }));
     setDocuments(fetchedItems.sort(compareNames));
-    setFetching(false);
+    setLoading(false);
   });
   return unsubscribe;
 }
 
-export function fetchUserImages(user, setImages, setFetching) {
+export function fetchUserImages(user, setImages, setLoading) {
   const ref = collection(db, "users", user.uid, "images");
   const q = query(ref, orderBy("dateUploaded", "desc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -420,12 +419,12 @@ export function fetchUserImages(user, setImages, setFetching) {
       searchHandle: doc.data().name.toLowerCase(),
     }));
     setImages(fetchedItems);
-    setFetching(false);
+    setLoading(false);
   });
   return unsubscribe;
 }
 
-export function fetchUserLinks(user, setLinks, setFetching) {
+export function fetchUserLinks(user, setLinks, setLoading) {
   const ref = collection(db, "users", user.uid, "links");
   const q = query(ref);
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -438,7 +437,7 @@ export function fetchUserLinks(user, setLinks, setFetching) {
     }));
     setTimeout(() => {
       setLinks(fetchedItems);
-      setFetching(false);
+      setLoading(false);
     }, 1000);
   });
   return unsubscribe;
@@ -455,7 +454,7 @@ export function fetchUserInfo(user, setUserInfo) {
   return unsubscribe;
 }
 
-export function fetchUserQSets(user, setQSets, setFetching) {
+export function fetchUserQSets(user, setQSets, setLoading) {
   const ref = collection(db, "users", user.uid, "question-sets");
   const q = query(ref);
   const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -470,7 +469,7 @@ export function fetchUserQSets(user, setQSets, setFetching) {
     }));
     setTimeout(() => {
       setQSets(fetchedItems);
-      setFetching(false);
+      setLoading(false);
     }, 1000);
   });
   return unsubscribe;
@@ -494,6 +493,35 @@ export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
 export function getAssignment(courseID, asgmtID, setAsgmt) {
   const ref = doc(db, "courses", courseID, "assignments", asgmtID);
   getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
+}
+
+export function getResource(courseID, resourceID, setResource) {
+  const ref = doc(db, "courses", courseID, "resources", resourceID);
+  getDoc(ref).then((doc) => setResource({ id: doc.id, ...doc.data() }));
+}
+
+export function getImage(userID, imageID, setImage, setLoading) {
+  const ref = doc(db, "users", userID, "images", imageID);
+  getDoc(ref).then((doc) => {
+    setImage({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
+export function getDocument(userID, documentID, setDocument, setLoading) {
+  const ref = doc(db, "users", userID, "documents", documentID);
+  getDoc(ref).then((doc) => {
+    setDocument({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
+export function getLink(userID, linkID, setLink, setLoading) {
+  const ref = doc(db, "users", userID, "links", linkID);
+  getDoc(ref).then((doc) => {
+    setLink({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
 }
 
 export function getQSet(userID, qSetID, setQSet, setLoading) {
@@ -687,7 +715,7 @@ export function saveQResponseFromCourse(
     setSubmitting(true);
 
     setDoc(ref, { [question.id]: updatedSubmissions }, { merge: true }).finally(
-      () => setTimeout(() => setSubmitting(false), 200)
+      () => setTimeout(() => setSubmitting(false), 500)
     );
   }
 

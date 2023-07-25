@@ -8,7 +8,6 @@ import {
 } from "../utils/firestoreClient.js";
 import {
   Box,
-  Button,
   Card,
   CardActionArea,
   CardContent,
@@ -22,6 +21,7 @@ import {
   PageHeader,
 } from "../components/common/Pages.jsx";
 import { AddCourseForm } from "../components/forms/AddCourseForm.jsx";
+import { BuildFirstItem } from "../components/common/CallsToAction.jsx";
 
 export default function CoursesPage() {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ export default function CoursesPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetchInstructorCourses(user, setInstructorCourses, setLoading);
+    fetchInstructorCourses(user, setInstructorCourses);
   }, [user]);
 
   useEffect(() => {
@@ -69,7 +69,15 @@ export default function CoursesPage() {
   return (
     <Page>
       <PageHeader title="Courses" />
-      {allCourses.length === 0 && <NoCoursesYet handleOpen={handleOpen} />}
+      {allCourses.length === 0 && (
+        <div className="flex flex-center" style={{ height: "50vh" }}>
+          <BuildFirstItem
+            handleOpen={handleOpen}
+            item="course"
+            message="Welcome to your courses! Create your first course as an instructor or student."
+          />
+        </div>
+      )}
       {allCourses.length > 0 && (
         <Box className="flex flex-wrap flex-center" sx={{ px: 2 }}>
           {instructorCourses.map((course) => (
@@ -106,20 +114,6 @@ export default function CoursesPage() {
         user={user}
       />
     </Page>
-  );
-}
-
-function NoCoursesYet({ handleOpen }) {
-  return (
-    <Box className="flex flex-col flex-center" sx={{ minHeight: "60vh" }}>
-      <Typography sx={{ p: 1 }}>
-        Teaching is more than imparting knowledge, it is inspiring change.
-      </Typography>
-      <Typography sx={{ pb: 3 }}>- William Aruther Ward</Typography>
-      <Button onClick={handleOpen} startIcon={<AddIcon />} variant="contained">
-        ADD COURSE
-      </Button>
-    </Box>
   );
 }
 
