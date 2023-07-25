@@ -104,27 +104,6 @@ export function QuestionList({
     padding: 0,
   };
 
-  // function pointsAwarded(question, submissionHistory) {
-  //   if (!submissionHistory) {
-  //     return 0;
-  //   }
-
-  //   const submissions = submissionHistory[question.id] || [];
-  //   const lastSubmission = submissions?.at(-1) || null;
-  //   const pointsAwarded = lastSubmission?.pointsAwarded || 0;
-  //   return pointsAwarded;
-  // }
-
-  // function pointsPossible(question) {
-  //   if (!question) {
-  //     return "";
-  //   } else {
-  //     return question.pointsPossible > 1
-  //       ? `${question.pointsPossible} points`
-  //       : `${question.pointsPossible} point`;
-  //   }
-  // }
-
   if (questions?.length == 0) {
     return null;
   }
@@ -217,7 +196,7 @@ function QuestionListItem({
             {...provided.dragHandleProps}
             onClick={handleClick}
             sx={{
-              bgcolor: selected ? "rgba(0,0,0,0.05)" : "transparent",
+              bgcolor: selected ? "rgba(0,180,235,0.1)" : "transparent",
             }}
           >
             <ListItemText
@@ -241,7 +220,7 @@ function QuestionListItem({
         key={question?.id}
         onClick={handleClick}
         sx={{
-          bgcolor: selected ? "rgba(0,0,0,0.05)" : "transparent",
+          bgcolor: selected ? "rgba(0,180,235,0.1)" : "transparent",
         }}
       >
         <ListItemText
@@ -257,32 +236,28 @@ function QuestionListItem({
   }
 }
 
-export function QuestionNav({ qIndex, questions, setSelQuestion }) {
+export function QuestionNav({
+  backDisabled,
+  goBack,
+  goForward,
+  nextDisabled,
+  qIndex,
+  questions,
+}) {
   if (questions.length === 0) {
     return null;
   }
 
-  function goBack() {
-    setSelQuestion(() => questions[qIndex - 1]);
-  }
-
-  function goForward() {
-    setSelQuestion(() => questions[qIndex + 1]);
-  }
-
-  const leftArrowDisabled = qIndex <= 0;
-  const rightArrowDisabled = qIndex + 1 >= questions.length;
-
   return (
     <div className="question-nav">
       <div>
-        <IconButton disabled={leftArrowDisabled} onClick={goBack}>
+        <IconButton disabled={backDisabled} onClick={goBack}>
           <ArrowLeftIcon />
         </IconButton>
         <Typography display="inline" sx={{ position: "relative", top: 2 }}>
           Question {qIndex + 1} of {questions.length}
         </Typography>
-        <IconButton disabled={rightArrowDisabled} onClick={goForward}>
+        <IconButton disabled={nextDisabled} onClick={goForward}>
           <ArrowRightIcon />
         </IconButton>
       </div>

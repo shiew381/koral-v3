@@ -361,7 +361,7 @@ export function fetchQSetSubmissionHistory(
         setSubmissionHistory({
           ...doc.data(),
         });
-      }, 1000);
+      }, 200);
     }
   });
   return unsubscribe;
@@ -715,7 +715,7 @@ export function saveQResponseFromCourse(
     setSubmitting(true);
 
     setDoc(ref, { [question.id]: updatedSubmissions }, { merge: true }).finally(
-      () => setTimeout(() => setSubmitting(false), 200)
+      () => setTimeout(() => setSubmitting(false), 500)
     );
   }
 

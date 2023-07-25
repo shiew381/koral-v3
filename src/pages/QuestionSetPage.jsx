@@ -61,7 +61,18 @@ export default function QuestionSetPage() {
     selQuestion ? el.id === selQuestion.id : 0
   );
 
+  const backDisabled = qIndex <= 0;
+  const nextDisabled = qIndex + 1 >= questions.length;
+
   const submissionHistory = qSet?.submissionHistory || null;
+
+  function goBack() {
+    setSelQuestion(() => questions[qIndex - 1]);
+  }
+
+  function goForward() {
+    setSelQuestion(() => questions[qIndex + 1]);
+  }
 
   function handleAddQuestion() {
     setOpenBuilder(true);
@@ -185,9 +196,12 @@ export default function QuestionSetPage() {
               </Box>
             </Box>
             <QuestionNav
+              backDisabled={backDisabled}
+              goBack={goBack}
+              goForward={goForward}
+              nextDisabled={nextDisabled}
               qIndex={qIndex}
               questions={questions}
-              setSelQuestion={setSelQuestion}
             />
 
             <QuestionCardPanel>
@@ -205,10 +219,12 @@ export default function QuestionSetPage() {
                 </ToggleButtonGroup>
               )}
               <QuestionCard
-                handleOpenPoints={handleOpenPoints}
-                handleOpenAttempts={handleOpenAttempts}
+                goForward={goForward}
                 handleEditQuestion={handleEditQuestion}
+                handleOpenAttempts={handleOpenAttempts}
+                handleOpenPoints={handleOpenPoints}
                 mode={mode}
+                nextDisabled={nextDisabled}
                 qSet={qSet}
                 question={selQuestion}
                 user={user}
@@ -297,9 +313,10 @@ function GetStarted({ handleAddQuestion }) {
 }
 
 function QuestionCard({
+  goForward,
   handleEditQuestion,
-  handleOpenPoints,
   handleOpenAttempts,
+  handleOpenPoints,
   mode,
   qSet,
   question,
@@ -346,6 +363,7 @@ function QuestionCard({
         {type === "multiple choice" && (
           <MultipleChoice
             docRefParams={docRefParams}
+            goForward={goForward}
             mode={mode}
             question={question}
             submissions={submissions}
@@ -354,6 +372,7 @@ function QuestionCard({
         {type === "short answer" && (
           <ShortAnswer
             docRefParams={docRefParams}
+            goForward={goForward}
             mode={mode}
             question={question}
             submissions={submissions}
@@ -363,10 +382,9 @@ function QuestionCard({
           <FreeResponse
             docRefParams={docRefParams}
             mode={mode}
+            goForward={goForward}
             question={question}
-            qSet={qSet}
             submissions={submissions}
-            user={user}
           />
         )}
       </Card>

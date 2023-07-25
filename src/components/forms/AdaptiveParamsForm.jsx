@@ -65,7 +65,7 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
     : {
         objectives: [cleanObjective],
         assignments: qSet?.questions?.map(() => "unassigned"),
-        rule: "in a row",
+        rule: "consecutive correct",
       };
 
   const steps = [
@@ -74,7 +74,7 @@ export default function AdaptiveParamsForm({ qSet, open, handleClose, user }) {
     "Set Completion Criteria",
   ];
 
-  const initialRule = "in a row";
+  const initialRule = "consecutive correct";
   const [activeStep, setActiveStep] = useState(0);
   const [objectives, setObjectives] = useState(initVal.objectives);
   const [assignments, setAssignments] = useState(initVal.assignments);
@@ -345,6 +345,7 @@ function GroupQuestions({
                     value={assignments[qIndex]}
                     label="Objective"
                     onChange={(e) => selectSkill(e, qIndex)}
+                    sx={{ maxWidth: "255px" }}
                   >
                     <MenuItem value="unassigned">
                       <Typography color="textSecondary">unassigned</Typography>
@@ -392,8 +393,8 @@ function GroupSkills({
               onChange={handleRule}
               sx={{ minWidth: "200px" }}
             >
-              <MenuItem value="in a row">
-                <Typography>in a row</Typography>
+              <MenuItem value="consecutive correct">
+                <Typography>consecutive correct</Typography>
               </MenuItem>
               <MenuItem value="total correct">
                 <Typography>total correct</Typography>
@@ -481,8 +482,8 @@ function getHelperText(completeRule) {
   switch (completeRule) {
     case "total correct":
       return "Students must answer a defined number of question correctly.";
-    case "in a row":
-      return "Students must answer a defined number of questions in-a-row correctly. Progress resets whenever the student answer incorrectly.";
+    case "consecutive correct":
+      return "Students must answer a defined number of consecutive questions correctly. Progress resets whenever the student answer incorrectly.";
     case "chutes and ladders":
       return "Student's progress bar advances after each correctly answered question, but regresses after each incorrectly answered question";
     default:
