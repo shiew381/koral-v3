@@ -54,12 +54,10 @@ export default function HomePage() {
   return (
     <Box height="100vh" className="flex flex-center">
       <Box className="flex flex-center flex-wrap" width="750px">
-        <img
-          src={imgURL}
-          alt="app logo"
-          width="300px"
-          style={{ margin: "20px" }}
-        />
+        <Box sx={{ p: "50px" }}>
+          <img src={imgURL} alt="app logo" width="300px" />
+        </Box>
+
         {user ? (
           <ContinueToCoursesPanel
             user={user}
