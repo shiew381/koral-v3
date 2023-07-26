@@ -456,21 +456,20 @@ export function fetchUserInfo(user, setUserInfo) {
 
 export function fetchUserQSets(user, setQSets, setLoading) {
   const ref = collection(db, "users", user.uid, "question-sets");
-  const q = query(ref);
+  const q = query(ref, orderBy("title", "asc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       title: doc.data().title,
       mode: doc.data().mode,
       adaptiveParams: doc.data().adaptiveParams || null,
+      deployments: doc.data().deployments || [],
       questions: doc.data().questions,
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
-    setTimeout(() => {
-      setQSets(fetchedItems);
-      setLoading(false);
-    }, 1000);
+    setQSets(fetchedItems);
+    setLoading(false);
   });
   return unsubscribe;
 }
@@ -532,13 +531,6 @@ export function getQSet(userID, qSetID, setQSet, setLoading) {
   });
 }
 
-export function getUserGrades(courseID, userID, setGrades) {
-  const ref = doc(db, "courses", courseID, "grades", userID);
-  getDoc(ref).then((doc) => {
-    setGrades({ id: doc.id, ...doc.data() });
-  });
-}
-
 export function getUserDocuments(user, setDocuments, setSelItem) {
   const ref = collection(db, "users", user.uid, "documents");
   const q = query(ref);
@@ -550,6 +542,13 @@ export function getUserDocuments(user, setDocuments, setSelItem) {
     }));
     setDocuments(fetchedItems);
     setSelItem(fetchedItems[0]);
+  });
+}
+
+export function getUserGrades(courseID, userID, setGrades) {
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  getDoc(ref).then((doc) => {
+    setGrades({ id: doc.id, ...doc.data() });
   });
 }
 
@@ -585,8 +584,12 @@ export function getUserQSets(user, setQSets, setSelItem) {
   const ref = collection(db, "users", user.uid, "question-sets");
   const q = query(ref);
 
-  function calcTotalPoints(questions) {
+  function calcTotalPossiblePoints(qSet) {
+    const questions = qSet.questions;
     if (questions.length === 0) return 0;
+    if (qSet.mode === "adaptive") {
+      return qSet.adaptiveParams?.totalPointsPossible || 0;
+    }
     const arr = [];
     questions.forEach((question) => arr.push(question.pointsPossible || 0));
     return arr.reduce((acc, cur) => acc + cur, 0);
@@ -596,7 +599,7 @@ export function getUserQSets(user, setQSets, setSelItem) {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       title: doc.data().title,
-      totalPointsPossible: calcTotalPoints(doc.data().questions),
+      totalPointsPossible: calcTotalPossiblePoints(doc.data()),
     }));
     setQSets(fetchedItems);
     setSelItem(fetchedItems[0]);

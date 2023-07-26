@@ -27,6 +27,8 @@ import { getInitDueDate } from "../../utils/dateUtils";
 function getTitle(type, selItem) {
   if (type === "question set") {
     return selItem?.title;
+  } else {
+    return "";
   }
 }
 
@@ -66,7 +68,7 @@ export function AssignmentForm({
   const values = {
     type: type,
     title: getTitle(type, selItem),
-    totalPointsPossible: selItem?.totalPointsPossible || 0,
+    totalPointsPossible: selItem?.totalPointsPossible || null,
     source: {
       type: "user content",
       docRef: `users/${user?.uid}/question-sets/${selItem?.id}`,
