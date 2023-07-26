@@ -70,7 +70,7 @@ export function MultipleChoice({
       prompt: cleanEditorHTML(promptRef.current),
       answerChoices: answerChoices,
       pointsPossible: 1,
-      attemptsPossible: 1,
+      attemptsPossible: 5,
     };
     autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
   }
