@@ -10,28 +10,14 @@ admin.initializeApp();
 //   response.send("Hello from Firebase!");
 // });
 
-// exports.addMessage = functions.https.onRequest(async (req, res) => {
-//   // Grab the text parameter.
-//   const original = req.query.text;
-//   // Push the new message into Firestore using the Firebase Admin SDK.
-//   const writeResult = await admin
-//     .firestore()
-//     .collection("messages")
-//     .add({ original: original });
-//   // Send back a message that we've successfully written the message
-//   res.json({ result: `Message with ID: ${writeResult.id} added.` });
-// });
-
-//
 exports.addQResponse = functions.https.onRequest(async (req, res) => {
-  // Grab the text parameter.
   const courseID = req.query.courseid;
   const asgmtID = req.query.asgmtid;
   const userID = req.query.userid;
   const questionID = req.query.qid;
   const correctStatus = req.query.correct;
   const ptsAwarded = req.query.ptsAwarded;
-  // Push the new message into Firestore using the Firebase Admin SDK.
+
   const writeResult = await admin
     .firestore()
     .collection("courses")
@@ -48,17 +34,105 @@ exports.addQResponse = functions.https.onRequest(async (req, res) => {
         },
       ],
     });
-  // Send back a message that we've successfully written the message
+
   res.json({ result: `Success! document updated` });
 });
+
+exports.addAsgmt = functions.https.onRequest(async (req, res) => {
+  const qSetID = req.query.qsetid;
+  const courseID = req.query.courseid;
+  const userID = req.query.userid;
+  const points = req.query.points;
+
+  functions.logger.log(qSetID, courseID, userID, points);
+
+  const ref = admin
+    .firestore()
+    .collection("courses")
+    .doc(courseID)
+    .collection("assignments");
+
+  await ref.add({
+    source: {
+      docRef: `users/${userID}/question-sets/${qSetID}`,
+      type: "user content",
+    },
+    totalPointsPossible: points,
+    type: "question set",
+  });
+
+  res.json({ result: `Success! document updated` });
+
+  // example url
+  // http://127.0.0.1:5001/koral-v3/us-central1/addAsgmt?userid=kcgZaULYG103p18J2Uvq&courseid=course101&qsetid=t7PHrMq4eQQeXPtq159B&points=7
+});
+
+exports.addQSetDeployment = functions.firestore
+  .document("/courses/{courseID}/assignments/{asgmtID}")
+  .onCreate(async (snap, context) => {
+    const { courseID } = context.params;
+
+    const docRef = snap.data().source.docRef;
+    const docRefArr = docRef.split("/");
+    const userID = docRefArr[1];
+    const qSetID = docRefArr[3];
+
+    const qSetRef = admin
+      .firestore()
+      .collection("users")
+      .doc(userID)
+      .collection("question-sets")
+      .doc(qSetID);
+
+    const courseRef = admin.firestore().collection("courses").doc(courseID);
+
+    const qSetDoc = await qSetRef.get();
+    const deployments = qSetDoc.data()?.deployments || [];
+
+    const courseDoc = await courseRef.get();
+    const courseTitle = courseDoc.data()?.title || "";
+
+    const newDeployment = {
+      type: "course",
+      id: courseID,
+      title: courseTitle,
+    };
+
+    return qSetRef.update({ deployments: [...deployments, newDeployment] });
+  });
+
+exports.removeQSetDeployment = functions.firestore
+  .document("/courses/{courseID}/assignments/{asgmtID}")
+  .onDelete(async (snap, context) => {
+    const { courseID } = context.params;
+    const docRef = snap.data().source.docRef;
+    const docRefArr = docRef.split("/");
+    const userID = docRefArr[1];
+    const qSetID = docRefArr[3];
+
+    const qSetRef = admin
+      .firestore()
+      .collection("users")
+      .doc(userID)
+      .collection("question-sets")
+      .doc(qSetID);
+
+    const qSetDoc = await qSetRef.get();
+    const deployments = qSetDoc.data()?.deployments || [];
+
+    const itemIndex = deployments.findIndex((el) => el.id === courseID);
+
+    if (itemIndex > -1) {
+      deployments.splice(itemIndex, 1);
+    }
+
+    return qSetRef.update({ deployments: deployments });
+  });
 
 exports.generateGradeSummary = functions.firestore
   .document("/courses/{courseID}/assignments/{asgmtID}/submissions/{userID}")
   .onWrite((change, context) => {
     const { courseID, asgmtID, userID } = context.params;
-    // const courseID = context.params.courseID;
-    // const asgmtID = context.params.asgmtID;
-    // const userID = context.params.userID;
 
     const ref1 = admin
       .firestore()

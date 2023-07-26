@@ -257,8 +257,7 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
             |
           </Typography>
           <Typography display="inline">{numQuestions} questions</Typography>
-
-          <Typography sx={{ mt: 1 }}>Not deployed to any course yet</Typography>
+          <NumDeployments qSet={qSet} />
         </Box>
       </CardContent>
       <Box sx={{ p: 2 }}>
@@ -270,4 +269,39 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
       </Box>
     </Card>
   );
+}
+
+function NumDeployments({ qSet }) {
+  const deployments = qSet.deployments;
+  const num = deployments.length;
+
+  if (num === 0) {
+    return (
+      <Typography color="text.secondary" sx={{ mt: 1 }}>
+        not deployed to a course yet
+      </Typography>
+    );
+  }
+
+  if (num === 1) {
+    return (
+      <Typography color="text.secondary" sx={{ mt: 1 }}>
+        deployed to {deployments[0].title}
+      </Typography>
+    );
+  }
+
+  if (num === 2) {
+    return (
+      <Typography color="text.secondary" sx={{ mt: 1 }}>
+        deployed to {deployments[0].title} and {deployments[1].title}
+      </Typography>
+    );
+  }
+
+  if (num > 2) {
+    <Typography color="text.secondary" sx={{ mt: 1 }}>
+      Deployed to {num} courses
+    </Typography>;
+  }
 }
