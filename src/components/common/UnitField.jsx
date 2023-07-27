@@ -206,6 +206,7 @@ export function UnitField({
           contentEditable
           ref={unitRef}
           id={id}
+          key={id}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           suppressContentEditableWarning

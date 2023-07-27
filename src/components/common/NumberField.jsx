@@ -208,6 +208,7 @@ export function NumberField({
           contentEditable
           ref={numberRef}
           id={id}
+          key={id}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           suppressContentEditableWarning
