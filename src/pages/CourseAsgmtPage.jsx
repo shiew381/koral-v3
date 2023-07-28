@@ -5,6 +5,7 @@ import {
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
+  saveAdaptivePointsAwarded,
 } from "../utils/firestoreClient";
 import { getSubmissions } from "../utils/questionSetUtils";
 import { pickRandomInt } from "../utils/commonUtils";
@@ -175,6 +176,12 @@ function QuestionSetDisplay({
   const backDisabled = qIndex <= 0;
   const nextDisabled = qIndex + 1 >= questions.length;
 
+  const docRefParams = {
+    asgmtID: asgmtID,
+    courseID: courseID,
+    userID: user.uid,
+  };
+
   function goBack() {
     setSelQuestion(() => questions[qIndex - 1]);
   }
@@ -206,11 +213,9 @@ function QuestionSetDisplay({
       <QSetContainer>
         <QuestionCardPanel>
           <AdaptiveDisplay
-            asgmtID={asgmtID}
-            courseID={courseID}
+            docRefParams={docRefParams}
             qSet={qSet}
             submissionHistory={submissionHistory}
-            user={user}
           />
         </QuestionCardPanel>
       </QSetContainer>
@@ -238,13 +243,12 @@ function QuestionSetDisplay({
       />
       <QuestionCardPanel>
         <QuestionCard
-          asgmtID={asgmtID}
+          docRefParams={docRefParams}
           goForward={goForward}
           nextDisabled={nextDisabled}
-          courseID={courseID}
+          qSet={qSet}
           question={selQuestion}
           submissionHistory={submissionHistory}
-          user={user}
         />
       </QuestionCardPanel>
     </QSetContainer>
@@ -267,7 +271,7 @@ function ruleDescription(rule) {
   return "";
 }
 
-function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
+function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
   const [loading, setLoading] = useState(true);
   const [objIndex, setObjIndex] = useState(-1);
   const [selQuestion, setSelQuestion] = useState(null);
@@ -386,6 +390,8 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
   }
 
   if (progress.percentage >= 100 && objIndex === objectives.length - 1) {
+    saveAdaptivePointsAwarded(docRefParams, params.totalPointsPossible);
+
     return (
       <>
         <ProgressMeters
@@ -426,13 +432,10 @@ function AdaptiveDisplay({ asgmtID, courseID, qSet, submissionHistory, user }) {
         submissionHistory={submissionHistory}
       />
       <AdaptiveQuestionCard
-        asgmtID={asgmtID}
-        courseID={courseID}
+        docRefParams={docRefParams}
         handlePickQuestion={handlePickQuestion}
-        qSet={qSet}
         selQuestion={selQuestion}
         submissionHistory={submissionHistory}
-        user={user}
       />
     </>
   );
@@ -515,24 +518,35 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
   );
 }
 
+function getTotalPointsAwarded(submissionHistory, qSet) {
+  if (!submissionHistory) {
+    return 0;
+  }
+
+  const questions = qSet.questions;
+  const pointArr = [];
+
+  questions?.forEach((question) => {
+    const submissions = getSubmissions(submissionHistory, question);
+    const lastSubmission = submissions?.at(-1) || null;
+    pointArr.push(lastSubmission?.pointsAwarded || 0);
+  });
+
+  const totalPointsAwarded = pointArr.reduce((acc, cur) => acc + cur, 0);
+
+  return totalPointsAwarded;
+}
+
 function AdaptiveQuestionCard({
-  asgmtID,
-  courseID,
+  docRefParams,
   handlePickQuestion,
   selQuestion,
   submissionHistory,
-  user,
 }) {
   const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
   const type = selQuestion?.type;
   const submissions = getSubmissions(submissionHistory, selQuestion);
   const lastSubmission = submissions?.at(-1) || null;
-
-  const docRefParams = {
-    asgmtID: asgmtID,
-    courseID: courseID,
-    userID: user.uid,
-  };
 
   if (!selQuestion) return null;
 
@@ -555,22 +569,26 @@ function AdaptiveQuestionCard({
 
       {type === "multiple choice" && (
         <MultipleChoice
+          adaptive
           docRefParams={docRefParams}
           goForward={handlePickQuestion}
           mode="course"
           nextDisabled={false}
           question={selQuestion}
           submissions={submissions}
+          totalPointsAwarded={0}
         />
       )}
       {type === "short answer" && (
         <ShortAnswer
+          adaptive
           docRefParams={docRefParams}
           goForward={handlePickQuestion}
           mode="course"
           nextDisabled={false}
           question={selQuestion}
           submissions={submissions}
+          totalPointsAwarded={0}
         />
       )}
     </Card>
@@ -578,20 +596,13 @@ function AdaptiveQuestionCard({
 }
 
 function QuestionCard({
-  asgmtID,
+  docRefParams,
   goForward,
-  courseID,
+  qSet,
   question,
   nextDisabled,
   submissionHistory,
-  user,
 }) {
-  const docRefParams = {
-    asgmtID: asgmtID,
-    courseID: courseID,
-    userID: user.uid,
-  };
-
   if (!question) {
     return (
       <div className="question-card-placeholder">
@@ -606,6 +617,7 @@ function QuestionCard({
     const { type } = question;
     const submissions = getSubmissions(submissionHistory, question);
     const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
+    const totalPointsAwarded = getTotalPointsAwarded(submissionHistory, qSet);
 
     return (
       <Card className="question-card" sx={cardColor}>
@@ -617,6 +629,7 @@ function QuestionCard({
             nextDisabled={nextDisabled}
             question={question}
             submissions={submissions}
+            totalPointsAwarded={totalPointsAwarded}
           />
         )}
         {type === "short answer" && (
@@ -627,6 +640,7 @@ function QuestionCard({
             nextDisabled={nextDisabled}
             question={question}
             submissions={submissions}
+            totalPointsAwarded={totalPointsAwarded}
           />
         )}
         {type === "free response" && (
@@ -637,6 +651,7 @@ function QuestionCard({
             nextDisabled={nextDisabled}
             question={question}
             submissions={submissions}
+            totalPointsAwarded={totalPointsAwarded}
           />
         )}
       </Card>

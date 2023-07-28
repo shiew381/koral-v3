@@ -692,6 +692,7 @@ export function saveQResponseFromCourse(
   question,
   currentResponse,
   grade,
+  updatedPointsAwarded,
   setSubmitting
 ) {
   const { courseID, asgmtID, userID } = docRefParams;
@@ -717,12 +718,35 @@ export function saveQResponseFromCourse(
     newSubmission.pointsAwarded = grade.pointsAwarded;
     setSubmitting(true);
 
-    setDoc(ref, { [question.id]: updatedSubmissions }, { merge: true }).finally(
-      () => setTimeout(() => setSubmitting(false), 500)
-    );
+    setDoc(
+      ref,
+      {
+        [question.id]: updatedSubmissions,
+        totalPointsAwarded: updatedPointsAwarded,
+      },
+      { merge: true }
+    ).finally(() => setTimeout(() => setSubmitting(false), 500));
   }
 
   appendResponse();
+}
+
+export function saveAdaptivePointsAwarded(docRefParams, points) {
+  const { courseID, asgmtID, userID } = docRefParams;
+
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  updateDoc(ref, {
+    totalPointsAwarded: points,
+  });
 }
 
 export function updateAdaptiveParams(
