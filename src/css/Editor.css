@@ -1,3 +1,15 @@
+.clear-field {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  padding: 5px;
+  color: gray;
+}
+
+.clear-field:hover {
+  cursor: pointer;
+}
+
 .editor-container {
   position: relative;
   padding: 5px;
@@ -300,6 +312,7 @@ div.equation-container {
   font-family: Computer Modern, Minion, Utopia, serif;
   justify-content: center;
   padding-top: 20px;
+  padding-bottom: 15px;
   text-align: center;
 }
 

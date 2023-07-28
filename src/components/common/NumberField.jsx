@@ -35,6 +35,11 @@ export function NumberField({
     setEditorActive(false);
   }
 
+  function handleClear() {
+    numberRef.current.innerHTML = "";
+    numberRef.current.focus();
+  }
+
   function handleFocus() {
     setEditorActive(true);
   }
@@ -94,7 +99,6 @@ export function NumberField({
 
         return;
       }
-
       case "ArrowLeft": {
         if (
           parent.tagName === "SUP" ||
@@ -176,6 +180,7 @@ export function NumberField({
         return;
       }
       case "Enter": {
+        e.preventDefault();
         return;
       }
       case "Minus": {
@@ -213,6 +218,9 @@ export function NumberField({
           onKeyUp={handleKeyUp}
           suppressContentEditableWarning
         ></div>
+        <div className="clear-field" onClick={handleClear}>
+          clear
+        </div>
       </Box>
     </>
   );
@@ -225,6 +233,7 @@ function NumberToolbar({ disabled, numberRef, setCurrentResponse }) {
   function handleTab(event) {
     const value = event.target.attributes.value.nodeValue;
     setTab(value);
+    numberRef.current.focus();
   }
 
   if (disabled) {
