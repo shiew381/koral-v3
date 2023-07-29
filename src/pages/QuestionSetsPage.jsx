@@ -30,6 +30,7 @@ import { AddQSetForm } from "../components/forms/AddQSetForm";
 import { BtnContainer, MoreOptionsBtn } from "../components/common/Buttons";
 import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 import AdaptiveParamsForm from "../components/forms/AdaptiveParamsForm";
+import { EditQSetTitleForm } from "../components/forms/EditQSetTitleForm";
 
 export default function QuestionSetsPage() {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ export default function QuestionSetsPage() {
   const [loading, setLoading] = useState(true);
   const [qSets, setQSets] = useState([]);
   const [open, setOpen] = useState(false);
+  const [openTitle, setOpenTitle] = useState(false);
   const [adaptiveFormOpen, setAdaptiveFormOpen] = useState(false);
   const [selQSet, setSelQSet] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,8 +48,16 @@ export default function QuestionSetsPage() {
     deleteUserContent(user, "question-sets", doc.id);
   }
 
+  function handleOpenTitle() {
+    setOpenTitle(true);
+  }
+
   function handleOpen() {
     setOpen(true);
+  }
+
+  function handleCloseTitle() {
+    setOpenTitle(false);
   }
 
   function handleClose() {
@@ -65,11 +75,6 @@ export default function QuestionSetsPage() {
   function handleSearchTerm(e) {
     setSearchTerm(e.target.value.toLowerCase());
   }
-
-  // function toggleOrder() {
-  //   const updated = [...qSets].reverse();
-  //   setQSets(updated);
-  // }
 
   useEffect(
     () => {
@@ -125,6 +130,7 @@ export default function QuestionSetsPage() {
                 <QSetCard
                   deleteQSet={deleteQSet}
                   key={qSet.id}
+                  handleOpenTitle={handleOpenTitle}
                   openAdaptiveForm={openAdaptiveForm}
                   setSelQSet={setSelQSet}
                   qSet={qSet}
@@ -136,6 +142,12 @@ export default function QuestionSetsPage() {
       )}
 
       <AddQSetForm open={open} handleClose={handleClose} user={user} />
+      <EditQSetTitleForm
+        open={openTitle}
+        handleClose={handleCloseTitle}
+        qSet={selQSet}
+        user={user}
+      />
       <AdaptiveParamsForm
         qSet={selQSet}
         open={adaptiveFormOpen}
@@ -154,7 +166,14 @@ function AddQSetBtn({ onClick }) {
   );
 }
 
-function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
+function QSetCard({
+  deleteQSet,
+  handleOpenTitle,
+  openAdaptiveForm,
+  qSet,
+  setSelQSet,
+  user,
+}) {
   const navigate = useNavigate();
   const [adaptiveModeOn, setAdaptiveModeOn] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -197,7 +216,7 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
   if (!qSet) return null;
 
   return (
-    <Card sx={{ minWidth: "450px", mb: 2, mr: 2 }} className="relative">
+    <Card sx={{ minWidth: "400px", mb: 2, mr: 2 }} className="relative">
       <CardContent>
         <Box style={{ position: "absolute", top: "10px", right: "8px" }}>
           <MoreOptionsBtn
@@ -212,6 +231,17 @@ function QSetCard({ deleteQSet, openAdaptiveForm, qSet, setSelQSet, user }) {
           handleClose={handleCloseMenu}
           open={menuOpen}
         >
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                setSelQSet(qSet);
+                handleOpenTitle();
+                handleCloseMenu();
+              }}
+            >
+              Edit title
+            </ListItemButton>
+          </MenuOption>
           <MenuOption>
             <ListItemButton
               onClick={() => {
@@ -285,23 +315,19 @@ function NumDeployments({ qSet }) {
 
   if (num === 1) {
     return (
-      <Typography color="text.secondary" sx={{ mt: 1 }}>
-        deployed to {deployments[0].title}
-      </Typography>
+      <Typography sx={{ mt: 1 }}>deployed to {deployments[0].title}</Typography>
     );
   }
 
   if (num === 2) {
     return (
-      <Typography color="text.secondary" sx={{ mt: 1 }}>
+      <Typography sx={{ mt: 1 }}>
         deployed to {deployments[0].title} and {deployments[1].title}
       </Typography>
     );
   }
 
   if (num > 2) {
-    <Typography color="text.secondary" sx={{ mt: 1 }}>
-      Deployed to {num} courses
-    </Typography>;
+    <Typography sx={{ mt: 1 }}>Deployed to {num} courses</Typography>;
   }
 }
