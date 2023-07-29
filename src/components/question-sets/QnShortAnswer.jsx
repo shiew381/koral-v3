@@ -28,12 +28,14 @@ import {
 import parse from "html-react-parser";
 
 export default function ShortAnswer({
+  adaptive,
   docRefParams,
   goForward,
   mode,
   nextDisabled,
   question,
   submissions,
+  totalPointsAwarded,
 }) {
   const subtype = question.subtype;
   const lastSubmission = submissions?.at(-1) || null;
@@ -59,6 +61,7 @@ export default function ShortAnswer({
       />
       {subtype === "text" && (
         <ShortAnswerText
+          adaptive={adaptive}
           answeredCorrectly={answeredCorrectly}
           attemptsExhausted={attemptsExhausted}
           docRefParams={docRefParams}
@@ -70,11 +73,13 @@ export default function ShortAnswer({
           submissions={submissions}
           submitting={submitting}
           setSubmitting={setSubmitting}
+          totalPointsAwarded={totalPointsAwarded}
         />
       )}
 
       {subtype === "number" && (
         <ShortAnswerNumber
+          adaptive={adaptive}
           answeredCorrectly={answeredCorrectly}
           attemptsExhausted={attemptsExhausted}
           docRefParams={docRefParams}
@@ -86,10 +91,12 @@ export default function ShortAnswer({
           submissions={submissions}
           submitting={submitting}
           setSubmitting={setSubmitting}
+          totalPointsAwarded={totalPointsAwarded}
         />
       )}
       {subtype === "measurement" && (
         <ShortAnswerMeasurement
+          adaptive={adaptive}
           answeredCorrectly={answeredCorrectly}
           attemptsExhausted={attemptsExhausted}
           docRefParams={docRefParams}
@@ -101,6 +108,7 @@ export default function ShortAnswer({
           submissions={submissions}
           submitting={submitting}
           setSubmitting={setSubmitting}
+          totalPointsAwarded={totalPointsAwarded}
         />
       )}
     </CardContent>
@@ -108,6 +116,7 @@ export default function ShortAnswer({
 }
 
 function ShortAnswerText({
+  adaptive,
   answeredCorrectly,
   attemptsExhausted,
   docRefParams,
@@ -118,6 +127,7 @@ function ShortAnswerText({
   setSubmitting,
   submissions,
   submitting,
+  totalPointsAwarded,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const responseChanged = currentResponse?.text !== lastResponse?.text;
@@ -138,6 +148,9 @@ function ShortAnswerText({
 
   function handleSubmit() {
     const grade = gradeResponse(question, currentResponse);
+    const updatedPointsAwarded = adaptive
+      ? 0
+      : totalPointsAwarded + grade.pointsAwarded;
 
     if (mode === "course") {
       saveQResponseFromCourse(
@@ -146,6 +159,7 @@ function ShortAnswerText({
         question,
         currentResponse,
         grade,
+        updatedPointsAwarded,
         setSubmitting
       );
     }
@@ -234,6 +248,7 @@ function ShortAnswerText({
 }
 
 function ShortAnswerNumber({
+  adaptive,
   answeredCorrectly,
   attemptsExhausted,
   docRefParams,
@@ -244,6 +259,7 @@ function ShortAnswerNumber({
   setSubmitting,
   submissions,
   submitting,
+  totalPointsAwarded,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
@@ -285,6 +301,9 @@ function ShortAnswerNumber({
     console.log(tidiedQuestion);
 
     const grade = gradeResponse(tidiedQuestion, tidiedResponse);
+    const updatedPointsAwarded = adaptive
+      ? 0
+      : totalPointsAwarded + grade.pointsAwarded;
 
     if (mode === "course") {
       saveQResponseFromCourse(
@@ -293,6 +312,7 @@ function ShortAnswerNumber({
         question,
         currentResponse,
         grade,
+        updatedPointsAwarded,
         setSubmitting
       );
     }
@@ -380,6 +400,7 @@ function ShortAnswerNumber({
 }
 
 function ShortAnswerMeasurement({
+  adaptive,
   answeredCorrectly,
   attemptsExhausted,
   docRefParams,
@@ -390,6 +411,7 @@ function ShortAnswerMeasurement({
   setSubmitting,
   submissions,
   submitting,
+  totalPointsAwarded,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const numberRef = useRef();
@@ -449,6 +471,9 @@ function ShortAnswerMeasurement({
     };
 
     const grade = gradeResponse(tidiedQuestion, tidiedResponse);
+    const updatedPointsAwarded = adaptive
+      ? 0
+      : totalPointsAwarded + grade.pointsAwarded;
 
     if (mode === "course") {
       saveQResponseFromCourse(
@@ -457,6 +482,7 @@ function ShortAnswerMeasurement({
         question,
         currentResponse,
         grade,
+        updatedPointsAwarded,
         setSubmitting
       );
     }

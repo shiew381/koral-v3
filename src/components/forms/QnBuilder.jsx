@@ -131,7 +131,7 @@ export function AttemptsForm({
   user,
 }) {
   const initVal = {
-    attempts: selQuestion?.attemptsPossible || 1,
+    attempts: selQuestion?.attemptsPossible || 5,
   };
   const [attempts, setAttempts] = useState(initVal.attempts);
   const [errorMessage, setErrorMessage] = useState("");

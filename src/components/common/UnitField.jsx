@@ -33,6 +33,11 @@ export function UnitField({
     setEditorActive(false);
   }
 
+  function handleClear() {
+    unitRef.current.innerHTML = "";
+    unitRef.current.focus();
+  }
+
   function handleFocus() {
     setEditorActive(true);
   }
@@ -174,6 +179,7 @@ export function UnitField({
         return;
       }
       case "Enter": {
+        e.preventDefault();
         return;
       }
       case "Minus": {
@@ -206,10 +212,14 @@ export function UnitField({
           contentEditable
           ref={unitRef}
           id={id}
+          key={id}
           onKeyDown={handleKeyDown}
           onKeyUp={handleKeyUp}
           suppressContentEditableWarning
         ></div>
+        <div className="clear-field" onClick={handleClear}>
+          clear
+        </div>
       </Box>
     </>
   );
@@ -222,6 +232,7 @@ function UnitToolbar({ disabled, unitRef, setCurrentResponse }) {
   function handleTab(event) {
     const value = event.target.attributes.value.nodeValue;
     setTab(value);
+    unitRef.current.focus();
   }
 
   if (disabled) {

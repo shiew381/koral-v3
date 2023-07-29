@@ -88,6 +88,7 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
       ],
       instructorIDs: [user.uid],
       instructorNames_searchable: [firstNameNormalized, lastNameNormalized],
+      studentIDs: [],
       availableTo: availableTo,
     };
 
@@ -129,8 +130,6 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
 
     setSearching(true);
 
-    console.log(searchTerm);
-
     const querySnapshot1 = await getDocs(q1);
     const querySnapshot2 = await getDocs(q2);
 
@@ -149,8 +148,6 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
     );
 
     const foundCourseIDs = fetchedItems.map((item) => item.id);
-
-    console.log(foundCourseIDs);
 
     if (foundCourseIDs.length === 0) {
       setNoSearchResults(true);
@@ -299,7 +296,7 @@ function FoundCourse({ course, registerStudent, user }) {
     setCourseCode(e.target.value);
   }
 
-  if (course.instructorIDs.includes(user.uid)) {
+  if (course.instructorIDs?.includes(user.uid)) {
     return (
       <ListItem>
         <ListItemText
@@ -310,7 +307,7 @@ function FoundCourse({ course, registerStudent, user }) {
     );
   }
 
-  if (course.studentIDs.includes(user.uid)) {
+  if (course.studentIDs?.includes(user.uid)) {
     return (
       <ListItem>
         <ListItemText

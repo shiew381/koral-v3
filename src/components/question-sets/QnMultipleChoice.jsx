@@ -27,12 +27,14 @@ import {
 } from "./QSetSharedCpnts";
 
 export default function MultipleChoice({
+  adaptive,
   docRefParams,
   goForward,
   mode,
   nextDisabled,
   question,
   submissions,
+  totalPointsAwarded,
 }) {
   const answerChoices = question?.answerChoices || [];
   const numCorrect = answerChoices.filter((el) => el.isCorrect).length || 0;
@@ -81,14 +83,19 @@ export default function MultipleChoice({
 
   function handleSubmit() {
     const grade = gradeResponse(question, currentResponse);
+    const updatedPointsAwarded = adaptive
+      ? 0
+      : totalPointsAwarded + grade.pointsAwarded;
 
     if (mode === "course") {
+      console.log(updatedPointsAwarded);
       saveQResponseFromCourse(
         submissions,
         docRefParams,
         question,
         currentResponse,
         grade,
+        updatedPointsAwarded,
         setSubmitting
       );
     }

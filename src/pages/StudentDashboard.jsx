@@ -33,6 +33,7 @@ import {
   Panel,
   ResourceIcon,
 } from "../components/common/DashboardCpnts";
+import { formatGrade } from "../utils/gradeUtils";
 
 export function StudentDashboard() {
   const navigate = useNavigate();
@@ -361,6 +362,20 @@ function Grades({ course, user }) {
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const cellStyle = { padding: "10px", textAlign: "center", maxWidth: "200px" };
+
+  function compareTitles(a, b) {
+    if (a.title.toLowerCase() < b.title.toLowerCase()) return -1;
+    if (a.title.toLowerCase() > b.title.toLowerCase()) return 1;
+    return 0;
+  }
+
+  const sorted = assignments.sort(compareTitles);
+  const cellStyle2 = {
+    padding: "10px",
+    textAlign: "center",
+    maxWidth: "140px",
+  };
 
   useEffect(
     () => {
@@ -390,19 +405,22 @@ function Grades({ course, user }) {
       <Box sx={{ pt: "50px" }}>
         <table style={{ width: "300px", textAlign: "center" }}>
           <thead>
-            <tr>
-              <th style={{ width: "50%" }}>assignment</th>
-              <th style={{ width: "50%" }}>score</th>
+            <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
+              <th style={cellStyle}>Assignment</th>
+              <th style={cellStyle}>Score</th>
             </tr>
           </thead>
           <tbody>
-            {assignments.map((asgmt) => (
-              <tr key={asgmt.id}>
-                <td>{asgmt.title}</td>
-                <td>
-                  {grades[asgmt.id].totalPointsAwarded} of{" "}
-                  {grades[asgmt.id].totalPointsPossible}
-                </td>
+            {sorted.map((asgmt, ind) => (
+              <tr
+                key={asgmt.id}
+                style={{
+                  backgroundColor:
+                    ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
+                }}
+              >
+                <td style={cellStyle}>{asgmt.title}</td>
+                <td style={cellStyle2}>{formatGrade(asgmt, grades)}</td>
               </tr>
             ))}
           </tbody>

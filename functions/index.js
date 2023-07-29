@@ -16,9 +16,9 @@ exports.addQResponse = functions.https.onRequest(async (req, res) => {
   const userID = req.query.userid;
   const questionID = req.query.qid;
   const correctStatus = req.query.correct;
-  const ptsAwarded = req.query.ptsAwarded;
+  const ptsAwarded = req.query.pts;
 
-  const writeResult = await admin
+  await admin
     .firestore()
     .collection("courses")
     .doc(courseID)
@@ -36,6 +36,9 @@ exports.addQResponse = functions.https.onRequest(async (req, res) => {
     });
 
   res.json({ result: `Success! document updated` });
+
+  // example url
+  // http://127.0.0.1:5001/koral-v3/us-central1/addQResponse?courseid=iZpyhGCBfLsQmsQ6W6rv&asgmtid=lmeGfuMgC1aaWN38Tn6g&userid=fmssRP4l1zCNkGsHo9py&qid=q82hj40&correct=1&pts=8
 });
 
 exports.addAsgmt = functions.https.onRequest(async (req, res) => {
@@ -131,70 +134,52 @@ exports.removeQSetDeployment = functions.firestore
 
 exports.generateGradeSummary = functions.firestore
   .document("/courses/{courseID}/assignments/{asgmtID}/submissions/{userID}")
-  .onWrite((change, context) => {
+  .onWrite(async (change, context) => {
     const { courseID, asgmtID, userID } = context.params;
 
-    const ref1 = admin
+    const asmgtRef = admin
       .firestore()
       .collection("courses")
       .doc(courseID)
       .collection("assignments")
       .doc(asgmtID);
 
-    const ref2 = admin
+    const studentGradesDoc = admin
       .firestore()
       .collection("courses")
       .doc(courseID)
       .collection("grades")
       .doc(userID);
 
-    return ref1
-      .get()
-      .then((doc) => {
-        if (doc.data().type === "question set") {
-          const submissionHistory = change.after.data();
-          const questionIDs = Object.keys(submissionHistory);
-          const arr = [];
+    const asgmtDoc = await asmgtRef.get();
 
-          questionIDs.forEach((id) => {
-            const submissions = submissionHistory[id];
-            const lastSubmission = submissions.at(-1);
-            arr.push(lastSubmission.pointsAwarded || 0);
-          });
+    if (asgmtDoc.data().type === "question set") {
+      const totalPointsAwarded = change.after.data().totalPointsAwarded;
 
-          const totalPointsAwarded = arr.reduce((acc, cur) => acc + cur, 0);
+      functions.logger.log(
+        "generating question set grade summary for",
+        `courseID: ${courseID}, userID: ${userID}, asgmtID: ${asgmtID}`
+      );
 
+      functions.logger.log("total points awarded: " + totalPointsAwarded);
+
+      const values = {
+        [asgmtID]: {
+          totalPointsPossible: asgmtDoc.data().totalPointsPossible,
+          totalPointsAwarded: totalPointsAwarded,
+          type: asgmtDoc.data().type,
+        },
+      };
+
+      return studentGradesDoc
+        .set(values, { merge: true })
+        .then(() => functions.logger.log("grade summary added successfully"))
+        .catch(() => {
           functions.logger.log(
-            "generating question set grade summary for",
-            `courseID: ${courseID}, userID: ${userID}, asgmtID: ${asgmtID}`
+            "an error occurred adding grade summary...exiting function"
           );
-
-          functions.logger.log("total points awarded: " + totalPointsAwarded);
-
-          const values = {
-            [asgmtID]: {
-              totalPointsPossible: doc.data().totalPointsPossible,
-              totalPointsAwarded: totalPointsAwarded,
-              type: doc.data().type,
-            },
-          };
-
-          ref2
-            .set(values, { merge: true })
-            .then(() =>
-              functions.logger.log("grade summary added successfully")
-            );
-        } else {
-          functions.logger.log(
-            "assignment is not a quesiton set...exiting function"
-          );
-        }
-      })
-      .catch(() => {
-        functions.logger.log(
-          "an error occurred adding grade summary...exiting function"
-        );
-      });
+        });
+    }
   });
 
 exports.addUserInfoToAsgmt = functions.firestore

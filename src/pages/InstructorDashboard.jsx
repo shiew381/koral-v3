@@ -17,6 +17,7 @@ import {
   fetchResources,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
+import { formatGrade } from "../utils/gradeUtils";
 import {
   Alert,
   Box,
@@ -714,17 +715,4 @@ function Grades({ course }) {
       </Box>
     </Panel>
   );
-}
-
-function formatGrade(asgmt, userGrades) {
-  const asgmtGrade = userGrades[asgmt.id];
-
-  const totalPointsAwarded = asgmtGrade?.totalPointsAwarded;
-  const totalPointsPossible = asgmtGrade?.totalPointsPossible;
-
-  if (!asgmtGrade) {
-    return "N/A";
-  }
-
-  return totalPointsAwarded + " of " + totalPointsPossible;
 }
