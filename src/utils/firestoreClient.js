@@ -431,6 +431,7 @@ export function fetchUserLinks(user, setLinks, setLoading) {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       title: doc.data().title,
+      description: doc.data().description,
       url: doc.data().url,
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
