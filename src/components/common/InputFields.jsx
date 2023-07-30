@@ -365,10 +365,8 @@ export function TagField({ onChange, value }) {
   return (
     <TextField
       fullWidth
-      size="small"
       autoComplete="off"
       onChange={onChange}
-      label="new tag"
       value={value}
       variant="outlined"
     />

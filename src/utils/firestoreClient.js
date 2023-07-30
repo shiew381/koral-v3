@@ -36,6 +36,23 @@ export function addAnnouncement(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
+export async function addTag(
+  tag,
+  libraryID,
+  questionID,
+  handleClose,
+  setSubmitting
+) {
+  const docRef = doc(db, "libraries", libraryID, "questions", questionID);
+  setSubmitting(true);
+  updateDoc(docRef, {
+    tags: arrayUnion(tag),
+  })
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
+}
+
 export function addCourse(values, handleClose, setSubmitting) {
   const ref = collection(db, "courses");
   setSubmitting(true);
@@ -43,6 +60,34 @@ export function addCourse(values, handleClose, setSubmitting) {
     .then(() => setTimeout(() => handleClose(), 600))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 400));
+}
+
+export function addPointerToFile(user, file, url, colName) {
+  const ref = collection(db, "users", user.uid, colName);
+  const data = {
+    type: file.type,
+    name: file.name,
+    size: file.size,
+    dateUploaded: serverTimestamp(),
+    url: url,
+  };
+  addDoc(ref, data)
+    .then(() => console.log("upload successful"))
+    .catch((error) => console.log(error));
+}
+
+export function addPointerToCourseImage(course, file, url) {
+  const ref = doc(db, "courses", course.id);
+  const data = {
+    type: file.type,
+    name: file.name,
+    size: file.size,
+    dateUploaded: serverTimestamp(),
+    url: url,
+  };
+  updateDoc(ref, { courseImage: data })
+    .then(() => console.log("upload successful"))
+    .catch((error) => console.log(error));
 }
 
 export function addQuestion(
@@ -74,32 +119,18 @@ export function addQuestion(
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export function addPointerToFile(user, file, url, colName) {
-  const ref = collection(db, "users", user.uid, colName);
-  const data = {
-    type: file.type,
-    name: file.name,
-    size: file.size,
-    dateUploaded: serverTimestamp(),
-    url: url,
-  };
-  addDoc(ref, data)
-    .then(() => console.log("upload successful"))
-    .catch((error) => console.log(error));
-}
-
-export function addPointerToCourseImage(course, file, url) {
-  const ref = doc(db, "courses", course.id);
-  const data = {
-    type: file.type,
-    name: file.name,
-    size: file.size,
-    dateUploaded: serverTimestamp(),
-    url: url,
-  };
-  updateDoc(ref, { courseImage: data })
-    .then(() => console.log("upload successful"))
-    .catch((error) => console.log(error));
+export function addQuestionToLibrary(
+  values,
+  libraryID,
+  handleClose,
+  setSubmitting
+) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addResource(course, values, handleClose, setSubmitting) {
@@ -319,6 +350,44 @@ export function fetchInstructorCourses(user, setInstructorCourses) {
       ...doc.data(),
     }));
     setInstructorCourses(fetchedItems);
+  });
+  return unsubscribe;
+}
+
+export function fetchLibraries(setLibraries) {
+  const colRef = collection(db, "libraries");
+  const q = query(colRef);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setLibraries(fetchedItems);
+  });
+  return unsubscribe;
+}
+
+export function fetchLibrary(libraryID, setLibrary, setLoading) {
+  const ref = doc(db, "libraries", libraryID);
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    setLibrary({
+      id: doc.id,
+      ...doc.data(),
+    });
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchLibraryQuestions(libraryID, setQuestions) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  const q = query(ref);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setQuestions(fetchedItems);
   });
   return unsubscribe;
 }

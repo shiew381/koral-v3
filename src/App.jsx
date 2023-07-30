@@ -15,10 +15,12 @@ import ImagesPage from "./pages/ImagesPage.jsx";
 import LinksPage from "./pages/LinksPage.jsx";
 import QuestionSetsPage from "./pages/QuestionSetsPage.jsx";
 import QuestionSetPage from "./pages/QuestionSetPage.jsx";
-import "./css/App.css";
-import { StudentDashboard } from "./pages/StudentDashboard.jsx";
+import StudentDashboard from "./pages/StudentDashboard.jsx";
 import CourseAsgmtPage from "./pages/CourseAsgmtPage.jsx";
 import CourseResourcePage from "./pages/CourseResourcePage.jsx";
+import LibrariesPage from "./pages/LibrariesPage.jsx";
+import LibraryPage from "./pages/LibraryPage.jsx";
+import "./css/App.css";
 
 export default function App() {
   const [open, setOpen] = useState(false);
@@ -70,6 +72,11 @@ export default function App() {
                 <Route
                   path="content/question-sets"
                   element={<QuestionSetsPage />}
+                />
+                <Route path="community/libraries" element={<LibrariesPage />} />
+                <Route
+                  path="community/libraries/:title/:libraryID"
+                  element={<LibraryPage />}
                 />
               </Routes>
             </div>
