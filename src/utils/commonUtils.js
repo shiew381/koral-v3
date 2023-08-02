@@ -58,3 +58,16 @@ export function truncateString(str, maxLength) {
     return str.slice(0, maxLength - 3) + "...";
   }
 }
+
+export function alphabetize(arr) {
+  // alphabetizes an array of strings
+
+  function compare(a, b) {
+    if (a.toLowerCase() < b.toLowerCase()) return -1;
+    if (a.toLowerCase() > b.toLowerCase()) return 1;
+    return 0;
+  }
+
+  const sortedArr = arr.sort(compare);
+  return sortedArr;
+}

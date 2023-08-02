@@ -3,9 +3,16 @@ import { useState, useEffect } from "react";
 import { Lightbox, LightboxHeader } from "../common/Lightbox.jsx";
 import { BtnContainer, SubmitBtn } from "../common/Buttons.jsx";
 import { TagField } from "../common/InputFields.jsx";
-import { addTag } from "../../utils/firestoreClient.js";
+import { addTags } from "../../utils/firestoreClient.js";
+import { alphabetize } from "../../utils/commonUtils.js";
 
-export function TagsForm({ handleClose, libraryID, open, questionID }) {
+export function TagsForm({
+  handleClose,
+  libraryID,
+  open,
+  questionID,
+  selQuestion,
+}) {
   const [tag, setTag] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,12 +27,10 @@ export function TagsForm({ handleClose, libraryID, open, questionID }) {
   }
 
   function handleSubmit() {
-    console.log("submitting");
-    console.log(libraryID);
-    console.log(questionID);
-    addTag(tag, libraryID, questionID, handleClose, setSubmitting);
-    //check if subject area already exists
-    // addTopic(topic, subject, userInfo, handleClose, setSubmitting);
+    const existingTags = selQuestion.tags;
+    const updatedTags = alphabetize([...existingTags, tag]);
+
+    addTags(updatedTags, libraryID, questionID, handleClose, setSubmitting);
   }
 
   function resetForm() {
@@ -36,13 +41,13 @@ export function TagsForm({ handleClose, libraryID, open, questionID }) {
 
   return (
     <Lightbox open={open} onClose={handleClose} handleKeyPress={handleKeyPress}>
-      <LightboxHeader title="New Tag" />
+      <LightboxHeader title="Add Tag" />
       <TagField onChange={handleTag} value={tag} />
       <br />
       <br />
       <BtnContainer right>
         <SubmitBtn
-          label="ADD"
+          label="SAVE"
           disabled={submitting}
           onClick={handleSubmit}
           submitting={submitting}

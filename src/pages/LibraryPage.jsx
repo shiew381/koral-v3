@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchLibrary, fetchLibraryQuestions } from "../utils/firestoreClient";
+import {
+  deleteLibraryQuestion,
+  fetchLibrary,
+  fetchLibraryQuestions,
+  updateTags,
+} from "../utils/firestoreClient";
 import {
   Box,
   Button,
@@ -12,6 +17,7 @@ import {
   ListItemText,
   Tab,
   Tabs,
+  Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -21,6 +27,7 @@ import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
 import { TagsForm } from "../components/forms/TagsForm";
+import { Panel } from "../components/common/DashboardCpnts";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -120,67 +127,130 @@ function QuestionSetsPanel({ libraryID }) {
     setOpenTag(false);
   }
 
-  function deleteTag() {
-    console.log("hello");
+  function deleteTag(ind) {
+    const updatedTags = tags.filter((el, index) => ind !== index);
+    const questionID = selQuestion.id;
+    updateTags(updatedTags, libraryID, questionID);
   }
 
-  useEffect(() => {
-    fetchLibraryQuestions(libraryID, setQuestions);
-  }, []);
+  function deleteQuestion() {
+    deleteLibraryQuestion(selQuestion, libraryID);
+  }
+
+  function refreshQuestion() {
+    const found = questions.find((question) => question.id === selQuestion.id);
+    setSelQuestion(found);
+  }
+
+  useEffect(
+    () => {
+      fetchLibraryQuestions(libraryID, setQuestions);
+    },
+    //eslint-disable-next-line
+    []
+  );
+
+  useEffect(
+    () => {
+      if (selQuestion?.id) {
+        refreshQuestion();
+      }
+    },
+    //eslint-disable-next-line
+    [questions]
+  );
 
   return (
     <>
-      <div className="flex flex-row" style={{ padding: "50px" }}>
-        <Box>
-          <List sx={listStyle}>
-            {questions.map((question) => (
-              <ListItemButton
-                key={question.id}
-                onClick={() => setSelQuestion(question)}
-              >
-                <ListItemText>{formatPrompt(question.prompt)}</ListItemText>
-              </ListItemButton>
-            ))}
-          </List>
-          <Divider sx={{ my: "2px" }} />
-          <Button fullWidth onClick={handleOpenBuilder} startIcon={<AddIcon />}>
-            ADD QUESTION
-          </Button>
-        </Box>
-        <Box>
-          <Card className="question-card">
-            {type === "multiple choice" && (
-              <MultipleChoice mode="preview" question={selQuestion} />
-            )}
-            {type === "short answer" && (
-              <ShortAnswer mode="preview" question={selQuestion} />
-            )}
-            {type === "free response" && (
-              <FreeResponse mode="preview" question={selQuestion} />
-            )}
-          </Card>
-          {selQuestion && (
-            <Card className="tags-card">
-              Tags
-              {tags?.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  sx={{ mr: 1, mb: 1 }}
-                  onDelete={() => deleteTag()}
-                />
+      <Panel>
+        <Box className="flex flex-row" sx={{ pt: "80px" }}>
+          <Box>
+            <List sx={listStyle}>
+              {questions.map((question) => (
+                <ListItemButton
+                  key={question.id}
+                  onClick={() => setSelQuestion(question)}
+                >
+                  <ListItemText>{formatPrompt(question.prompt)}</ListItemText>
+                </ListItemButton>
               ))}
-              <Chip
-                icon={<AddIcon />}
-                onClick={handleOpenTag}
-                label="add topic"
-                sx={{ mr: 1, mb: 1 }}
-                variant="outlined"
-              />
-            </Card>
-          )}
+            </List>
+            <Divider sx={{ my: "2px" }} />
+            <Button
+              fullWidth
+              onClick={handleOpenBuilder}
+              startIcon={<AddIcon />}
+            >
+              ADD QUESTION
+            </Button>
+          </Box>
+          <Box>
+            {!selQuestion && (
+              <Box
+                className="flex flex-col flex-center"
+                sx={{
+                  width: "550px",
+                  height: "400px",
+                  p: "20px",
+                  border: "1px solid gainsboro",
+                  backgroundColor: "whitesmoke",
+                  borderRadius: "8px",
+                  m: "20px",
+                }}
+              >
+                <Typography> Please select a question form the list</Typography>
+              </Box>
+            )}
+            {selQuestion && (
+              <Card className="question-card">
+                <Typography color="text.secondary" sx={{ pl: "10px" }}>
+                  Question ID: {selQuestion.id}
+                </Typography>
+                {type === "multiple choice" && (
+                  <MultipleChoice mode="preview" question={selQuestion} />
+                )}
+                {type === "short answer" && (
+                  <ShortAnswer mode="preview" question={selQuestion} />
+                )}
+                {type === "free response" && (
+                  <FreeResponse mode="preview" question={selQuestion} />
+                )}
+              </Card>
+            )}
+            {selQuestion && (
+              <Card className="tags-card">
+                <span style={{ marginLeft: "10px", marginRight: "10px" }}>
+                  Tags:
+                </span>
+                {tags?.map((tag, ind) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    sx={{ mr: 1, mb: 1 }}
+                    onDelete={() => deleteTag(ind)}
+                  />
+                ))}
+                <Chip
+                  icon={<AddIcon />}
+                  onClick={handleOpenTag}
+                  label="add tag"
+                  sx={{ mr: 1, mb: 1 }}
+                  variant="outlined"
+                />
+              </Card>
+            )}
+            {selQuestion && (
+              <Box
+                className="flex flex-center"
+                width="600px"
+                sx={{ p: "20px" }}
+              >
+                <Button onClick={deleteQuestion}>DELETE QUESTION</Button>
+              </Box>
+            )}
+          </Box>
         </Box>
-      </div>
+      </Panel>
       <QuestionBuilder
         collection="library"
         libraryID={libraryID}
@@ -193,6 +263,8 @@ function QuestionSetsPanel({ libraryID }) {
         libraryID={libraryID}
         questionID={selQuestion?.id}
         open={openTag}
+        selQuestion={selQuestion}
+        setSelQuestion={setSelQuestion}
       />
     </>
   );

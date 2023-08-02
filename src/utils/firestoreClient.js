@@ -36,21 +36,20 @@ export function addAnnouncement(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export async function addTag(
-  tag,
+export async function addTags(
+  tags,
   libraryID,
   questionID,
   handleClose,
   setSubmitting
 ) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
+
   setSubmitting(true);
-  updateDoc(docRef, {
-    tags: arrayUnion(tag),
-  })
-    .then(() => setTimeout(() => handleClose(), 600))
+  updateDoc(docRef, { tags: tags })
+    .then(() => setTimeout(() => handleClose(), 500))
     .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 400));
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
 }
 
 export function addCourse(values, handleClose, setSubmitting) {
@@ -245,6 +244,11 @@ export function deleteCourseImage(course) {
 
 export function deleteCourseResource(course, resource) {
   const ref = doc(db, "courses", course.id, "resources", resource.id);
+  deleteDoc(ref);
+}
+
+export function deleteLibraryQuestion(question, libraryID) {
+  const ref = doc(db, "libraries", libraryID, "questions", question.id);
   deleteDoc(ref);
 }
 
@@ -864,6 +868,12 @@ export function updateAssignment(
     .then(() => setTimeout(() => handleClose(), 800))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export async function updateTags(tags, libraryID, questionID) {
+  const docRef = doc(db, "libraries", libraryID, "questions", questionID);
+
+  updateDoc(docRef, { tags: tags });
 }
 
 export function updateQuestion(
