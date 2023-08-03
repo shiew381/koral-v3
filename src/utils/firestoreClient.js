@@ -16,7 +16,7 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { generateRandomCode } from "./commonUtils.js";
+import { generateRandomCode, searchifyTags } from "./commonUtils.js";
 
 export function addAssignment(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "assignments");
@@ -45,8 +45,10 @@ export async function addTags(
 ) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
 
+  const tagsSearchable = searchifyTags(tags);
+
   setSubmitting(true);
-  updateDoc(docRef, { tags: tags })
+  updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable })
     .then(() => setTimeout(() => handleClose(), 500))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 300));
@@ -872,8 +874,8 @@ export function updateAssignment(
 
 export async function updateTags(tags, libraryID, questionID) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
-
-  updateDoc(docRef, { tags: tags });
+  const tagsSearchable = searchifyTags(tags);
+  updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable });
 }
 
 export function updateQuestion(

@@ -28,6 +28,7 @@ import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
 import { TagsForm } from "../components/forms/TagsForm";
 import { Panel } from "../components/common/DashboardCpnts";
+import { SearchField } from "../components/common/InputFields";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -46,9 +47,13 @@ export default function LibraryPage() {
     setTabIndex(newIndex);
   }
 
-  useEffect(() => {
-    fetchLibrary(libraryID, setLibrary, setLoading);
-  }, []);
+  useEffect(
+    () => {
+      fetchLibrary(libraryID, setLibrary, setLoading);
+    },
+    //eslint-disable-next-line
+    []
+  );
 
   if (loading) {
     return (
@@ -108,7 +113,9 @@ function QuestionSetsPanel({ libraryID }) {
   const type = selQuestion?.type;
   const listStyle = {
     padding: 0,
-    width: "200px",
+    width: "300px",
+    height: "500px",
+    overflow: "auto",
   };
 
   function handleOpenBuilder() {
@@ -165,6 +172,7 @@ function QuestionSetsPanel({ libraryID }) {
       <Panel>
         <Box className="flex flex-row" sx={{ pt: "80px" }}>
           <Box>
+            <SearchField />
             <List sx={listStyle}>
               {questions.map((question) => (
                 <ListItemButton
@@ -273,6 +281,8 @@ function QuestionSetsPanel({ libraryID }) {
 function formatPrompt(str) {
   const newStr = str
     .replaceAll(/<\/{0,1}div>/g, "")
+    .replaceAll(/<\/{0,1}strong>/g, "")
+    .replaceAll(/<\/{0,1}sub>/g, "")
     .replaceAll(/<br\/{0,1}>/g, "");
   return newStr;
 }

@@ -38,8 +38,46 @@ export function pickRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
+export function searchifyTags(rawTags) {
+  function isArticle(str) {
+    switch (str) {
+      case "of":
+      case "the":
+      case "and":
+        return false;
+      default:
+        return true;
+    }
+  }
+
+  function isPhrase(str) {
+    return /\s/.test(str);
+  }
+
+  if (!Array.isArray(rawTags)) return [];
+
+  // lower cases and replaces continguous spaces with a single space
+  const wholeTags = rawTags.map((el) =>
+    el.toLowerCase().replace(/\s+/g, " ").trim()
+  );
+
+  const phrases = wholeTags.filter((el) => isPhrase(el));
+  if (!phrases || phrases.length === 0) return wholeTags;
+
+  const atomizedPhrases = [];
+  phrases.forEach((phrase) => {
+    const atomizedPhrase = phrase.split(" ");
+    atomizedPhrases.push(...atomizedPhrase);
+  });
+
+  const filteredAtomizedPhrases = atomizedPhrases.filter((el) => isArticle(el));
+
+  const wholeAndAtomizedTags = [...wholeTags, ...filteredAtomizedPhrases];
+  return wholeAndAtomizedTags;
+}
+
 export function searchifyStr(str) {
-  if (typeof str !== "string") return [];
+  if (typeof str !== "string") return "";
 
   const arr = str.split(" ");
   const lowercaseArr = arr.map((tag) => tag.toLowerCase());

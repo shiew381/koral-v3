@@ -27,7 +27,7 @@ export function TagsForm({
   }
 
   function handleSubmit() {
-    const existingTags = selQuestion.tags;
+    const existingTags = selQuestion.tags || [];
     const updatedTags = alphabetize([...existingTags, tag]);
 
     addTags(updatedTags, libraryID, questionID, handleClose, setSubmitting);
