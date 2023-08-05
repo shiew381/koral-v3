@@ -12,6 +12,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import ImageIcon from "@mui/icons-material/Image";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import LinkIcon from "@mui/icons-material/Link";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Link as RouterLink } from "react-router-dom";
 
 export function NavMenu({ open }) {
@@ -38,6 +39,13 @@ export function NavMenu({ open }) {
           text="Question Sets"
         />
         <NavLink icon={<LinkIcon />} path="content/links" text="Links" />
+        <Break />
+        <Section title="Community" />
+        <NavLink
+          icon={<AutoStoriesIcon />}
+          path="community/libraries"
+          text="Libraries"
+        />
       </List>
     </Drawer>
   );

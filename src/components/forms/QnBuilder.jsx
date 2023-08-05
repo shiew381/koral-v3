@@ -9,7 +9,11 @@ import {
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { AttemptsField, PointsField } from "../common/InputFields";
 import { Lightbox, LightboxHeader } from "../common/Lightbox";
-import { addQuestion, updateQuestion } from "../../utils/firestoreClient";
+import {
+  addQuestion,
+  addQuestionToLibrary,
+  updateQuestion,
+} from "../../utils/firestoreClient";
 import { MultipleChoice } from "./QnBuilderMultipleChoice";
 import { ShortAnswer } from "./QnBuilderShortAnswer";
 import { FreeResponse } from "./QnBuilderFreeResponse";
@@ -17,6 +21,8 @@ import { FreeResponse } from "./QnBuilderFreeResponse";
 export function QuestionBuilder({
   edit,
   handleClose,
+  collection,
+  libraryID,
   open,
   qSet,
   selQuestion,
@@ -25,7 +31,6 @@ export function QuestionBuilder({
   user,
 }) {
   const [type, setType] = useState("multiple choice");
-
   const [submitting, setSubmitting] = useState(false);
 
   function handleType(e) {
@@ -33,6 +38,11 @@ export function QuestionBuilder({
   }
 
   function handleAddQuestion(values) {
+    if (collection === "library") {
+      addQuestionToLibrary(values, libraryID, handleClose, setSubmitting);
+      return;
+    }
+
     addQuestion(values, qSet, user, setSubmitting, setSelQuestion, handleClose);
   }
 

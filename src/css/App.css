@@ -164,3 +164,24 @@
 .prompt .equation {
   background-color: transparent;
 }
+
+.tags-card {
+  margin: 15px;
+  max-width: 630px;
+  min-height: 100px;
+  min-width: 600px;
+  padding: 10px;
+}
+
+.select-question-cta {
+  align-items: center;
+  border: 1px solid #026c8c;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+  justify-content: center;
+  margin: 20px;
+  padding: 20px;
+  width: 550px;
+}

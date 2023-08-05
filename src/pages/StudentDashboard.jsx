@@ -35,7 +35,7 @@ import {
 } from "../components/common/DashboardCpnts";
 import { formatGrade } from "../utils/gradeUtils";
 
-export function StudentDashboard() {
+export default function StudentDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();

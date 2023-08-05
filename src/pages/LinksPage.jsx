@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { filterByTerm } from "../utils/filterUtils";
 import { formatDate } from "../utils/dateUtils";
-import { fetchUserLinks } from "../utils/firestoreClient";
+import { deleteUserContent, fetchUserLinks } from "../utils/firestoreClient";
 import {
   Box,
   Button,
@@ -18,7 +18,6 @@ import {
 import { SearchField } from "../components/common/InputFields";
 import { VertDivider } from "../components/common/Dividers";
 import AddIcon from "@mui/icons-material/Add";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { BuildFirstItem } from "../components/common/CallsToAction";
@@ -28,6 +27,8 @@ import {
   PageHeader,
 } from "../components/common/Pages.jsx";
 import { AddLinkForm } from "../components/forms/AddLinkForm";
+import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
+import { MoreOptionsBtn } from "../components/common/Buttons";
 
 export default function LinksPage() {
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,7 @@ export default function LinksPage() {
   const [open, setOpen] = useState(false);
   const [selLink, setSelLink] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+
   const filtered = filterByTerm(links, searchTerm);
 
   const { user } = useAuth();
@@ -103,6 +105,7 @@ export default function LinksPage() {
               searchTerm={searchTerm}
               selLink={selLink}
               setSelLink={setSelLink}
+              user={user}
             />
             <Divider />
             <AddLinkBtn onClick={handleOpen} />
@@ -118,7 +121,15 @@ export default function LinksPage() {
   );
 }
 
-function LinkList({ links, searchTerm, selLink, setSelLink }) {
+function LinkList({ links, searchTerm, selLink, setSelLink, user }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selItem, setSelItem] = useState(null);
+  const menuOpen = Boolean(anchorEl);
+
+  function handleCloseMenu() {
+    setAnchorEl(null);
+  }
+
   if (links?.length == 0) {
     return (
       <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
@@ -133,23 +144,50 @@ function LinkList({ links, searchTerm, selLink, setSelLink }) {
 
   return (
     <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
-      {links.map((doc) => (
+      {links.map((link) => (
         <ListItem
           component="div"
           disablePadding
-          key={doc.id}
+          key={link.id}
           sx={{
-            bgcolor: selLink?.id === doc.id ? "whitesmoke" : "none",
+            bgcolor: selLink?.id === link.id ? "whitesmoke" : "none",
           }}
         >
-          <ListItemButton onClick={() => setSelLink(doc)}>
-            {doc?.title}
+          <ListItemButton onClick={() => setSelLink(link)}>
+            {link?.title}
           </ListItemButton>
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
+          <MoreOptionsBtn
+            item={link}
+            setAnchorEl={setAnchorEl}
+            setSelItem={setSelItem}
+          />
         </ListItem>
       ))}
+      <MoreOptionsMenu
+        anchorEl={anchorEl}
+        handleClose={handleCloseMenu}
+        open={menuOpen}
+      >
+        <MenuOption>
+          <ListItemButton
+            href={selItem?.url}
+            target="_blank"
+            onClick={handleCloseMenu}
+          >
+            Open in new tab
+          </ListItemButton>
+        </MenuOption>
+        <MenuOption>
+          <ListItemButton
+            onClick={() => {
+              deleteUserContent(user, "links", selItem?.id);
+              handleCloseMenu();
+            }}
+          >
+            Delete
+          </ListItemButton>
+        </MenuOption>
+      </MoreOptionsMenu>
     </List>
   );
 }
@@ -193,6 +231,8 @@ function LinkDetails({ link }) {
   return (
     <Box width="95%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
       <Typography variant="h6">{link.title}</Typography>
+      <Typography display="inline">{link.description}</Typography>
+      <VertDivider />
       <Typography display="inline" variant="subtitle1">
         added: {formatDate(link.dateCreated)}
       </Typography>

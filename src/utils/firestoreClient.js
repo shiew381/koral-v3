@@ -15,8 +15,9 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  limit,
 } from "firebase/firestore";
-import { generateRandomCode } from "./commonUtils.js";
+import { generateRandomCode, searchifyTags } from "./commonUtils.js";
 
 export function addAssignment(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "assignments");
@@ -36,6 +37,24 @@ export function addAnnouncement(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
+export async function addTags(
+  tags,
+  libraryID,
+  questionID,
+  handleClose,
+  setSubmitting
+) {
+  const docRef = doc(db, "libraries", libraryID, "questions", questionID);
+
+  const tagsSearchable = searchifyTags(tags);
+
+  setSubmitting(true);
+  updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable })
+    .then(() => setTimeout(() => handleClose(), 500))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
+}
+
 export function addCourse(values, handleClose, setSubmitting) {
   const ref = collection(db, "courses");
   setSubmitting(true);
@@ -43,6 +62,34 @@ export function addCourse(values, handleClose, setSubmitting) {
     .then(() => setTimeout(() => handleClose(), 600))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 400));
+}
+
+export function addPointerToFile(user, file, url, colName) {
+  const ref = collection(db, "users", user.uid, colName);
+  const data = {
+    type: file.type,
+    name: file.name,
+    size: file.size,
+    dateUploaded: serverTimestamp(),
+    url: url,
+  };
+  addDoc(ref, data)
+    .then(() => console.log("upload successful"))
+    .catch((error) => console.log(error));
+}
+
+export function addPointerToCourseImage(course, file, url) {
+  const ref = doc(db, "courses", course.id);
+  const data = {
+    type: file.type,
+    name: file.name,
+    size: file.size,
+    dateUploaded: serverTimestamp(),
+    url: url,
+  };
+  updateDoc(ref, { courseImage: data })
+    .then(() => console.log("upload successful"))
+    .catch((error) => console.log(error));
 }
 
 export function addQuestion(
@@ -74,32 +121,18 @@ export function addQuestion(
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export function addPointerToFile(user, file, url, colName) {
-  const ref = collection(db, "users", user.uid, colName);
-  const data = {
-    type: file.type,
-    name: file.name,
-    size: file.size,
-    dateUploaded: serverTimestamp(),
-    url: url,
-  };
-  addDoc(ref, data)
-    .then(() => console.log("upload successful"))
-    .catch((error) => console.log(error));
-}
-
-export function addPointerToCourseImage(course, file, url) {
-  const ref = doc(db, "courses", course.id);
-  const data = {
-    type: file.type,
-    name: file.name,
-    size: file.size,
-    dateUploaded: serverTimestamp(),
-    url: url,
-  };
-  updateDoc(ref, { courseImage: data })
-    .then(() => console.log("upload successful"))
-    .catch((error) => console.log(error));
+export function addQuestionToLibrary(
+  values,
+  libraryID,
+  handleClose,
+  setSubmitting
+) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  setSubmitting(true);
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addResource(course, values, handleClose, setSubmitting) {
@@ -217,6 +250,11 @@ export function deleteCourseResource(course, resource) {
   deleteDoc(ref);
 }
 
+export function deleteLibraryQuestion(question, libraryID) {
+  const ref = doc(db, "libraries", libraryID, "questions", question.id);
+  deleteDoc(ref);
+}
+
 export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
   const questions = qSet.questions;
   const updatedQuestions = questions.filter((el) => question.id !== el.id);
@@ -321,6 +359,59 @@ export function fetchInstructorCourses(user, setInstructorCourses) {
     setInstructorCourses(fetchedItems);
   });
   return unsubscribe;
+}
+
+export function fetchLibraries(setLibraries) {
+  const colRef = collection(db, "libraries");
+  const q = query(colRef);
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setLibraries(fetchedItems);
+  });
+  return unsubscribe;
+}
+
+export function fetchLibrary(libraryID, setLibrary, setLoading) {
+  const ref = doc(db, "libraries", libraryID);
+  const unsubscribe = onSnapshot(ref, (doc) => {
+    setLibrary({
+      id: doc.id,
+      ...doc.data(),
+    });
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchLibraryQuestions(libraryID, setQuestions) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  const q = query(ref, orderBy("dateCreated", "desc"), limit(30));
+
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setQuestions(fetchedItems);
+  });
+  return unsubscribe;
+}
+
+export function countLibraryQuestions(libraryID) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  const ref2 = doc(db, "libraries", libraryID);
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+    }));
+    console.log(fetchedItems);
+    updateDoc(ref2, { questionCount: fetchedItems.length });
+  });
 }
 
 export function fetchStudentCourses(user, setStudentCourses, setLoading) {
@@ -431,6 +522,7 @@ export function fetchUserLinks(user, setLinks, setLoading) {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       title: doc.data().title,
+      description: doc.data().description,
       url: doc.data().url,
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
@@ -794,6 +886,12 @@ export function updateAssignment(
     .then(() => setTimeout(() => handleClose(), 800))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export async function updateTags(tags, libraryID, questionID) {
+  const docRef = doc(db, "libraries", libraryID, "questions", questionID);
+  const tagsSearchable = searchifyTags(tags);
+  updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable });
 }
 
 export function updateQuestion(
