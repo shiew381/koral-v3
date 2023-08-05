@@ -1,20 +1,16 @@
 import { useEffect, useRef } from "react";
-import { autoAddQueston, autoSaveQuestion } from "../../utils/firestoreClient";
 import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
-import { BtnContainer, SubmitBtn } from "../common/Buttons";
-
 import { Box, Divider } from "@mui/material";
+import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { generateRandomCode } from "../../utils/commonUtils";
 
 export function FreeResponse({
+  autoSaveQuestion,
   edit,
-  handleAddQuestion,
-  handleUpdateQuestion,
   qSet,
+  saveQuestion,
   selQuestion,
-  setEdit,
-  setSelQuestion,
   submitting,
   user,
 }) {
@@ -32,46 +28,32 @@ export function FreeResponse({
   const promptRef = useRef();
   const exampleResponseRef = useRef();
 
-  function handleAutoAdd() {
-    const values = {
-      type: "free response",
-      prompt: cleanEditorHTML(promptRef.current),
-      exampleResponse: cleanEditorHTML(exampleResponseRef.current),
-      pointsPossible: 1,
-    };
-    console.log("auto adding...");
-    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
-  }
-
   function handleAutoSave() {
-    const values = {
-      ...selQuestion,
-      prompt: cleanEditorHTML(promptRef.current),
-    };
-    console.log("auto saving...");
-    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
+    const values = add
+      ? {
+          type: "free response",
+          prompt: cleanEditorHTML(promptRef.current),
+          exampleResponse: cleanEditorHTML(exampleResponseRef.current),
+          pointsPossible: 1,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+        };
+    autoSaveQuestion(values);
   }
 
-  function handleSubmit() {
-    if (add) {
-      const values = {
-        type: "free response",
-        prompt: cleanEditorHTML(promptRef.current),
-        exampleResponse: cleanEditorHTML(exampleResponseRef.current),
-        pointsPossible: 1,
-      };
-      handleAddQuestion(values);
-      return;
-    }
+  function handleSave() {
+    const values = add
+      ? {
+          type: "free response",
+          prompt: cleanEditorHTML(promptRef.current),
+          exampleResponse: cleanEditorHTML(exampleResponseRef.current),
+          pointsPossible: 1,
+        }
+      : { ...selQuestion, prompt: cleanEditorHTML(promptRef.current) };
 
-    if (edit) {
-      const values = {
-        ...selQuestion,
-        prompt: cleanEditorHTML(promptRef.current),
-      };
-      handleUpdateQuestion(values);
-      return;
-    }
+    saveQuestion(values);
   }
 
   useEffect(
@@ -92,8 +74,8 @@ export function FreeResponse({
         id="prompt"
         imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
         label="prompt"
-        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
-        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageUploadSuccess={handleAutoSave}
+        onImageDeleteSuccess={handleAutoSave}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -109,8 +91,8 @@ export function FreeResponse({
           id="response"
           imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
           label="example response"
-          onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
-          onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
+          onImageUploadSuccess={handleAutoSave}
+          onImageDeleteSuccess={handleAutoSave}
           toolbarOptions={[
             "font style",
             "superscript/subscript",
@@ -126,7 +108,7 @@ export function FreeResponse({
           disabled={submitting}
           submitting={submitting}
           label="SAVE"
-          onClick={handleSubmit}
+          onClick={handleSave}
         />
       </BtnContainer>
     </>

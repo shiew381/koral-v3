@@ -10,18 +10,21 @@ import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { AttemptsField, PointsField } from "../common/InputFields";
 import { Lightbox, LightboxHeader } from "../common/Lightbox";
 import {
-  addQuestion,
-  addQuestionToLibrary,
-  updateQuestion,
+  addUserQn,
+  addLibraryQn,
+  autoAddUserQn,
+  autoSaveUserQn,
+  saveUserQn,
 } from "../../utils/firestoreClient";
 import { MultipleChoice } from "./QnBuilderMultipleChoice";
 import { ShortAnswer } from "./QnBuilderShortAnswer";
 import { FreeResponse } from "./QnBuilderFreeResponse";
+import { generateRandomCode } from "../../utils/commonUtils";
 
 export function QuestionBuilder({
+  collection,
   edit,
   handleClose,
-  collection,
   libraryID,
   open,
   qSet,
@@ -30,6 +33,7 @@ export function QuestionBuilder({
   setSelQuestion,
   user,
 }) {
+  const add = !edit;
   const [type, setType] = useState("multiple choice");
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,25 +41,45 @@ export function QuestionBuilder({
     setType(e.target.value);
   }
 
-  function handleAddQuestion(values) {
+  function autoSaveQuestion(values) {
+    const qID = add ? generateRandomCode(8) : selQuestion?.id;
+
+    if (add) {
+      autoAddUserQn(values, qID, qSet, user, setEdit, setSelQuestion);
+    }
+
+    if (edit) {
+      autoSaveUserQn(values, qID, qSet, user, setSelQuestion);
+    }
+  }
+
+  function saveQuestion(values) {
     if (collection === "library") {
-      addQuestionToLibrary(values, libraryID, handleClose, setSubmitting);
+      addLibraryQn(values, libraryID, handleClose, setSubmitting);
       return;
     }
 
-    addQuestion(values, qSet, user, setSubmitting, setSelQuestion, handleClose);
-  }
-
-  function handleUpdateQuestion(values) {
-    updateQuestion(
-      values,
-      selQuestion,
-      qSet,
-      user,
-      setSubmitting,
-      setSelQuestion,
-      handleClose
-    );
+    if (collection === "user") {
+      const refParams = { userID: user.uid, qSetID: qSet.id };
+      add
+        ? addUserQn(
+            values,
+            refParams,
+            setSubmitting,
+            setSelQuestion,
+            handleClose
+          )
+        : saveUserQn(
+            values,
+            selQuestion,
+            qSet,
+            refParams,
+            setSubmitting,
+            setSelQuestion,
+            handleClose
+          );
+      return;
+    }
   }
 
   useEffect(
@@ -91,39 +115,36 @@ export function QuestionBuilder({
       </FormControl>
       {type === "multiple choice" && (
         <MultipleChoice
+          autoSaveQuestion={autoSaveQuestion}
           edit={edit}
-          handleAddQuestion={handleAddQuestion}
-          handleUpdateQuestion={handleUpdateQuestion}
           qSet={qSet}
+          saveQuestion={saveQuestion}
           selQuestion={selQuestion}
           setEdit={setEdit}
-          setSelQuestion={setSelQuestion}
           submitting={submitting}
           user={user}
         />
       )}
       {type === "short answer" && (
         <ShortAnswer
+          autoSaveQuestion={autoSaveQuestion}
           edit={edit}
-          handleAddQuestion={handleAddQuestion}
-          handleUpdateQuestion={handleUpdateQuestion}
           qSet={qSet}
+          saveQuestion={saveQuestion}
           selQuestion={selQuestion}
           setEdit={setEdit}
-          setSelQuestion={setSelQuestion}
           submitting={submitting}
           user={user}
         />
       )}
       {type === "free response" && (
         <FreeResponse
+          autoSaveQuestion={autoSaveQuestion}
           edit={edit}
-          handleAddQuestion={handleAddQuestion}
-          handleUpdateQuestion={handleUpdateQuestion}
           qSet={qSet}
+          saveQuestion={saveQuestion}
           selQuestion={selQuestion}
           setEdit={setEdit}
-          setSelQuestion={setSelQuestion}
           submitting={submitting}
           user={user}
         />
@@ -171,7 +192,7 @@ export function AttemptsForm({
     } else if (!Number.isInteger(Number(attempts))) {
       setErrorMessage("Must be an integer");
     } else {
-      updateQuestion(
+      saveUserQn(
         values,
         selQuestion,
         qSet,
@@ -261,7 +282,7 @@ export function PointsForm({
     } else if (!Number.isInteger(Number(points))) {
       setErrorMessage("Must be an integer");
     } else {
-      updateQuestion(
+      saveUserQn(
         values,
         selQuestion,
         qSet,

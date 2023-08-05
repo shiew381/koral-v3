@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { autoAddQueston, autoSaveQuestion } from "../../utils/firestoreClient";
 import { generateRandomCode } from "../../utils/commonUtils";
 import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
@@ -9,13 +8,11 @@ import ClearIcon from "@mui/icons-material/Clear";
 import AddIcon from "@mui/icons-material/Add";
 
 export function MultipleChoice({
+  autoSaveQuestion,
   edit,
-  handleAddQuestion,
-  handleUpdateQuestion,
   qSet,
+  saveQuestion,
   selQuestion,
-  setEdit,
-  setSelQuestion,
   submitting,
   user,
 }) {
@@ -55,33 +52,40 @@ export function MultipleChoice({
   const promptRef = useRef();
   const [answerChoices, setAnswerChoices] = useState(initVal.answerChoices);
 
-  function addAnswerChoice() {
-    const updatedAnswerChoices = [
-      ...answerChoices,
-      { id: generateRandomCode(4), text: "", isCorrect: false },
-    ];
-
-    setAnswerChoices(updatedAnswerChoices);
-  }
-
-  function handleAutoAdd() {
-    const values = {
-      type: "multiple choice",
-      prompt: cleanEditorHTML(promptRef.current),
-      answerChoices: answerChoices,
-      pointsPossible: 1,
-      attemptsPossible: 5,
-    };
-    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
-  }
-
   function handleAutoSave() {
-    const values = {
-      ...selQuestion,
-      prompt: cleanEditorHTML(promptRef.current),
-      answerChoices: answerChoices,
-    };
-    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
+    const values = add
+      ? {
+          type: "multiple choice",
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: answerChoices,
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: answerChoices,
+        };
+
+    autoSaveQuestion(values);
+  }
+
+  function handleSave() {
+    const values = add
+      ? {
+          type: "multiple choice",
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+        };
+
+    saveQuestion(values);
   }
 
   function handleCheckbox(e, ind) {
@@ -93,6 +97,15 @@ export function MultipleChoice({
     const updatedAnswerChoices = answerChoices.map((el, index) =>
       ind === index ? updatedAnswerChoice : el
     );
+    setAnswerChoices(updatedAnswerChoices);
+  }
+
+  function addAnswerChoice() {
+    const updatedAnswerChoices = [
+      ...answerChoices,
+      { id: generateRandomCode(4), text: "", isCorrect: false },
+    ];
+
     setAnswerChoices(updatedAnswerChoices);
   }
 
@@ -118,30 +131,6 @@ export function MultipleChoice({
     return tidiedAnswerChoices;
   }
 
-  function handleSubmit() {
-    if (add) {
-      const values = {
-        type: "multiple choice",
-        prompt: cleanEditorHTML(promptRef.current),
-        answerChoices: tidyAnswerChoices(),
-        pointsPossible: 1,
-        attemptsPossible: 5,
-      };
-      handleAddQuestion(values);
-      return;
-    }
-
-    if (edit) {
-      const values = {
-        ...selQuestion,
-        prompt: cleanEditorHTML(promptRef.current),
-        answerChoices: tidyAnswerChoices(),
-      };
-      handleUpdateQuestion(values);
-      return;
-    }
-  }
-
   useEffect(
     () => {
       promptRef.current.innerHTML = initVal.prompt;
@@ -163,8 +152,8 @@ export function MultipleChoice({
         id="prompt"
         imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
         label="prompt"
-        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
-        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageUploadSuccess={handleAutoSave}
+        onImageDeleteSuccess={handleAutoSave}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -191,7 +180,7 @@ export function MultipleChoice({
             <AnswerChoiceField
               id={el.id}
               handleAutoSave={handleAutoSave}
-              handleAutoAdd={handleAutoAdd}
+              handleAutoAdd={handleAutoSave}
               qSet={qSet}
               selQuestion={selQuestion}
               user={user}
@@ -216,7 +205,7 @@ export function MultipleChoice({
           disabled={submitting}
           submitting={submitting}
           label="SAVE"
-          onClick={handleSubmit}
+          onClick={handleSave}
         />
       </BtnContainer>
     </>

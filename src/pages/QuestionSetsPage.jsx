@@ -19,6 +19,7 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import {
   LoadingIndicator,
   Page,
@@ -290,10 +291,10 @@ function QSetCard({
           <NumDeployments qSet={qSet} />
         </Box>
       </CardContent>
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ px: 2, pb: 2 }}>
         <BtnContainer right>
-          <Button onClick={redirectToQSet} variant="contained">
-            PREVIEW / TEST
+          <Button onClick={redirectToQSet} endIcon={<NavigateNextIcon />}>
+            View
           </Button>
         </BtnContainer>
       </Box>

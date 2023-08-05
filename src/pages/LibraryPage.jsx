@@ -218,7 +218,7 @@ function QuestionSetsPanel({ libraryID, library }) {
             {!selQuestion && (
               <Box className="select-question-cta">
                 <Typography color="primary">
-                  Please select a question form the list
+                  Please select a question from the list
                 </Typography>
               </Box>
             )}

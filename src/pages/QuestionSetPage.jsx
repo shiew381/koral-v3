@@ -243,6 +243,7 @@ export default function QuestionSetPage() {
       )}
 
       <QuestionBuilder
+        collection="user"
         edit={edit}
         handleClose={handleCloseBuilder}
         open={openBuilder}
