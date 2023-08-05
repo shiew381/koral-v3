@@ -15,6 +15,7 @@ import {
   serverTimestamp,
   updateDoc,
   where,
+  limit,
 } from "firebase/firestore";
 import { generateRandomCode, searchifyTags } from "./commonUtils.js";
 
@@ -387,7 +388,8 @@ export function fetchLibrary(libraryID, setLibrary, setLoading) {
 
 export function fetchLibraryQuestions(libraryID, setQuestions) {
   const ref = collection(db, "libraries", libraryID, "questions");
-  const q = query(ref);
+  const q = query(ref, orderBy("dateCreated", "desc"), limit(30));
+
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -396,6 +398,20 @@ export function fetchLibraryQuestions(libraryID, setQuestions) {
     setQuestions(fetchedItems);
   });
   return unsubscribe;
+}
+
+export function countLibraryQuestions(libraryID) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  const ref2 = doc(db, "libraries", libraryID);
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+    }));
+    console.log(fetchedItems);
+    updateDoc(ref2, { questionCount: fetchedItems.length });
+  });
 }
 
 export function fetchStudentCourses(user, setStudentCourses, setLoading) {

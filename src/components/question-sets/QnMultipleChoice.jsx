@@ -88,7 +88,6 @@ export default function MultipleChoice({
       : totalPointsAwarded + grade.pointsAwarded;
 
     if (mode === "course") {
-      console.log(updatedPointsAwarded);
       saveQResponseFromCourse(
         submissions,
         docRefParams,

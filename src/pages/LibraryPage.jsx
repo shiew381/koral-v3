@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  countLibraryQuestions,
   deleteLibraryQuestion,
   fetchLibrary,
   fetchLibraryQuestions,
@@ -98,12 +99,12 @@ export default function LibraryPage() {
           <Tab label="QUESTIONS" />
         </Tabs>
       </div>
-      <QuestionSetsPanel libraryID={libraryID} />
+      <QuestionSetsPanel library={library} libraryID={libraryID} />
     </div>
   );
 }
 
-function QuestionSetsPanel({ libraryID }) {
+function QuestionSetsPanel({ libraryID, library }) {
   const [openBuilder, setOpenBuilder] = useState(false);
   const [openTag, setOpenTag] = useState(false);
   const [questions, setQuestions] = useState([]);
@@ -112,6 +113,7 @@ function QuestionSetsPanel({ libraryID }) {
 
   const type = selQuestion?.type;
   const listStyle = {
+    marginTop: "5px",
     padding: 0,
     width: "300px",
     height: "500px",
@@ -178,12 +180,29 @@ function QuestionSetsPanel({ libraryID }) {
                 <ListItemButton
                   key={question.id}
                   onClick={() => setSelQuestion(question)}
+                  sx={{
+                    bgcolor:
+                      question?.id === selQuestion?.id
+                        ? "rgba(0,180,235,0.1)"
+                        : "transparent",
+                  }}
                 >
                   <ListItemText>{formatPrompt(question.prompt)}</ListItemText>
                 </ListItemButton>
               ))}
             </List>
-            <Divider sx={{ my: "2px" }} />
+
+            <div
+              style={{
+                textAlign: "center",
+                paddingTop: "5px",
+                paddingBottom: "5px",
+                backgroundColor: "rgba(0,0,0,0.05)",
+              }}
+            >
+              1 - {questions.length} of {library.questionCount} questions
+            </div>
+            <Divider />
             <Button
               fullWidth
               onClick={handleOpenBuilder}
@@ -191,22 +210,16 @@ function QuestionSetsPanel({ libraryID }) {
             >
               ADD QUESTION
             </Button>
+            <Button fullWidth onClick={() => countLibraryQuestions(libraryID)}>
+              Count Questions
+            </Button>
           </Box>
           <Box>
             {!selQuestion && (
-              <Box
-                className="flex flex-col flex-center"
-                sx={{
-                  width: "550px",
-                  height: "400px",
-                  p: "20px",
-                  border: "1px solid gainsboro",
-                  backgroundColor: "whitesmoke",
-                  borderRadius: "8px",
-                  m: "20px",
-                }}
-              >
-                <Typography> Please select a question form the list</Typography>
+              <Box className="select-question-cta">
+                <Typography color="primary">
+                  Please select a question form the list
+                </Typography>
               </Box>
             )}
             {selQuestion && (
@@ -283,6 +296,7 @@ function formatPrompt(str) {
     .replaceAll(/<\/{0,1}div>/g, "")
     .replaceAll(/<\/{0,1}strong>/g, "")
     .replaceAll(/<\/{0,1}sub>/g, "")
+    .replaceAll(/<\/{0,1}sup>/g, "")
     .replaceAll(/<br\/{0,1}>/g, "");
   return newStr;
 }
