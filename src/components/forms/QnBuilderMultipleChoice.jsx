@@ -10,14 +10,12 @@ import AddIcon from "@mui/icons-material/Add";
 export function MultipleChoice({
   autoSaveQuestion,
   edit,
-  qSet,
+  imagePath,
   saveQuestion,
   selQuestion,
   submitting,
-  user,
 }) {
   const add = !edit;
-  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
   const initVal = edit
     ? {
         prompt: selQuestion?.prompt || "<div><br></div>",
@@ -57,15 +55,18 @@ export function MultipleChoice({
       ? {
           type: "multiple choice",
           prompt: cleanEditorHTML(promptRef.current),
-          answerChoices: answerChoices,
+          answerChoices: tidyAnswerChoices(),
           pointsPossible: 1,
           attemptsPossible: 5,
         }
       : {
           ...selQuestion,
           prompt: cleanEditorHTML(promptRef.current),
-          answerChoices: answerChoices,
+          answerChoices: tidyAnswerChoices(),
         };
+
+    console.log("autosaving from handleAutoSave function");
+    console.log(values);
 
     autoSaveQuestion(values);
   }
@@ -134,9 +135,10 @@ export function MultipleChoice({
   useEffect(
     () => {
       promptRef.current.innerHTML = initVal.prompt;
-      answerChoices.forEach((el) => {
+      answerChoices.forEach((el, ind) => {
         const elem = document.getElementById(el.id);
-        elem.innerHTML = el.text;
+        console.log(el.text);
+        elem.innerHTML = initVal.answerChoices[ind].text;
       });
     },
     //eslint-disable-next-line
@@ -150,7 +152,7 @@ export function MultipleChoice({
       <Editor
         editorRef={promptRef}
         id="prompt"
-        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
+        imagePath={imagePath}
         label="prompt"
         onImageUploadSuccess={handleAutoSave}
         onImageDeleteSuccess={handleAutoSave}
@@ -166,6 +168,7 @@ export function MultipleChoice({
         <Typography align="right" variant="subtitle2" sx={{ mr: 1 }}>
           correct
         </Typography>
+        <Button onClick={() => console.log("hello")}>answer choice data</Button>
         {answerChoices?.map((el, ind) => (
           <Box key={el.id} className="answer-choice-row">
             <Box sx={{ paddingTop: "60px" }}>
@@ -179,11 +182,8 @@ export function MultipleChoice({
 
             <AnswerChoiceField
               id={el.id}
+              imagePath={imagePath}
               handleAutoSave={handleAutoSave}
-              handleAutoAdd={handleAutoSave}
-              qSet={qSet}
-              selQuestion={selQuestion}
-              user={user}
             />
             <Box sx={{ paddingTop: "60px" }}>
               <Checkbox
@@ -208,18 +208,12 @@ export function MultipleChoice({
           onClick={handleSave}
         />
       </BtnContainer>
+      <pre>{JSON.stringify(initVal, null, 2)}</pre>
     </>
   );
 }
 
-function AnswerChoiceField({
-  id,
-  handleAutoSave,
-  handleAutoAdd,
-  qSet,
-  selQuestion,
-  user,
-}) {
+function AnswerChoiceField({ id, imagePath, handleAutoSave }) {
   const editorRef = useRef();
 
   return (
@@ -227,13 +221,11 @@ function AnswerChoiceField({
       <Editor
         editorRef={editorRef}
         id={id}
+        imagePath={imagePath}
         label="answer choice"
-        handleAutoSave={handleAutoSave}
-        handleAutoAdd={handleAutoAdd}
-        qSet={qSet}
-        selQuestion={selQuestion}
+        onImageUploadSuccess={handleAutoSave}
+        onImageDeleteSuccess={handleAutoSave}
         toolbarOptions={["subscript/superscript", "equation", "image"]}
-        user={user}
       />
     </Box>
   );

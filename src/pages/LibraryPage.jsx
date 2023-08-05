@@ -23,7 +23,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { LoadingIndicator, Page } from "../components/common/Pages";
-import { QuestionBuilder } from "../components/forms/QnBuilder";
+import { QnBuilder } from "../components/forms/QnBuilder";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
@@ -272,7 +272,7 @@ function QuestionSetsPanel({ libraryID, library }) {
           </Box>
         </Box>
       </Panel>
-      <QuestionBuilder
+      <QnBuilder
         collection="library"
         libraryID={libraryID}
         open={openBuilder}

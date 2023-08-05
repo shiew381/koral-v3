@@ -3,19 +3,16 @@ import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
 import { Box, Divider } from "@mui/material";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
-import { generateRandomCode } from "../../utils/commonUtils";
 
 export function FreeResponse({
   autoSaveQuestion,
   edit,
-  qSet,
+  imagePath,
   saveQuestion,
   selQuestion,
   submitting,
-  user,
 }) {
   const add = !edit;
-  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
   const initVal = edit
     ? {
         prompt: selQuestion?.prompt || "<div><br></div>",
@@ -72,7 +69,7 @@ export function FreeResponse({
       <Editor
         editorRef={promptRef}
         id="prompt"
-        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
+        imagePath={imagePath}
         label="prompt"
         onImageUploadSuccess={handleAutoSave}
         onImageDeleteSuccess={handleAutoSave}
@@ -89,7 +86,7 @@ export function FreeResponse({
         <Editor
           editorRef={exampleResponseRef}
           id="response"
-          imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
+          imagePath={imagePath}
           label="example response"
           onImageUploadSuccess={handleAutoSave}
           onImageDeleteSuccess={handleAutoSave}

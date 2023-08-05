@@ -21,7 +21,7 @@ import { ShortAnswer } from "./QnBuilderShortAnswer";
 import { FreeResponse } from "./QnBuilderFreeResponse";
 import { generateRandomCode } from "../../utils/commonUtils";
 
-export function QuestionBuilder({
+export function QnBuilder({
   collection,
   edit,
   handleClose,
@@ -36,21 +36,18 @@ export function QuestionBuilder({
   const add = !edit;
   const [type, setType] = useState("multiple choice");
   const [submitting, setSubmitting] = useState(false);
+  const qID = add ? generateRandomCode(8) : selQuestion?.id;
+  const imagePath = `users/${user?.uid}/question-sets/${qSet?.id}/${qID}`;
 
   function handleType(e) {
     setType(e.target.value);
   }
 
   function autoSaveQuestion(values) {
-    const qID = add ? generateRandomCode(8) : selQuestion?.id;
-
-    if (add) {
-      autoAddUserQn(values, qID, qSet, user, setEdit, setSelQuestion);
-    }
-
-    if (edit) {
-      autoSaveUserQn(values, qID, qSet, user, setSelQuestion);
-    }
+    add
+      ? autoAddUserQn(values, qID, qSet, user, setEdit, setSelQuestion)
+      : autoSaveUserQn(values, qID, qSet, user, setSelQuestion);
+    return;
   }
 
   function saveQuestion(values) {
@@ -117,36 +114,30 @@ export function QuestionBuilder({
         <MultipleChoice
           autoSaveQuestion={autoSaveQuestion}
           edit={edit}
-          qSet={qSet}
+          imagePath={imagePath}
           saveQuestion={saveQuestion}
           selQuestion={selQuestion}
-          setEdit={setEdit}
           submitting={submitting}
-          user={user}
         />
       )}
       {type === "short answer" && (
         <ShortAnswer
           autoSaveQuestion={autoSaveQuestion}
           edit={edit}
-          qSet={qSet}
+          imagePath={imagePath}
           saveQuestion={saveQuestion}
           selQuestion={selQuestion}
-          setEdit={setEdit}
           submitting={submitting}
-          user={user}
         />
       )}
       {type === "free response" && (
         <FreeResponse
           autoSaveQuestion={autoSaveQuestion}
           edit={edit}
-          qSet={qSet}
+          imagePath={imagePath}
           saveQuestion={saveQuestion}
           selQuestion={selQuestion}
-          setEdit={setEdit}
           submitting={submitting}
-          user={user}
         />
       )}
     </Lightbox>

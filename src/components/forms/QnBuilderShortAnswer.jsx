@@ -16,19 +16,17 @@ import { NumberField } from "../common/NumberField";
 import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
 import { UnitField } from "../common/UnitField";
-import { generateRandomCode } from "../../utils/commonUtils";
 
 export function ShortAnswer({
   autoSaveQuestion,
   edit,
-  qSet,
+  imagePath,
   saveQuestion,
   selQuestion,
   submitting,
-  user,
 }) {
   const add = !edit;
-  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
+
   const initVal = edit
     ? {
         subtype: selQuestion?.subtype,
@@ -121,7 +119,7 @@ export function ShortAnswer({
       <Editor
         editorRef={promptRef}
         id="prompt"
-        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
+        imagePath={imagePath}
         label="prompt"
         onImageUploadSuccess={handleAutoSave}
         onImageDeleteSuccess={handleAutoSave}
