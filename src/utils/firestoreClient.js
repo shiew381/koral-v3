@@ -16,6 +16,8 @@ import {
   updateDoc,
   where,
   limit,
+  startAfter,
+  endBefore,
 } from "firebase/firestore";
 import { generateRandomCode, searchifyTags } from "./commonUtils.js";
 
@@ -378,9 +380,15 @@ export function fetchLibrary(libraryID, setLibrary, setLoading) {
   return unsubscribe;
 }
 
-export function fetchLibraryQuestions(libraryID, setQuestions) {
+export function fetchLibraryQuestions(
+  libraryID,
+  countPerPage,
+  setQuestions,
+  setLastDoc,
+  resetTotalCount
+) {
   const ref = collection(db, "libraries", libraryID, "questions");
-  const q = query(ref, orderBy("dateCreated", "desc"), limit(30));
+  const q = query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
 
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
@@ -388,8 +396,71 @@ export function fetchLibraryQuestions(libraryID, setQuestions) {
       ...doc.data(),
     }));
     setQuestions(fetchedItems);
+    setLastDoc(snapshot.docs?.at(-1));
+    resetTotalCount();
   });
   return unsubscribe;
+}
+
+export function fetchLibraryQnsAfter(
+  libID,
+  countPerPage,
+  lastDoc,
+  setFirstDoc,
+  setLastDoc,
+  setQuestions,
+  setPage,
+  setFetching
+) {
+  const ref = collection(db, "libraries", libID, "questions");
+  const q = query(
+    ref,
+    orderBy("dateCreated", "desc"),
+    startAfter(lastDoc),
+    limit(countPerPage)
+  );
+  setFetching(true);
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    setQuestions(fetchedItems);
+    setPage((prev) => prev + 1);
+    setFirstDoc(snapshot.docs?.at(0));
+    setLastDoc(snapshot.docs?.at(-1));
+    setTimeout(() => setFetching(false), 200);
+  });
+}
+
+export function fetchLibraryQnsBefore(
+  libID,
+  countPerPage,
+  firstDoc,
+  setFirstDoc,
+  setLastDoc,
+  setQuestions,
+  setPage,
+  setFetching
+) {
+  const ref = collection(db, "libraries", libID, "questions");
+  const q = query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
+
+  setFetching(true);
+  getDocs(q).then((snapshot) => {
+    const fetchedDocs = snapshot.docs.slice(-countPerPage);
+    const fetchedItems = fetchedDocs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    setQuestions(fetchedItems);
+    setPage((prev) => prev - 1);
+    setFirstDoc(fetchedDocs?.at(0));
+    setLastDoc(fetchedDocs?.at(-1));
+    setTimeout(() => setFetching(false), 200);
+  });
 }
 
 export function countLibraryQuestions(libraryID) {

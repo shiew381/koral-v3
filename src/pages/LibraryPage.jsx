@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  countLibraryQuestions,
+  // countLibraryQuestions,
   deleteLibraryQuestion,
   fetchLibrary,
+  fetchLibraryQnsAfter,
+  fetchLibraryQnsBefore,
   fetchLibraryQuestions,
   updateTags,
 } from "../utils/firestoreClient";
@@ -13,6 +15,7 @@ import {
   Card,
   Chip,
   Divider,
+  IconButton,
   List,
   ListItemButton,
   ListItemText,
@@ -21,6 +24,8 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import { QnBuilder } from "../components/forms/QnBuilder";
@@ -35,7 +40,7 @@ export default function LibraryPage() {
   const navigate = useNavigate();
 
   const params = useParams();
-  const libraryID = params.libraryID;
+  const libID = params.libID;
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [library, setLibrary] = useState(null);
@@ -50,7 +55,7 @@ export default function LibraryPage() {
 
   useEffect(
     () => {
-      fetchLibrary(libraryID, setLibrary, setLoading);
+      fetchLibrary(libID, setLibrary, setLoading);
     },
     //eslint-disable-next-line
     []
@@ -99,16 +104,26 @@ export default function LibraryPage() {
           <Tab label="QUESTIONS" />
         </Tabs>
       </div>
-      <QuestionSetsPanel library={library} libraryID={libraryID} />
+      <QuestionSetsPanel library={library} libID={libID} />
     </div>
   );
 }
 
-function QuestionSetsPanel({ libraryID, library }) {
+function QuestionSetsPanel({ libID, library }) {
   const [openBuilder, setOpenBuilder] = useState(false);
   const [openTag, setOpenTag] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [selQuestion, setSelQuestion] = useState(null);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [firstDoc, setFirstDoc] = useState(null);
+  const [totalCount, setTotalCount] = useState(library.questionCount);
+  const [fetching, setFetching] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const countPerPage = 10;
+
+  const lastPage = Math.ceil(totalCount / countPerPage);
+
   const tags = selQuestion?.tags || null;
 
   const type = selQuestion?.type;
@@ -139,11 +154,11 @@ function QuestionSetsPanel({ libraryID, library }) {
   function deleteTag(ind) {
     const updatedTags = tags.filter((el, index) => ind !== index);
     const questionID = selQuestion.id;
-    updateTags(updatedTags, libraryID, questionID);
+    updateTags(updatedTags, libID, questionID);
   }
 
   function deleteQuestion() {
-    deleteLibraryQuestion(selQuestion, libraryID);
+    deleteLibraryQuestion(selQuestion, libID);
   }
 
   function refreshQuestion() {
@@ -151,9 +166,45 @@ function QuestionSetsPanel({ libraryID, library }) {
     setSelQuestion(found);
   }
 
+  function resetTotalCount() {
+    setTotalCount(library.questionCount);
+  }
+
+  function handleNext() {
+    fetchLibraryQnsAfter(
+      libID,
+      countPerPage,
+      lastDoc,
+      setFirstDoc,
+      setLastDoc,
+      setQuestions,
+      setPage,
+      setFetching
+    );
+  }
+
+  function handleBack() {
+    fetchLibraryQnsBefore(
+      libID,
+      countPerPage,
+      firstDoc,
+      setFirstDoc,
+      setLastDoc,
+      setQuestions,
+      setPage,
+      setFetching
+    );
+  }
+
   useEffect(
     () => {
-      fetchLibraryQuestions(libraryID, setQuestions);
+      fetchLibraryQuestions(
+        libID,
+        countPerPage,
+        setQuestions,
+        setLastDoc,
+        resetTotalCount
+      );
     },
     //eslint-disable-next-line
     []
@@ -172,6 +223,7 @@ function QuestionSetsPanel({ libraryID, library }) {
   return (
     <>
       <Panel>
+        \
         <Box className="flex flex-row" sx={{ pt: "80px" }}>
           <Box>
             <SearchField />
@@ -192,15 +244,33 @@ function QuestionSetsPanel({ libraryID, library }) {
               ))}
             </List>
 
-            <div
-              style={{
-                textAlign: "center",
-                paddingTop: "5px",
-                paddingBottom: "5px",
-                backgroundColor: "rgba(0,0,0,0.05)",
-              }}
-            >
-              1 - {questions.length} of {library.questionCount} questions
+            <div className="question-counter">
+              <IconButton
+                disabled={page === 1 || fetching}
+                onClick={handleBack}
+                size="small"
+              >
+                <ArrowLeftIcon />
+              </IconButton>
+              <span
+                style={{
+                  marginLeft: "2px",
+                  marginRight: "2px",
+                  position: "relative",
+                  top: "1px",
+                }}
+              >
+                {(page - 1) * countPerPage + 1} -{" "}
+                {(page - 1) * countPerPage + questions.length} of {totalCount}{" "}
+                questions
+              </span>
+              <IconButton
+                disabled={page === lastPage || fetching}
+                onClick={handleNext}
+                size="small"
+              >
+                <ArrowRightIcon />
+              </IconButton>
             </div>
             <Divider />
             <Button
@@ -210,9 +280,9 @@ function QuestionSetsPanel({ libraryID, library }) {
             >
               ADD QUESTION
             </Button>
-            <Button fullWidth onClick={() => countLibraryQuestions(libraryID)}>
+            {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
               Count Questions
-            </Button>
+            </Button> */}
           </Box>
           <Box>
             {!selQuestion && (
@@ -274,14 +344,14 @@ function QuestionSetsPanel({ libraryID, library }) {
       </Panel>
       <QnBuilder
         collection="library"
-        libraryID={libraryID}
+        libraryID={libID}
         open={openBuilder}
         handleClose={handleCloseBuilder}
         edit={false}
       />
       <TagsForm
         handleClose={handleCloseTag}
-        libraryID={libraryID}
+        libraryID={libID}
         questionID={selQuestion?.id}
         open={openTag}
         selQuestion={selQuestion}
