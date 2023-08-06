@@ -15,6 +15,9 @@ import {
   autoAddUserQn,
   autoSaveUserQn,
   saveUserQn,
+  autoAddLibraryQn,
+  saveLibraryQn,
+  autoSaveLibraryQn,
 } from "../../utils/firestoreClient";
 import { MultipleChoice } from "./QnBuilderMultipleChoice";
 import { ShortAnswer } from "./QnBuilderShortAnswer";
@@ -25,7 +28,7 @@ export function QnBuilder({
   collection,
   edit,
   handleClose,
-  libraryID,
+  libID,
   open,
   qSet,
   selQuestion,
@@ -37,22 +40,37 @@ export function QnBuilder({
   const [type, setType] = useState("multiple choice");
   const [submitting, setSubmitting] = useState(false);
   const qID = add ? generateRandomCode(8) : selQuestion?.id;
-  const imagePath = `users/${user?.uid}/question-sets/${qSet?.id}/${qID}`;
+  const libQID = add ? generateRandomCode(20) : selQuestion?.id;
+  const imagePath =
+    collection === "library"
+      ? `libraries/${libID}/questions/${libQID}`
+      : `users/${user?.uid}/question-sets/${qSet?.id}/${qID}`;
 
   function handleType(e) {
     setType(e.target.value);
   }
 
   function autoSaveQuestion(values) {
-    add
-      ? autoAddUserQn(values, qID, qSet, user, setEdit, setSelQuestion)
-      : autoSaveUserQn(values, qID, qSet, user, setSelQuestion);
-    return;
+    if (collection === "library") {
+      add
+        ? autoAddLibraryQn(values, libID, libQID, setEdit, setSelQuestion)
+        : autoSaveLibraryQn(values, libID, libQID, setSelQuestion);
+      return;
+    }
+
+    if (collection === "user") {
+      add
+        ? autoAddUserQn(values, qID, qSet, user, setEdit, setSelQuestion)
+        : autoSaveUserQn(values, qID, qSet, user, setSelQuestion);
+      return;
+    }
   }
 
   function saveQuestion(values) {
     if (collection === "library") {
-      addLibraryQn(values, libraryID, handleClose, setSubmitting);
+      add
+        ? addLibraryQn(values, libID, handleClose, setSubmitting)
+        : saveLibraryQn(values, libID, handleClose, setSubmitting);
       return;
     }
 
