@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { autoAddQueston, autoSaveQuestion } from "../../utils/firestoreClient";
 import { generateRandomCode } from "../../utils/commonUtils";
 import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
@@ -9,18 +8,14 @@ import ClearIcon from "@mui/icons-material/Clear";
 import AddIcon from "@mui/icons-material/Add";
 
 export function MultipleChoice({
+  autoSaveQuestion,
   edit,
-  handleAddQuestion,
-  handleUpdateQuestion,
-  qSet,
+  imagePath,
+  saveQuestion,
   selQuestion,
-  setEdit,
-  setSelQuestion,
   submitting,
-  user,
 }) {
   const add = !edit;
-  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
   const initVal = edit
     ? {
         prompt: selQuestion?.prompt || "<div><br></div>",
@@ -55,33 +50,43 @@ export function MultipleChoice({
   const promptRef = useRef();
   const [answerChoices, setAnswerChoices] = useState(initVal.answerChoices);
 
-  function addAnswerChoice() {
-    const updatedAnswerChoices = [
-      ...answerChoices,
-      { id: generateRandomCode(4), text: "", isCorrect: false },
-    ];
-
-    setAnswerChoices(updatedAnswerChoices);
-  }
-
-  function handleAutoAdd() {
-    const values = {
-      type: "multiple choice",
-      prompt: cleanEditorHTML(promptRef.current),
-      answerChoices: answerChoices,
-      pointsPossible: 1,
-      attemptsPossible: 5,
-    };
-    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
-  }
-
   function handleAutoSave() {
-    const values = {
-      ...selQuestion,
-      prompt: cleanEditorHTML(promptRef.current),
-      answerChoices: answerChoices,
-    };
-    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
+    const values = add
+      ? {
+          type: "multiple choice",
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+        };
+
+    console.log("autosaving from handleAutoSave function");
+    console.log(values);
+
+    autoSaveQuestion(values);
+  }
+
+  function handleSave() {
+    const values = add
+      ? {
+          type: "multiple choice",
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+        };
+
+    saveQuestion(values);
   }
 
   function handleCheckbox(e, ind) {
@@ -93,6 +98,15 @@ export function MultipleChoice({
     const updatedAnswerChoices = answerChoices.map((el, index) =>
       ind === index ? updatedAnswerChoice : el
     );
+    setAnswerChoices(updatedAnswerChoices);
+  }
+
+  function addAnswerChoice() {
+    const updatedAnswerChoices = [
+      ...answerChoices,
+      { id: generateRandomCode(4), text: "", isCorrect: false },
+    ];
+
     setAnswerChoices(updatedAnswerChoices);
   }
 
@@ -118,36 +132,13 @@ export function MultipleChoice({
     return tidiedAnswerChoices;
   }
 
-  function handleSubmit() {
-    if (add) {
-      const values = {
-        type: "multiple choice",
-        prompt: cleanEditorHTML(promptRef.current),
-        answerChoices: tidyAnswerChoices(),
-        pointsPossible: 1,
-        attemptsPossible: 5,
-      };
-      handleAddQuestion(values);
-      return;
-    }
-
-    if (edit) {
-      const values = {
-        ...selQuestion,
-        prompt: cleanEditorHTML(promptRef.current),
-        answerChoices: tidyAnswerChoices(),
-      };
-      handleUpdateQuestion(values);
-      return;
-    }
-  }
-
   useEffect(
     () => {
       promptRef.current.innerHTML = initVal.prompt;
-      answerChoices.forEach((el) => {
+      answerChoices.forEach((el, ind) => {
         const elem = document.getElementById(el.id);
-        elem.innerHTML = el.text;
+        console.log(el.text);
+        elem.innerHTML = initVal.answerChoices[ind].text;
       });
     },
     //eslint-disable-next-line
@@ -161,10 +152,10 @@ export function MultipleChoice({
       <Editor
         editorRef={promptRef}
         id="prompt"
-        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
+        imagePath={imagePath}
         label="prompt"
-        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
-        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageUploadSuccess={handleAutoSave}
+        onImageDeleteSuccess={handleAutoSave}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -177,6 +168,7 @@ export function MultipleChoice({
         <Typography align="right" variant="subtitle2" sx={{ mr: 1 }}>
           correct
         </Typography>
+        <Button onClick={() => console.log("hello")}>answer choice data</Button>
         {answerChoices?.map((el, ind) => (
           <Box key={el.id} className="answer-choice-row">
             <Box sx={{ paddingTop: "60px" }}>
@@ -190,11 +182,8 @@ export function MultipleChoice({
 
             <AnswerChoiceField
               id={el.id}
+              imagePath={imagePath}
               handleAutoSave={handleAutoSave}
-              handleAutoAdd={handleAutoAdd}
-              qSet={qSet}
-              selQuestion={selQuestion}
-              user={user}
             />
             <Box sx={{ paddingTop: "60px" }}>
               <Checkbox
@@ -216,21 +205,15 @@ export function MultipleChoice({
           disabled={submitting}
           submitting={submitting}
           label="SAVE"
-          onClick={handleSubmit}
+          onClick={handleSave}
         />
       </BtnContainer>
+      <pre>{JSON.stringify(initVal, null, 2)}</pre>
     </>
   );
 }
 
-function AnswerChoiceField({
-  id,
-  handleAutoSave,
-  handleAutoAdd,
-  qSet,
-  selQuestion,
-  user,
-}) {
+function AnswerChoiceField({ id, imagePath, handleAutoSave }) {
   const editorRef = useRef();
 
   return (
@@ -238,13 +221,11 @@ function AnswerChoiceField({
       <Editor
         editorRef={editorRef}
         id={id}
+        imagePath={imagePath}
         label="answer choice"
-        handleAutoSave={handleAutoSave}
-        handleAutoAdd={handleAutoAdd}
-        qSet={qSet}
-        selQuestion={selQuestion}
+        onImageUploadSuccess={handleAutoSave}
+        onImageDeleteSuccess={handleAutoSave}
         toolbarOptions={["subscript/superscript", "equation", "image"]}
-        user={user}
       />
     </Box>
   );

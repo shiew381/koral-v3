@@ -27,7 +27,7 @@ import { Page, PageHeader, LoadingIndicator } from "../components/common/Pages";
 import {
   AttemptsForm,
   PointsForm,
-  QuestionBuilder,
+  QnBuilder,
 } from "../components/forms/QnBuilder";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
@@ -242,7 +242,8 @@ export default function QuestionSetPage() {
         </Box>
       )}
 
-      <QuestionBuilder
+      <QnBuilder
+        collection="user"
         edit={edit}
         handleClose={handleCloseBuilder}
         open={openBuilder}

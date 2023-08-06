@@ -159,7 +159,11 @@ export default function DocumentsPage() {
               className="flex flex-align-center flex-space-between "
               sx={{ py: 1 }}
             >
-              <SearchField onChange={handleSearchTerm} value={searchTerm} />
+              <SearchField
+                onChange={handleSearchTerm}
+                placeholder="search by title"
+                value={searchTerm}
+              />
               <IconButton onClick={toggleOrder}>
                 <SwapVertIcon style={{ color: "gray" }} />
               </IconButton>

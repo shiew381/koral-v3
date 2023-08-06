@@ -75,7 +75,7 @@ export default function App() {
                 />
                 <Route path="community/libraries" element={<LibrariesPage />} />
                 <Route
-                  path="community/libraries/:title/:libraryID"
+                  path="community/libraries/:title/:libID"
                   element={<LibraryPage />}
                 />
               </Routes>

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { autoAddQueston, autoSaveQuestion } from "../..//utils/firestoreClient";
 import { cleanEditorHTML } from "../../utils/questionSetUtils";
 import {
   Box,
@@ -17,21 +16,17 @@ import { NumberField } from "../common/NumberField";
 import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
 import { UnitField } from "../common/UnitField";
-import { generateRandomCode } from "../../utils/commonUtils";
 
 export function ShortAnswer({
+  autoSaveQuestion,
   edit,
-  handleAddQuestion,
-  handleUpdateQuestion,
-  qSet,
+  imagePath,
+  saveQuestion,
   selQuestion,
-  setEdit,
-  setSelQuestion,
   submitting,
-  user,
 }) {
   const add = !edit;
-  const questionID = edit ? selQuestion?.id : generateRandomCode(8);
+
   const initVal = edit
     ? {
         subtype: selQuestion?.subtype,
@@ -51,53 +46,44 @@ export function ShortAnswer({
   const [subtype, setSubtype] = useState(initVal.subtype);
   const [scoring, setScoring] = useState(initVal.scoring);
 
-  function handleAutoAdd() {
-    const values = {
-      type: "short answer",
-      subtype: subtype,
-      prompt: cleanEditorHTML(promptRef.current),
-      scoring: scoring,
-      correctAnswer: {},
-      pointsPossible: 1,
-      attemptsPossible: 5,
-    };
-    autoAddQueston(values, questionID, qSet, user, setEdit, setSelQuestion);
-  }
-
   function handleAutoSave() {
-    const values = {
-      ...selQuestion,
-      prompt: cleanEditorHTML(promptRef.current),
-      scoring: scoring,
-    };
-    autoSaveQuestion(values, questionID, qSet, user, setSelQuestion);
+    const values = add
+      ? {
+          type: "short answer",
+          subtype: subtype,
+          prompt: cleanEditorHTML(promptRef.current),
+          scoring: scoring,
+          correctAnswer: {},
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          scoring: scoring,
+        };
+    autoSaveQuestion(values);
   }
 
-  function handleSubmit(e, correctAnswer) {
-    if (add) {
-      const values = {
-        type: "short answer",
-        subtype: subtype,
-        prompt: cleanEditorHTML(promptRef.current),
-        correctAnswer: correctAnswer,
-        scoring: scoring,
-        pointsPossible: 1,
-        attemptsPossible: 5,
-      };
-      handleAddQuestion(values);
-      return;
-    }
+  function handleSave(e, correctAnswer) {
+    const values = add
+      ? {
+          type: "short answer",
+          subtype: subtype,
+          prompt: cleanEditorHTML(promptRef.current),
+          correctAnswer: correctAnswer,
+          scoring: scoring,
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          correctAnswer: correctAnswer,
+          scoring: scoring,
+        };
 
-    if (edit) {
-      const values = {
-        ...selQuestion,
-        prompt: cleanEditorHTML(promptRef.current),
-        correctAnswer: correctAnswer,
-        scoring: scoring,
-      };
-      handleUpdateQuestion(values);
-      return;
-    }
+    saveQuestion(values);
   }
 
   function handleSubtype(e) {
@@ -133,10 +119,10 @@ export function ShortAnswer({
       <Editor
         editorRef={promptRef}
         id="prompt"
-        imagePath={`users/${user?.uid}/question-sets/${qSet?.id}/${questionID}`}
+        imagePath={imagePath}
         label="prompt"
-        onImageUploadSuccess={edit ? handleAutoSave : handleAutoAdd}
-        onImageDeleteSuccess={edit ? handleAutoSave : handleAutoAdd}
+        onImageUploadSuccess={handleAutoSave}
+        onImageDeleteSuccess={handleAutoSave}
         toolbarOptions={[
           "font style",
           "superscript/subscript",
@@ -149,7 +135,7 @@ export function ShortAnswer({
         {subtype == "text" && (
           <Text
             edit={edit}
-            handleSubmit={handleSubmit}
+            handleSubmit={handleSave}
             scoring={scoring}
             selQuestion={selQuestion}
             setScoring={setScoring}
@@ -159,7 +145,7 @@ export function ShortAnswer({
         {subtype === "number" && (
           <Number
             edit={edit}
-            handleSubmit={handleSubmit}
+            handleSubmit={handleSave}
             scoring={scoring}
             selQuestion={selQuestion}
             setScoring={setScoring}
@@ -170,7 +156,7 @@ export function ShortAnswer({
         {subtype === "measurement" && (
           <Measurement
             edit={edit}
-            handleSubmit={handleSubmit}
+            handleSubmit={handleSave}
             scoring={scoring}
             selQuestion={selQuestion}
             setScoring={setScoring}

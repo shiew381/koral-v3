@@ -16,6 +16,8 @@ import {
   updateDoc,
   where,
   limit,
+  startAfter,
+  endBefore,
 } from "firebase/firestore";
 import { generateRandomCode, searchifyTags } from "./commonUtils.js";
 
@@ -92,15 +94,15 @@ export function addPointerToCourseImage(course, file, url) {
     .catch((error) => console.log(error));
 }
 
-export function addQuestion(
+export function addUserQn(
   values,
-  qSet,
-  user,
+  refParams,
   setSubmitting,
   setSelQuestion,
   handleClose
 ) {
-  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+  const { userID, qSetID } = refParams;
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
 
   const newID = generateRandomCode(8);
 
@@ -121,12 +123,7 @@ export function addQuestion(
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export function addQuestionToLibrary(
-  values,
-  libraryID,
-  handleClose,
-  setSubmitting
-) {
+export function addLibraryQn(values, libraryID, handleClose, setSubmitting) {
   const ref = collection(db, "libraries", libraryID, "questions");
   setSubmitting(true);
   addDoc(ref, { ...values, dateCreated: serverTimestamp() })
@@ -188,24 +185,20 @@ export function addUserQSet(user, values, setSubmitting, handleClose) {
     .finally(() => setTimeout(() => setSubmitting(false), 300));
 }
 
-export function autoSaveQuestion(
-  values,
-  questionID,
-  qSet,
-  user,
-  setSelQuestion
-) {
+export function autoSaveUserQn(values, questionID, qSet, user, setSelQuestion) {
   const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
   const updatedQuestions = qSet.questions.map((question) =>
     question.id === questionID ? values : question
   );
+
+  console.log("auto save triggered");
 
   updateDoc(ref, {
     questions: updatedQuestions,
   }).then(() => setSelQuestion(values));
 }
 
-export function autoAddQueston(
+export function autoAddUserQn(
   values,
   newID,
   qSet,
@@ -214,6 +207,7 @@ export function autoAddQueston(
   setSelQuestion
 ) {
   const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
+
   const tidiedValues = {
     id: newID,
     dateCreated: new Date(),
@@ -386,18 +380,112 @@ export function fetchLibrary(libraryID, setLibrary, setLoading) {
   return unsubscribe;
 }
 
-export function fetchLibraryQuestions(libraryID, setQuestions) {
+export function fetchLibraryQuestions(
+  libraryID,
+  searchTerm,
+  countPerPage,
+  setQuestions,
+  setLastDoc,
+  setTotalCount,
+  resetTotalCount
+) {
   const ref = collection(db, "libraries", libraryID, "questions");
-  const q = query(ref, orderBy("dateCreated", "desc"), limit(30));
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      limit(countPerPage)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(0, countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setQuestions(fetchedItems);
+      setLastDoc(fetchedDocs?.at(-1));
+      setTotalCount(snapshot.docs.length);
+    });
+    return unsubscribe;
+  }
+
+  if (!searchTerm) {
+    const q = query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setQuestions(fetchedItems);
+      setLastDoc(snapshot.docs?.at(-1));
+      resetTotalCount();
+    });
+    return unsubscribe;
+  }
+}
+
+export function fetchLibraryQnsAfter(
+  libID,
+  countPerPage,
+  lastDoc,
+  setFirstDoc,
+  setLastDoc,
+  setQuestions,
+  setPage,
+  setFetching
+) {
+  const ref = collection(db, "libraries", libID, "questions");
+  const q = query(
+    ref,
+    orderBy("dateCreated", "desc"),
+    startAfter(lastDoc),
+    limit(countPerPage)
+  );
+  setFetching(true);
+  getDocs(q).then((snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
     setQuestions(fetchedItems);
+    setPage((prev) => prev + 1);
+    setFirstDoc(snapshot.docs?.at(0));
+    setLastDoc(snapshot.docs?.at(-1));
+    setTimeout(() => setFetching(false), 200);
   });
-  return unsubscribe;
+}
+
+export function fetchLibraryQnsBefore(
+  libID,
+  countPerPage,
+  firstDoc,
+  setFirstDoc,
+  setLastDoc,
+  setQuestions,
+  setPage,
+  setFetching
+) {
+  const ref = collection(db, "libraries", libID, "questions");
+  const q = query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
+
+  setFetching(true);
+  getDocs(q).then((snapshot) => {
+    const fetchedDocs = snapshot.docs.slice(-countPerPage);
+    const fetchedItems = fetchedDocs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    setQuestions(fetchedItems);
+    setPage((prev) => prev - 1);
+    setFirstDoc(fetchedDocs?.at(0));
+    setLastDoc(fetchedDocs?.at(-1));
+    setTimeout(() => setFetching(false), 200);
+  });
 }
 
 export function countLibraryQuestions(libraryID) {
@@ -698,6 +786,24 @@ export function getUserQSets(user, setQSets, setSelItem) {
   });
 }
 
+export function saveAdaptivePointsAwarded(docRefParams, points) {
+  const { courseID, asgmtID, userID } = docRefParams;
+
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  updateDoc(ref, {
+    totalPointsAwarded: points,
+  });
+}
+
 export function saveFreeResponse(
   docRefParams,
   question,
@@ -823,22 +929,37 @@ export function saveQResponseFromCourse(
   appendResponse();
 }
 
-export function saveAdaptivePointsAwarded(docRefParams, points) {
-  const { courseID, asgmtID, userID } = docRefParams;
+export function saveUserQn(
+  values,
+  selQuestion,
+  qSet,
+  refParams,
+  setSubmitting,
+  setSelQuestion,
+  handleClose
+) {
+  const { userID, qSetID } = refParams;
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
 
-  const ref = doc(
-    db,
-    "courses",
-    courseID,
-    "assignments",
-    asgmtID,
-    "submissions",
-    userID
+  const tidiedValues = {
+    id: selQuestion.id,
+    ...values,
+    updated: new Date(),
+  };
+
+  const updatedQuestions = qSet.questions.map((question) =>
+    question.id === selQuestion.id ? tidiedValues : question
   );
 
+  setSubmitting(true);
   updateDoc(ref, {
-    totalPointsAwarded: points,
-  });
+    questions: updatedQuestions,
+  })
+    .then(() => {
+      setSelQuestion(tidiedValues);
+      setTimeout(() => handleClose(), 800);
+    })
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
 export function updateAdaptiveParams(
@@ -892,38 +1013,6 @@ export async function updateTags(tags, libraryID, questionID) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
   const tagsSearchable = searchifyTags(tags);
   updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable });
-}
-
-export function updateQuestion(
-  values,
-  selQuestion,
-  qSet,
-  user,
-  setSubmitting,
-  setSelQuestion,
-  handleClose
-) {
-  const ref = doc(db, "users", user.uid, "question-sets", qSet.id);
-
-  const tidiedValues = {
-    id: selQuestion.id,
-    ...values,
-    updated: new Date(),
-  };
-
-  const updatedQuestions = qSet.questions.map((question) =>
-    question.id === selQuestion.id ? tidiedValues : question
-  );
-
-  setSubmitting(true);
-  updateDoc(ref, {
-    questions: updatedQuestions,
-  })
-    .then(() => {
-      setSelQuestion(tidiedValues);
-      setTimeout(() => handleClose(), 800);
-    })
-    .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
 export function updateUserQSet(
