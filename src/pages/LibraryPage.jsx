@@ -112,6 +112,7 @@ export default function LibraryPage() {
 function QuestionSetsPanel({ libID, library }) {
   const [openBuilder, setOpenBuilder] = useState(false);
   const [openTag, setOpenTag] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
   const [selQuestion, setSelQuestion] = useState(null);
   const [lastDoc, setLastDoc] = useState(null);
@@ -196,19 +197,29 @@ function QuestionSetsPanel({ libID, library }) {
     );
   }
 
-  useEffect(
-    () => {
-      fetchLibraryQuestions(
-        libID,
-        countPerPage,
-        setQuestions,
-        setLastDoc,
-        resetTotalCount
-      );
-    },
-    //eslint-disable-next-line
-    []
-  );
+  function handleSearch() {
+    fetchLibraryQuestions(
+      libID,
+      searchTerm,
+      countPerPage,
+      setQuestions,
+      setLastDoc,
+      setTotalCount,
+      resetTotalCount
+    );
+  }
+
+  function handleChange(e) {
+    setSearchTerm(e.target.value);
+  }
+
+  function handleEnter(e) {
+    if (e.code === "Enter") {
+      handleSearch();
+    }
+  }
+
+  useEffect(handleSearch, []);
 
   useEffect(
     () => {
@@ -223,10 +234,16 @@ function QuestionSetsPanel({ libID, library }) {
   return (
     <>
       <Panel>
-        \
         <Box className="flex flex-row" sx={{ pt: "80px" }}>
           <Box>
-            <SearchField />
+            <SearchField
+              onClick={handleSearch}
+              onChange={handleChange}
+              onKeyUp={handleEnter}
+              placeholder="search by topic"
+              value={searchTerm}
+            />
+
             <List sx={listStyle}>
               {questions.map((question) => (
                 <ListItemButton

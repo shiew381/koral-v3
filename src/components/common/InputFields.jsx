@@ -1,4 +1,4 @@
-import { TextField, InputAdornment } from "@mui/material";
+import { IconButton, TextField } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
@@ -60,26 +60,6 @@ export function CourseDescriptionField({ onChange, value }) {
       sx={{ mb: 1 }}
       value={value}
       variant="filled"
-    />
-  );
-}
-
-export function CourseSearchField({ onChange, value, handleKeyUp }) {
-  return (
-    <TextField
-      onChange={onChange}
-      onKeyUp={handleKeyUp}
-      label="Search"
-      placeholder="course title or instructor name"
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="end">
-            <SearchIcon />
-          </InputAdornment>
-        ),
-      }}
-      value={value}
-      variant="outlined"
     />
   );
 }
@@ -314,20 +294,26 @@ export function PointsField({ onChange, value }) {
   );
 }
 
-export function SearchField({ onChange, value }) {
+export function SearchField({
+  onClick,
+  onKeyUp,
+  onChange,
+  placeholder,
+  value,
+}) {
   return (
     <TextField
+      placeholder={placeholder}
       onChange={onChange}
-      label="Search"
+      onKeyUp={onKeyUp}
+      value={value}
       InputProps={{
         endAdornment: (
-          <InputAdornment position="end">
+          <IconButton onClick={onClick} edge="end">
             <SearchIcon />
-          </InputAdornment>
+          </IconButton>
         ),
       }}
-      size="small"
-      value={value}
       variant="outlined"
     />
   );

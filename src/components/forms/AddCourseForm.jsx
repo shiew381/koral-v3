@@ -19,7 +19,7 @@ import { Lightbox, LightboxHeader } from "../common/Lightbox.jsx";
 import { BtnContainer, SubmitBtn } from "../common/Buttons.jsx";
 import {
   CourseDescriptionField,
-  CourseSearchField,
+  SearchField,
   CourseTitleField,
 } from "../common/InputFields.jsx";
 import {
@@ -215,10 +215,12 @@ export function AddCourseForm({ user, userInfo, open, handleClose }) {
       {step === 2 && role === "student" && (
         <>
           <FormControl sx={{ width: "100%" }} variant="outlined">
-            <CourseSearchField
+            <SearchField
+              onClick={findCourse}
               onChange={handleSearchTerm}
+              placeholder="course title or instructor name"
               value={searchTerm}
-              handleKeyUp={handleEnter}
+              onKeyUp={handleEnter}
             />
           </FormControl>
           {noSearchResults && (

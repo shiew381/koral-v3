@@ -117,7 +117,11 @@ export default function QuestionSetsPage() {
             sx={{ pb: 2 }}
             width="450px"
           >
-            <SearchField onChange={handleSearchTerm} value={searchTerm} />
+            <SearchField
+              onChange={handleSearchTerm}
+              placeholder="search by title"
+              value={searchTerm}
+            />
             <AddQSetBtn onClick={handleOpen} />
           </Box>
           {filtered.length === 0 && (

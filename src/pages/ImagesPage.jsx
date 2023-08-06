@@ -150,7 +150,11 @@ export default function ImagesPage() {
             sx={{ pb: 2 }}
             width="450px"
           >
-            <SearchField onChange={handleSearchTerm} value={searchTerm} />
+            <SearchField
+              onChange={handleSearchTerm}
+              placeholder="search by title"
+              value={searchTerm}
+            />
             <UploadImage
               file={file}
               handleSelectFile={handleSelectFile}
