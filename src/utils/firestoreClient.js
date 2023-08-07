@@ -191,11 +191,34 @@ export function autoSaveUserQn(values, questionID, qSet, user, setSelQuestion) {
     question.id === questionID ? values : question
   );
 
-  console.log("auto save triggered");
-
   updateDoc(ref, {
     questions: updatedQuestions,
   }).then(() => setSelQuestion(values));
+}
+
+export function autoAddLibraryQn(
+  values,
+  libID,
+  libQID,
+  setEdit,
+  setSelQuestion
+) {
+  const ref = doc(db, "libraries", libID, "questions", libQID);
+
+  const tidiedValues = {
+    dateCreated: serverTimestamp(),
+    ...values,
+  };
+
+  setDoc(ref, tidiedValues).then(() => {
+    setSelQuestion({ ...tidiedValues, id: libQID });
+    setEdit(true);
+  });
+}
+
+export function autoSaveLibraryQn(values, libID, libQID, setSelQuestion) {
+  const ref = doc(db, "libraries", libID, "questions", libQID);
+  updateDoc(ref, values).then(() => setSelQuestion(values));
 }
 
 export function autoAddUserQn(
@@ -387,6 +410,8 @@ export function fetchLibraryQuestions(
   setQuestions,
   setLastDoc,
   setTotalCount,
+  setPage,
+  setFetching,
   resetTotalCount
 ) {
   const ref = collection(db, "libraries", libraryID, "questions");
@@ -395,7 +420,7 @@ export function fetchLibraryQuestions(
     const q = query(
       ref,
       where("tags_searchable", "array-contains", searchTerm),
-      limit(countPerPage)
+      orderBy("dateCreated", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -404,9 +429,16 @@ export function fetchLibraryQuestions(
         id: doc.id,
         ...doc.data(),
       }));
-      setQuestions(fetchedItems);
-      setLastDoc(fetchedDocs?.at(-1));
-      setTotalCount(snapshot.docs.length);
+
+      console.log(snapshot.docs);
+      setFetching(true);
+      setPage(1);
+      setTimeout(() => {
+        setTotalCount(snapshot.docs.length);
+        setQuestions(fetchedItems);
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
     });
     return unsubscribe;
   }
@@ -419,9 +451,14 @@ export function fetchLibraryQuestions(
         id: doc.id,
         ...doc.data(),
       }));
-      setQuestions(fetchedItems);
-      setLastDoc(snapshot.docs?.at(-1));
-      resetTotalCount();
+      setFetching(true);
+      setPage(1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setLastDoc(snapshot.docs?.at(-1));
+        resetTotalCount();
+        setFetching(false);
+      }, 300);
     });
     return unsubscribe;
   }
@@ -429,21 +466,32 @@ export function fetchLibraryQuestions(
 
 export function fetchLibraryQnsAfter(
   libID,
+  searchTerm,
   countPerPage,
   lastDoc,
+  setQuestions,
   setFirstDoc,
   setLastDoc,
-  setQuestions,
   setPage,
   setFetching
 ) {
   const ref = collection(db, "libraries", libID, "questions");
-  const q = query(
-    ref,
-    orderBy("dateCreated", "desc"),
-    startAfter(lastDoc),
-    limit(countPerPage)
-  );
+
+  const q = searchTerm
+    ? query(
+        ref,
+        where("tags_searchable", "array-contains", searchTerm),
+        orderBy("dateCreated", "desc"),
+        startAfter(lastDoc),
+        limit(countPerPage)
+      )
+    : query(
+        ref,
+        orderBy("dateCreated", "desc"),
+        startAfter(lastDoc),
+        limit(countPerPage)
+      );
+
   setFetching(true);
   getDocs(q).then((snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
@@ -451,26 +499,37 @@ export function fetchLibraryQnsAfter(
       ...doc.data(),
     }));
 
-    setQuestions(fetchedItems);
     setPage((prev) => prev + 1);
-    setFirstDoc(snapshot.docs?.at(0));
-    setLastDoc(snapshot.docs?.at(-1));
-    setTimeout(() => setFetching(false), 200);
+    setTimeout(() => {
+      setQuestions(fetchedItems);
+      setFirstDoc(snapshot.docs?.at(0));
+      setLastDoc(snapshot.docs?.at(-1));
+      setFetching(false);
+    }, 300);
   });
+  return;
 }
 
 export function fetchLibraryQnsBefore(
   libID,
+  searchTerm,
   countPerPage,
   firstDoc,
+  setQuestions,
   setFirstDoc,
   setLastDoc,
-  setQuestions,
   setPage,
   setFetching
 ) {
   const ref = collection(db, "libraries", libID, "questions");
-  const q = query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
+  const q = searchTerm
+    ? query(
+        ref,
+        where("tags_searchable", "array-contains", searchTerm),
+        orderBy("dateCreated", "desc"),
+        endBefore(firstDoc)
+      )
+    : query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
 
   setFetching(true);
   getDocs(q).then((snapshot) => {
@@ -480,11 +539,14 @@ export function fetchLibraryQnsBefore(
       ...doc.data(),
     }));
 
-    setQuestions(fetchedItems);
     setPage((prev) => prev - 1);
-    setFirstDoc(fetchedDocs?.at(0));
-    setLastDoc(fetchedDocs?.at(-1));
-    setTimeout(() => setFetching(false), 200);
+
+    setTimeout(() => {
+      setQuestions(fetchedItems);
+      setFirstDoc(fetchedDocs?.at(0));
+      setLastDoc(fetchedDocs?.at(-1));
+      setFetching(false);
+    }, 300);
   });
 }
 
@@ -927,6 +989,15 @@ export function saveQResponseFromCourse(
   }
 
   appendResponse();
+}
+
+export function saveLibraryQn(values, libID, handleClose, setSubmitting) {
+  const ref = doc(db, "libraries", libID, "questions", values.id);
+
+  setSubmitting(true);
+  updateDoc(ref, values)
+    .then(() => setTimeout(() => handleClose(), 800))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
 export function saveUserQn(

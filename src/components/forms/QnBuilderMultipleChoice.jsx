@@ -65,9 +65,6 @@ export function MultipleChoice({
           answerChoices: tidyAnswerChoices(),
         };
 
-    console.log("autosaving from handleAutoSave function");
-    console.log(values);
-
     autoSaveQuestion(values);
   }
 
@@ -137,7 +134,6 @@ export function MultipleChoice({
       promptRef.current.innerHTML = initVal.prompt;
       answerChoices.forEach((el, ind) => {
         const elem = document.getElementById(el.id);
-        console.log(el.text);
         elem.innerHTML = initVal.answerChoices[ind].text;
       });
     },
@@ -168,7 +164,7 @@ export function MultipleChoice({
         <Typography align="right" variant="subtitle2" sx={{ mr: 1 }}>
           correct
         </Typography>
-        <Button onClick={() => console.log("hello")}>answer choice data</Button>
+
         {answerChoices?.map((el, ind) => (
           <Box key={el.id} className="answer-choice-row">
             <Box sx={{ paddingTop: "60px" }}>
@@ -208,7 +204,6 @@ export function MultipleChoice({
           onClick={handleSave}
         />
       </BtnContainer>
-      <pre>{JSON.stringify(initVal, null, 2)}</pre>
     </>
   );
 }

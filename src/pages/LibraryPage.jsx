@@ -13,10 +13,14 @@ import {
   Box,
   Button,
   Card,
+  Checkbox,
   Chip,
+  CircularProgress,
   Divider,
   IconButton,
+  Link,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   Tab,
@@ -27,6 +31,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import RedoIcon from "@mui/icons-material/Redo";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import { QnBuilder } from "../components/forms/QnBuilder";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
@@ -35,6 +40,9 @@ import FreeResponse from "../components/question-sets/QnFreeResponse";
 import { TagsForm } from "../components/forms/TagsForm";
 import { Panel } from "../components/common/DashboardCpnts";
 import { SearchField } from "../components/common/InputFields";
+import parse from "html-react-parser";
+import "../css/Library.css";
+import { BtnContainer } from "../components/common/Buttons";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -74,7 +82,7 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="dashboard-container relative">
+    <div className="library-container relative">
       <div style={{ position: "absolute" }}>
         <Button startIcon={<ChevronLeftIcon />} onClick={redirectToLibraries}>
           All Libraries
@@ -114,12 +122,15 @@ function QuestionSetsPanel({ libID, library }) {
   const [openTag, setOpenTag] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
+  const [checkedQns, setCheckedQns] = useState([]);
+  const checkedQnIDs = checkedQns.map((el) => el.id);
   const [selQuestion, setSelQuestion] = useState(null);
   const [lastDoc, setLastDoc] = useState(null);
   const [firstDoc, setFirstDoc] = useState(null);
   const [totalCount, setTotalCount] = useState(library.questionCount);
   const [fetching, setFetching] = useState(false);
   const [page, setPage] = useState(1);
+  const [edit, setEdit] = useState(false);
 
   const countPerPage = 10;
 
@@ -129,27 +140,14 @@ function QuestionSetsPanel({ libID, library }) {
 
   const type = selQuestion?.type;
   const listStyle = {
-    marginTop: "5px",
     padding: 0,
     width: "300px",
     height: "500px",
     overflow: "auto",
   };
 
-  function handleOpenBuilder() {
-    setOpenBuilder(true);
-  }
-
-  function handleCloseBuilder() {
-    setOpenBuilder(false);
-  }
-
-  function handleOpenTag() {
-    setOpenTag(true);
-  }
-
-  function handleCloseTag() {
-    setOpenTag(false);
+  function deleteQuestion() {
+    deleteLibraryQuestion(selQuestion, libID);
   }
 
   function deleteTag(ind) {
@@ -158,8 +156,96 @@ function QuestionSetsPanel({ libID, library }) {
     updateTags(updatedTags, libID, questionID);
   }
 
-  function deleteQuestion() {
-    deleteLibraryQuestion(selQuestion, libID);
+  function handleCloseBuilder() {
+    setOpenBuilder(false);
+    setEdit(false);
+  }
+
+  function handleCloseTag() {
+    setOpenTag(false);
+  }
+
+  function handleBack() {
+    fetchLibraryQnsBefore(
+      libID,
+      searchTerm,
+      countPerPage,
+      firstDoc,
+      setQuestions,
+      setFirstDoc,
+      setLastDoc,
+      setPage,
+      setFetching
+    );
+  }
+
+  function handleChange(e) {
+    setSearchTerm(e.target.value);
+  }
+
+  function handleKeyUp(e) {
+    if (e.code === "Enter") {
+      handleSearch();
+    }
+
+    if (e.code === "Backspace" && e.target.value === "") {
+      handleSearch();
+    }
+  }
+
+  function handleNext() {
+    fetchLibraryQnsAfter(
+      libID,
+      searchTerm,
+      countPerPage,
+      lastDoc,
+      setQuestions,
+      setFirstDoc,
+      setLastDoc,
+      setPage,
+      setFetching
+    );
+  }
+
+  function handleOpenBuilder() {
+    setOpenBuilder(true);
+  }
+
+  function handleOpenEdit() {
+    setOpenBuilder(true);
+    setEdit(true);
+  }
+
+  function handleOpenTag() {
+    setOpenTag(true);
+  }
+
+  function handleSearch() {
+    fetchLibraryQuestions(
+      libID,
+      searchTerm,
+      countPerPage,
+      setQuestions,
+      setLastDoc,
+      setTotalCount,
+      setPage,
+      setFetching,
+      resetTotalCount
+    );
+  }
+
+  function handleToggle(e) {
+    const qID = e.target.value;
+    const foundQuestion = questions.find((question) => question.id === qID);
+
+    if (e.target.checked) {
+      setCheckedQns([...checkedQns, foundQuestion]);
+    } else {
+      const index = checkedQnIDs.indexOf(qID);
+      const copy = [...checkedQns];
+      copy.splice(index, 1);
+      setCheckedQns(copy);
+    }
   }
 
   function refreshQuestion() {
@@ -171,52 +257,9 @@ function QuestionSetsPanel({ libID, library }) {
     setTotalCount(library.questionCount);
   }
 
-  function handleNext() {
-    fetchLibraryQnsAfter(
-      libID,
-      countPerPage,
-      lastDoc,
-      setFirstDoc,
-      setLastDoc,
-      setQuestions,
-      setPage,
-      setFetching
-    );
-  }
-
-  function handleBack() {
-    fetchLibraryQnsBefore(
-      libID,
-      countPerPage,
-      firstDoc,
-      setFirstDoc,
-      setLastDoc,
-      setQuestions,
-      setPage,
-      setFetching
-    );
-  }
-
-  function handleSearch() {
-    fetchLibraryQuestions(
-      libID,
-      searchTerm,
-      countPerPage,
-      setQuestions,
-      setLastDoc,
-      setTotalCount,
-      resetTotalCount
-    );
-  }
-
-  function handleChange(e) {
-    setSearchTerm(e.target.value);
-  }
-
-  function handleEnter(e) {
-    if (e.code === "Enter") {
-      handleSearch();
-    }
+  function seeSelected() {
+    setQuestions(checkedQns);
+    setTotalCount(checkedQns.length);
   }
 
   useEffect(handleSearch, []);
@@ -234,33 +277,49 @@ function QuestionSetsPanel({ libID, library }) {
   return (
     <>
       <Panel>
-        <Box className="flex flex-row" sx={{ pt: "80px" }}>
+        <Box className="flex flex-row" sx={{ pt: "40px" }}>
           <Box>
-            <SearchField
-              onClick={handleSearch}
-              onChange={handleChange}
-              onKeyUp={handleEnter}
-              placeholder="search by topic"
-              value={searchTerm}
-            />
+            <Box className="flex flex-center flex-space-between">
+              <SearchField
+                onClick={handleSearch}
+                onChange={handleChange}
+                onKeyUp={handleKeyUp}
+                placeholder="search by topic"
+                value={searchTerm}
+              />
 
+              {fetching && <CircularProgress size={25} sx={{ mr: "15px" }} />}
+            </Box>
             <List sx={listStyle}>
               {questions.map((question) => (
-                <ListItemButton
+                <ListItem
+                  disablePadding
                   key={question.id}
-                  onClick={() => setSelQuestion(question)}
-                  sx={{
-                    bgcolor:
-                      question?.id === selQuestion?.id
-                        ? "rgba(0,180,235,0.1)"
-                        : "transparent",
-                  }}
+                  secondaryAction={
+                    <Checkbox
+                      edge="end"
+                      onChange={handleToggle}
+                      value={question.id}
+                      checked={checkedQnIDs?.includes(question.id) || false}
+                    />
+                  }
                 >
-                  <ListItemText>{formatPrompt(question.prompt)}</ListItemText>
-                </ListItemButton>
+                  <ListItemButton
+                    onClick={() => setSelQuestion(question)}
+                    sx={{
+                      bgcolor:
+                        question?.id === selQuestion?.id
+                          ? "rgba(0,180,235,0.1)"
+                          : "transparent",
+                    }}
+                  >
+                    <ListItemText>
+                      {parse(formatPrompt(question.prompt))}
+                    </ListItemText>
+                  </ListItemButton>
+                </ListItem>
               ))}
-            </List>
-
+            </List>{" "}
             <div className="question-counter">
               <IconButton
                 disabled={page === 1 || fetching}
@@ -290,16 +349,36 @@ function QuestionSetsPanel({ libID, library }) {
               </IconButton>
             </div>
             <Divider />
-            <Button
+            {/* <Button
               fullWidth
               onClick={handleOpenBuilder}
               startIcon={<AddIcon />}
             >
               ADD QUESTION
-            </Button>
+            </Button> */}
+            <BtnContainer center>
+              <Link
+                href="#"
+                onClick={seeSelected}
+                fullWidth
+                underline="none"
+                sx={{ fontFamily: "roboto", my: "8px" }}
+              >
+                VIEW SELECTED
+              </Link>
+            </BtnContainer>
+            <Button
+              fullWidth
+              onClick={handleOpenBuilder}
+              startIcon={<RedoIcon />}
+              variant="contained"
+            >
+              COPY TO MY QUESTIONS
+            </Button>{" "}
             {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
               Count Questions
             </Button> */}
+            <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
             {!selQuestion && (
@@ -311,9 +390,13 @@ function QuestionSetsPanel({ libID, library }) {
             )}
             {selQuestion && (
               <Card className="question-card">
-                <Typography color="text.secondary" sx={{ pl: "10px" }}>
-                  Question ID: {selQuestion.id}
-                </Typography>
+                <div className="flex flex-row flex-space-between flex-center">
+                  <Typography color="text.secondary" sx={{ pl: "10px" }}>
+                    Question ID: {selQuestion.id}
+                  </Typography>
+                  <Button onClick={handleOpenEdit}>Edit</Button>
+                </div>
+
                 {type === "multiple choice" && (
                   <MultipleChoice mode="preview" question={selQuestion} />
                 )}
@@ -361,10 +444,13 @@ function QuestionSetsPanel({ libID, library }) {
       </Panel>
       <QnBuilder
         collection="library"
-        libraryID={libID}
-        open={openBuilder}
+        edit={edit}
+        libID={libID}
         handleClose={handleCloseBuilder}
-        edit={false}
+        open={openBuilder}
+        selQuestion={selQuestion}
+        setEdit={setEdit}
+        setSelQuestion={setSelQuestion}
       />
       <TagsForm
         handleClose={handleCloseTag}
@@ -382,8 +468,6 @@ function formatPrompt(str) {
   const newStr = str
     .replaceAll(/<\/{0,1}div>/g, "")
     .replaceAll(/<\/{0,1}strong>/g, "")
-    .replaceAll(/<\/{0,1}sub>/g, "")
-    .replaceAll(/<\/{0,1}sup>/g, "")
     .replaceAll(/<br\/{0,1}>/g, "");
   return newStr;
 }

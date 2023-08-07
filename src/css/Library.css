@@ -1,0 +1,33 @@
+.library-container {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: 100vw;
+  padding-top: 70px;
+  min-height: calc(100vh - 70px);
+}
+
+.tabs-horiz-container {
+  display: none;
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.tabs-vert {
+  padding-top: 80px;
+}
+
+@media only screen and (max-width: 1100px) {
+  .library-container {
+    flex-direction: column;
+  }
+
+  .tabs-vert-container {
+    display: none;
+  }
+
+  .tabs-horiz-container {
+    display: flex;
+    flex-direction: row;
+  }
+}
