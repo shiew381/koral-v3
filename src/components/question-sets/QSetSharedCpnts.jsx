@@ -4,6 +4,7 @@ import {
   IconButton,
   Link,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   Typography,
@@ -189,26 +190,28 @@ function QuestionListItem({
     return (
       <Draggable draggableId={question.id} index={index}>
         {(provided) => (
-          <ListItemButton
+          <ListItem
+            disablePadding
             key={question?.id}
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            onClick={handleClick}
             sx={{
               bgcolor: selected ? "rgba(0,180,235,0.1)" : "transparent",
             }}
           >
-            <ListItemText
-              primary={`Question ${index + 1}`}
-              secondary={
-                pointsAwarded(question, submissionHistory) +
-                " of " +
-                pointsPossible(question)
-              }
-            />
-            {provided.placeholder}
-          </ListItemButton>
+            <ListItemButton onClick={handleClick}>
+              <ListItemText
+                primary={`Question ${index + 1}`}
+                secondary={
+                  pointsAwarded(question, submissionHistory) +
+                  " of " +
+                  pointsPossible(question)
+                }
+              />
+              {provided.placeholder}
+            </ListItemButton>
+          </ListItem>
         )}
       </Draggable>
     );

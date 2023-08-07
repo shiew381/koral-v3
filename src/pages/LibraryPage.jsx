@@ -13,11 +13,13 @@ import {
   Box,
   Button,
   Card,
+  Checkbox,
   Chip,
   CircularProgress,
   Divider,
   IconButton,
   List,
+  ListItem,
   ListItemButton,
   ListItemText,
   Tab,
@@ -37,6 +39,7 @@ import { TagsForm } from "../components/forms/TagsForm";
 import { Panel } from "../components/common/DashboardCpnts";
 import { SearchField } from "../components/common/InputFields";
 import parse from "html-react-parser";
+import "../css/Library.css";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -76,7 +79,7 @@ export default function LibraryPage() {
   }
 
   return (
-    <div className="dashboard-container relative">
+    <div className="library-container relative">
       <div style={{ position: "absolute" }}>
         <Button startIcon={<ChevronLeftIcon />} onClick={redirectToLibraries}>
           All Libraries
@@ -116,6 +119,7 @@ function QuestionSetsPanel({ libID, library }) {
   const [openTag, setOpenTag] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
+  const [checkedQns, setCheckedQns] = useState([]);
   const [selQuestion, setSelQuestion] = useState(null);
   const [lastDoc, setLastDoc] = useState(null);
   const [firstDoc, setFirstDoc] = useState(null);
@@ -236,6 +240,18 @@ function QuestionSetsPanel({ libID, library }) {
     }
   }
 
+  function handleToggle(e) {
+    const qID = e.target.value;
+    if (e.target.checked) {
+      setCheckedQns([...checkedQns, qID]);
+    } else {
+      const index = checkedQns.indexOf(qID);
+      const copy = [...checkedQns];
+      copy.splice(index, 1);
+      setCheckedQns(copy);
+    }
+  }
+
   useEffect(handleSearch, []);
 
   useEffect(
@@ -251,6 +267,8 @@ function QuestionSetsPanel({ libID, library }) {
   return (
     <>
       <Panel>
+        <pre>{JSON.stringify(checkedQns, null, 2)}</pre>
+
         <Box className="flex flex-row" sx={{ pt: "40px" }}>
           <Box>
             <Box className="flex flex-center flex-space-between">
@@ -267,20 +285,32 @@ function QuestionSetsPanel({ libID, library }) {
 
             <List sx={listStyle}>
               {questions.map((question) => (
-                <ListItemButton
+                <ListItem
+                  disablePadding
                   key={question.id}
-                  onClick={() => setSelQuestion(question)}
-                  sx={{
-                    bgcolor:
-                      question?.id === selQuestion?.id
-                        ? "rgba(0,180,235,0.1)"
-                        : "transparent",
-                  }}
+                  secondaryAction={
+                    <Checkbox
+                      edge="end"
+                      onChange={handleToggle}
+                      value={question.id}
+                      checked={checkedQns?.includes(question.id) || false}
+                    />
+                  }
                 >
-                  <ListItemText>
-                    {parse(formatPrompt(question.prompt))}
-                  </ListItemText>
-                </ListItemButton>
+                  <ListItemButton
+                    onClick={() => setSelQuestion(question)}
+                    sx={{
+                      bgcolor:
+                        question?.id === selQuestion?.id
+                          ? "rgba(0,180,235,0.1)"
+                          : "transparent",
+                    }}
+                  >
+                    <ListItemText>
+                      {parse(formatPrompt(question.prompt))}
+                    </ListItemText>
+                  </ListItemButton>
+                </ListItem>
               ))}
             </List>
 

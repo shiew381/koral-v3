@@ -63,6 +63,7 @@
   .dashboard-container {
     flex-direction: column;
   }
+
   .tabs-vert-container {
     display: none;
   }
