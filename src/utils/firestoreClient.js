@@ -179,7 +179,7 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
 export function addUserQSet(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
-  addDoc(ref, { ...values, questions: [], dateCreated: serverTimestamp() })
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
     .then(() => setTimeout(() => handleClose(), 500))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 300));
@@ -245,6 +245,27 @@ export function autoAddUserQn(
   });
 
   return tidiedValues.id;
+}
+
+export function copyLibrayQnToUser(
+  questions,
+  refParams,
+  setSubmitting,
+  handleClose
+) {
+  console.log(questions);
+  console.log(refParams);
+  const { userID, qSetID } = refParams;
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
+
+  setSubmitting(true);
+  updateDoc(ref, {
+    questions: questions,
+  })
+    .then(() => {
+      setTimeout(() => handleClose(), 600);
+    })
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function deleteCourseAnncmt(course, anncmt) {
@@ -824,7 +845,7 @@ export function getUserImages(user, setImages, setSelItem) {
 
 export function getUserQSets(user, setQSets, setSelItem) {
   const ref = collection(db, "users", user.uid, "question-sets");
-  const q = query(ref);
+  const q = query(ref, orderBy("title", "asc"));
 
   function calcTotalPossiblePoints(qSet) {
     const questions = qSet.questions;
@@ -840,7 +861,7 @@ export function getUserQSets(user, setQSets, setSelItem) {
   getDocs(q).then((snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
-      title: doc.data().title,
+      ...doc.data(),
       totalPointsPossible: calcTotalPossiblePoints(doc.data()),
     }));
     setQSets(fetchedItems);
@@ -1080,7 +1101,7 @@ export function updateAssignment(
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
-export async function updateTags(tags, libraryID, questionID) {
+export function updateTags(tags, libraryID, questionID) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
   const tagsSearchable = searchifyTags(tags);
   updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable });

@@ -11,7 +11,8 @@ export function AddQSetForm({ user, open, handleClose }) {
   const disabled = !title || submitting;
 
   const values = {
-    title,
+    title: title,
+    questions: [],
   };
 
   function handleKeyUp(e) {
