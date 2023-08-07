@@ -18,6 +18,7 @@ import {
   CircularProgress,
   Divider,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemButton,
@@ -30,6 +31,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import RedoIcon from "@mui/icons-material/Redo";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import { QnBuilder } from "../components/forms/QnBuilder";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
@@ -40,6 +42,7 @@ import { Panel } from "../components/common/DashboardCpnts";
 import { SearchField } from "../components/common/InputFields";
 import parse from "html-react-parser";
 import "../css/Library.css";
+import { BtnContainer } from "../components/common/Buttons";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -120,6 +123,7 @@ function QuestionSetsPanel({ libID, library }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
   const [checkedQns, setCheckedQns] = useState([]);
+  const checkedQnIDs = checkedQns.map((el) => el.id);
   const [selQuestion, setSelQuestion] = useState(null);
   const [lastDoc, setLastDoc] = useState(null);
   const [firstDoc, setFirstDoc] = useState(null);
@@ -136,33 +140,14 @@ function QuestionSetsPanel({ libID, library }) {
 
   const type = selQuestion?.type;
   const listStyle = {
-    marginTop: "5px",
     padding: 0,
     width: "300px",
     height: "500px",
     overflow: "auto",
   };
 
-  function handleOpenBuilder() {
-    setOpenBuilder(true);
-  }
-
-  function handleOpenEdit() {
-    setOpenBuilder(true);
-    setEdit(true);
-  }
-
-  function handleCloseBuilder() {
-    setOpenBuilder(false);
-    setEdit(false);
-  }
-
-  function handleOpenTag() {
-    setOpenTag(true);
-  }
-
-  function handleCloseTag() {
-    setOpenTag(false);
+  function deleteQuestion() {
+    deleteLibraryQuestion(selQuestion, libID);
   }
 
   function deleteTag(ind) {
@@ -171,31 +156,13 @@ function QuestionSetsPanel({ libID, library }) {
     updateTags(updatedTags, libID, questionID);
   }
 
-  function deleteQuestion() {
-    deleteLibraryQuestion(selQuestion, libID);
+  function handleCloseBuilder() {
+    setOpenBuilder(false);
+    setEdit(false);
   }
 
-  function refreshQuestion() {
-    const found = questions.find((question) => question.id === selQuestion.id);
-    setSelQuestion(found);
-  }
-
-  function resetTotalCount() {
-    setTotalCount(library.questionCount);
-  }
-
-  function handleNext() {
-    fetchLibraryQnsAfter(
-      libID,
-      searchTerm,
-      countPerPage,
-      lastDoc,
-      setQuestions,
-      setFirstDoc,
-      setLastDoc,
-      setPage,
-      setFetching
-    );
+  function handleCloseTag() {
+    setOpenTag(false);
   }
 
   function handleBack() {
@@ -209,20 +176,6 @@ function QuestionSetsPanel({ libID, library }) {
       setLastDoc,
       setPage,
       setFetching
-    );
-  }
-
-  function handleSearch() {
-    fetchLibraryQuestions(
-      libID,
-      searchTerm,
-      countPerPage,
-      setQuestions,
-      setLastDoc,
-      setTotalCount,
-      setPage,
-      setFetching,
-      resetTotalCount
     );
   }
 
@@ -240,16 +193,73 @@ function QuestionSetsPanel({ libID, library }) {
     }
   }
 
+  function handleNext() {
+    fetchLibraryQnsAfter(
+      libID,
+      searchTerm,
+      countPerPage,
+      lastDoc,
+      setQuestions,
+      setFirstDoc,
+      setLastDoc,
+      setPage,
+      setFetching
+    );
+  }
+
+  function handleOpenBuilder() {
+    setOpenBuilder(true);
+  }
+
+  function handleOpenEdit() {
+    setOpenBuilder(true);
+    setEdit(true);
+  }
+
+  function handleOpenTag() {
+    setOpenTag(true);
+  }
+
+  function handleSearch() {
+    fetchLibraryQuestions(
+      libID,
+      searchTerm,
+      countPerPage,
+      setQuestions,
+      setLastDoc,
+      setTotalCount,
+      setPage,
+      setFetching,
+      resetTotalCount
+    );
+  }
+
   function handleToggle(e) {
     const qID = e.target.value;
+    const foundQuestion = questions.find((question) => question.id === qID);
+
     if (e.target.checked) {
-      setCheckedQns([...checkedQns, qID]);
+      setCheckedQns([...checkedQns, foundQuestion]);
     } else {
-      const index = checkedQns.indexOf(qID);
+      const index = checkedQnIDs.indexOf(qID);
       const copy = [...checkedQns];
       copy.splice(index, 1);
       setCheckedQns(copy);
     }
+  }
+
+  function refreshQuestion() {
+    const found = questions.find((question) => question.id === selQuestion.id);
+    setSelQuestion(found);
+  }
+
+  function resetTotalCount() {
+    setTotalCount(library.questionCount);
+  }
+
+  function seeSelected() {
+    setQuestions(checkedQns);
+    setTotalCount(checkedQns.length);
   }
 
   useEffect(handleSearch, []);
@@ -267,8 +277,6 @@ function QuestionSetsPanel({ libID, library }) {
   return (
     <>
       <Panel>
-        <pre>{JSON.stringify(checkedQns, null, 2)}</pre>
-
         <Box className="flex flex-row" sx={{ pt: "40px" }}>
           <Box>
             <Box className="flex flex-center flex-space-between">
@@ -282,7 +290,6 @@ function QuestionSetsPanel({ libID, library }) {
 
               {fetching && <CircularProgress size={25} sx={{ mr: "15px" }} />}
             </Box>
-
             <List sx={listStyle}>
               {questions.map((question) => (
                 <ListItem
@@ -293,7 +300,7 @@ function QuestionSetsPanel({ libID, library }) {
                       edge="end"
                       onChange={handleToggle}
                       value={question.id}
-                      checked={checkedQns?.includes(question.id) || false}
+                      checked={checkedQnIDs?.includes(question.id) || false}
                     />
                   }
                 >
@@ -312,8 +319,7 @@ function QuestionSetsPanel({ libID, library }) {
                   </ListItemButton>
                 </ListItem>
               ))}
-            </List>
-
+            </List>{" "}
             <div className="question-counter">
               <IconButton
                 disabled={page === 1 || fetching}
@@ -343,16 +349,36 @@ function QuestionSetsPanel({ libID, library }) {
               </IconButton>
             </div>
             <Divider />
-            <Button
+            {/* <Button
               fullWidth
               onClick={handleOpenBuilder}
               startIcon={<AddIcon />}
             >
               ADD QUESTION
-            </Button>
+            </Button> */}
+            <BtnContainer center>
+              <Link
+                href="#"
+                onClick={seeSelected}
+                fullWidth
+                underline="none"
+                sx={{ fontFamily: "roboto", my: "8px" }}
+              >
+                VIEW SELECTED
+              </Link>
+            </BtnContainer>
+            <Button
+              fullWidth
+              onClick={handleOpenBuilder}
+              startIcon={<RedoIcon />}
+              variant="contained"
+            >
+              COPY TO MY QUESTIONS
+            </Button>{" "}
             {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
               Count Questions
             </Button> */}
+            <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
             {!selQuestion && (

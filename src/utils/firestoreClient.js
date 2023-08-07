@@ -429,13 +429,14 @@ export function fetchLibraryQuestions(
         id: doc.id,
         ...doc.data(),
       }));
+
+      console.log(snapshot.docs);
       setFetching(true);
       setPage(1);
       setTimeout(() => {
         setTotalCount(snapshot.docs.length);
         setQuestions(fetchedItems);
         setLastDoc(fetchedDocs?.at(-1));
-        resetTotalCount();
         setFetching(false);
       }, 300);
     });
