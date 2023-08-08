@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  // countLibraryQuestions,
+  countLibraryQuestions,
   deleteLibraryQuestion,
   fetchLibrary,
   fetchLibraryQnsAfter,
@@ -134,8 +134,9 @@ function QuestionSetsPanel({ libID, library }) {
   const [page, setPage] = useState(1);
   const [edit, setEdit] = useState(false);
   const [viewChecked, setViewChecked] = useState(false);
-
   const { user } = useAuth();
+
+  const isEditor = library.editorIDs?.includes(user.uid);
 
   const countPerPage = 10;
 
@@ -213,9 +214,9 @@ function QuestionSetsPanel({ libID, library }) {
     );
   }
 
-  // function handleOpenBuilder() {
-  //   setOpenBuilder(true);
-  // }
+  function handleOpenBuilder() {
+    setOpenBuilder(true);
+  }
 
   function handleOpenImport() {
     setOpenImport(true);
@@ -298,7 +299,6 @@ function QuestionSetsPanel({ libID, library }) {
   return (
     <>
       <Panel>
-        {/* <pre>{JSON.stringify(checkedQns, null, 2)}</pre> */}
         <Box className="flex flex-row" sx={{ pt: "40px" }}>
           <Box>
             <Box className="flex flex-center flex-space-between">
@@ -374,13 +374,7 @@ function QuestionSetsPanel({ libID, library }) {
             </Box>
 
             <Divider sx={{ mb: 1 }} />
-            {/* <Button
-              fullWidth
-              onClick={handleOpenBuilder}
-              startIcon={<AddIcon />}
-            >
-              ADD QUESTION
-            </Button> */}
+
             <BtnContainer>
               {viewChecked ? (
                 <Button
@@ -410,9 +404,21 @@ function QuestionSetsPanel({ libID, library }) {
               </BtnContainer>
             )}
 
-            {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
-              Count Questions
-            </Button> */}
+            {isEditor && (
+              <Button
+                fullWidth
+                onClick={handleOpenBuilder}
+                startIcon={<AddIcon />}
+              >
+                ADD QUESTION
+              </Button>
+            )}
+
+            {isEditor && (
+              <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
+                Count Questions
+              </Button>
+            )}
             <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
