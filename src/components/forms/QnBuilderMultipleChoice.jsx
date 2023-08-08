@@ -220,7 +220,7 @@ function AnswerChoiceField({ id, imagePath, handleAutoSave }) {
         label="answer choice"
         onImageUploadSuccess={handleAutoSave}
         onImageDeleteSuccess={handleAutoSave}
-        toolbarOptions={["subscript/superscript", "equation", "image"]}
+        toolbarOptions={["superscript/subscript", "equation", "image"]}
       />
     </Box>
   );
