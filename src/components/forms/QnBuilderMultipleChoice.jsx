@@ -101,7 +101,7 @@ export function MultipleChoice({
   function addAnswerChoice() {
     const updatedAnswerChoices = [
       ...answerChoices,
-      { id: generateRandomCode(4), text: "", isCorrect: false },
+      { id: generateRandomCode(4), text: "<div><br></div>", isCorrect: false },
     ];
 
     setAnswerChoices(updatedAnswerChoices);
@@ -131,6 +131,7 @@ export function MultipleChoice({
 
   useEffect(
     () => {
+      if (!selQuestion) return;
       promptRef.current.innerHTML = initVal.prompt;
       answerChoices.forEach((el, ind) => {
         const elem = document.getElementById(el.id);
@@ -139,6 +140,20 @@ export function MultipleChoice({
     },
     //eslint-disable-next-line
     [selQuestion?.id]
+  );
+
+  useEffect(
+    () => {
+      answerChoices.forEach((el) => {
+        const elem = document.getElementById(el.id);
+
+        if (elem.innerHTML === "") {
+          elem.innerHTML = "<div><br></div>";
+        }
+      });
+    },
+    //eslint-disable-next-line
+    [answerChoices.length]
   );
 
   return (

@@ -322,6 +322,21 @@ export function deleteQuestionSubmissions(selQuestion, docRefParams) {
   });
 }
 
+export function deleteUserSubmissionHistory(docRefParams) {
+  const { courseID, asgmtID, userID } = docRefParams;
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  deleteDoc(ref);
+}
+
 export function deleteUserContent(user, colName, docID) {
   const ref = doc(db, "users", user.uid, colName, docID);
   deleteDoc(ref);

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
+  deleteUserSubmissionHistory,
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
@@ -295,9 +296,13 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
     setTimeout(() => setLoading(false), 1800);
   }, []);
 
-  useEffect(() => {
-    handlePickQuestion();
-  }, [objIndex]);
+  useEffect(
+    () => {
+      handlePickQuestion();
+    },
+    //eslint-disable-next-line
+    [objIndex]
+  );
 
   if (loading) {
     return (
@@ -341,6 +346,34 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
         </Box>
       </Card>
     );
+
+  if (selQuestion === "exhausted") {
+    return (
+      <>
+        <ProgressMeters
+          currentObjective={currentObjective}
+          qSet={qSet}
+          submissionHistory={submissionHistory}
+        />
+        <Card
+          className="adaptive-progress-card flex"
+          sx={{ minHeight: "400px" }}
+        >
+          <Box className="flex flex-col flex-grow flex-center">
+            <Typography>Exhausted all available questions...</Typography>
+            <Button
+              onClick={() => {
+                deleteUserSubmissionHistory(docRefParams);
+                setObjIndex(-1);
+              }}
+            >
+              Reset
+            </Button>
+          </Box>
+        </Card>
+      </>
+    );
+  }
 
   if (
     progress.percentage >= 100 &&
@@ -416,8 +449,6 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
                 You completed all the objectives. Nicely done!
               </Typography>
             </Box>
-
-            {/* <Button>RESET</Button> */}
           </Box>
         </Card>
       </>
@@ -673,6 +704,10 @@ function pickQuestion(objective, questions, submissionHistory) {
   const pickedID = untouchedIDs[qIndex];
   const foundQuestion = questions.find((question) => question.id === pickedID);
 
+  if (untouchedIDs.length == 0) {
+    return "exhausted";
+  }
+
   return foundQuestion;
 }
 
@@ -702,7 +737,7 @@ function calculateProgress(rule, objective, submissionHistory) {
   }
 
   if (rule === "chutes and ladders") {
-    const count = 2 * numCorrect - touchedIDs.length;
+    const count = chutesStreak(lastSubmissions);
 
     const percentage = 100 * (count / objective.completionThreshold);
     return { percentage, count };
@@ -715,6 +750,23 @@ function calculateProgress(rule, objective, submissionHistory) {
   }
 
   return zeroScore;
+}
+
+function chutesStreak(lastSubmissions) {
+  const sorted = lastSubmissions.sort(compareDates);
+
+  let count = 0;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const lastSubmission = sorted[i];
+    if (lastSubmission.answeredCorrectly) {
+      count = count + 1;
+    } else {
+      count = count > 0 ? count - 1 : 0;
+    }
+  }
+
+  return count;
 }
 
 function correctStreak(lastSubmissions) {
