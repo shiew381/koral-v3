@@ -37,6 +37,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import AddIcon from "@mui/icons-material/Add";
+import DownloadIcon from "@mui/icons-material/Download";
 import {
   AssignmentIcon,
   CourseImage,
@@ -47,7 +48,7 @@ import {
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import { getFileExtension } from "../utils/fileUtils";
 import "../css/CourseDashboard.css";
-import { MoreOptionsBtn } from "../components/common/Buttons";
+import { BtnContainer, MoreOptionsBtn } from "../components/common/Buttons";
 import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
@@ -636,12 +637,70 @@ function Grades({ course }) {
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const cellStyle = { padding: "10px", textAlign: "left", maxWidth: "200px" };
+  const cellStyle = {
+    padding: "10px",
+    textAlign: "left",
+    maxWidth: "200px",
+    minWidth: "140px",
+  };
   const cellStyle2 = {
     padding: "10px",
     textAlign: "center",
     maxWidth: "140px",
   };
+
+  function downloadGradebook() {
+    //adapted from https://medium.com/@idorenyinudoh10/how-to-export-data-from-javascript-to-a-csv-file-955bdfc394a9
+
+    const asgmtIDs = assignments.map((asgmt) => asgmt.id);
+    const asgmtTitles = assignments.map((asgmt) => asgmt.title);
+    const points = assignments.map((asgmt) => asgmt.totalPointsPossible);
+
+    const headers = ["First Name", "Last Name", ...asgmtTitles];
+    const pointsRow = ["Points Possible", "", ...points];
+
+    const gradebook = [];
+    gradebook.push(headers);
+    for (let i = 0; i < grades.length; i++) {
+      const userGrades = grades[i];
+      const asgmtScores = asgmtIDs.map(
+        (asgmtID) => userGrades[asgmtID]?.totalPointsAwarded.toString() || "0"
+      );
+      const rowData = [
+        userGrades.firstName,
+        userGrades.lastName,
+        ...asgmtScores,
+      ];
+      gradebook.push(rowData);
+    }
+
+    gradebook.push(pointsRow);
+
+    let csvFormat = "";
+    gradebook.forEach((row) => {
+      csvFormat += row.join(",") + "\n";
+    });
+
+    const dateObj = new Date();
+    const year = dateObj.getFullYear();
+    let month = dateObj.getMonth() + 1;
+    const date = dateObj.getDate();
+
+    if (month < 10) {
+      month = "0" + month;
+    }
+
+    const blob = new Blob([csvFormat], { type: "text/csv;charset=utf-8," });
+    const objUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", objUrl);
+    link.setAttribute(
+      "download",
+      `Gradebook-${course.title}-${year}-${month}-${date}.csv`
+    );
+    link.click();
+    link.remove();
+  }
 
   useEffect(
     () => {
@@ -678,6 +737,11 @@ function Grades({ course }) {
   return (
     <Panel>
       <Box sx={{ pt: "50px" }}>
+        <BtnContainer right>
+          <Button onClick={downloadGradebook} startIcon={<DownloadIcon />}>
+            Download CSV
+          </Button>
+        </BtnContainer>
         <table>
           <thead>
             <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
