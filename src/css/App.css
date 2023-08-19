@@ -165,6 +165,16 @@
   background-color: transparent;
 }
 
+.answer-choice-preview .equation {
+  background-color: transparent;
+}
+
+.answer-choice-text {
+  flex-grow: 1;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
 .tags-card {
   margin: 15px;
   max-width: 630px;

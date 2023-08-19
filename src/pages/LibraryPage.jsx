@@ -454,24 +454,31 @@ function QuestionSetsPanel({ libID, library }) {
                 <span style={{ marginLeft: "10px", marginRight: "10px" }}>
                   Tags:
                 </span>
-                {tags?.map((tag, ind) => (
+                {isEditor &&
+                  tags?.map((tag, ind) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      sx={{ mr: 1, mb: 1 }}
+                      onDelete={() => deleteTag(ind)}
+                    />
+                  ))}
+                {!isEditor &&
+                  tags?.map((tag) => (
+                    <Chip key={tag} label={tag} sx={{ mr: 1, mb: 1 }} />
+                  ))}
+                {isEditor && (
                   <Chip
-                    key={tag}
-                    label={tag}
+                    icon={<AddIcon />}
+                    onClick={handleOpenTag}
+                    label="add tag"
                     sx={{ mr: 1, mb: 1 }}
-                    onDelete={() => deleteTag(ind)}
+                    variant="outlined"
                   />
-                ))}
-                <Chip
-                  icon={<AddIcon />}
-                  onClick={handleOpenTag}
-                  label="add tag"
-                  sx={{ mr: 1, mb: 1 }}
-                  variant="outlined"
-                />
+                )}
               </Card>
             )}
-            {selQuestion && (
+            {isEditor && selQuestion && (
               <Box
                 className="flex flex-center"
                 width="600px"

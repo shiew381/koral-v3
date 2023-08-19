@@ -135,10 +135,22 @@ export default function MultipleChoice({
         )}
         <div className="answer-choice-area">
           {answerChoices.map((el, ind) => (
-            <Box className="answer-choice-row" key={`choice-${ind}`}>
-              {numCorrect <= 1 && <Radio checked={el.isCorrect} disabled />}
-              {numCorrect > 1 && <Checkbox checked={el.isCorrect} disabled />}
-              {parse(el.text)}
+            <Box className="answer-choice-preview" key={`choice-${ind}`}>
+              {numCorrect <= 1 && (
+                <Radio
+                  className="multiple-choice-radio"
+                  checked={el.isCorrect}
+                  disabled
+                />
+              )}
+              {numCorrect > 1 && (
+                <Checkbox
+                  className="multiple-choice-checkbox"
+                  checked={el.isCorrect}
+                  disabled
+                />
+              )}
+              <Box className="answer-choice-text">{parse(el.text)}</Box>
             </Box>
           ))}
         </div>
@@ -164,9 +176,10 @@ export default function MultipleChoice({
         )}
         <div className="answer-choice-area">
           {answerChoices.map((el, ind) => (
-            <Box className="answer-choice-row" key={`choice-${ind}`}>
+            <Box className="answer-choice-preview" key={`choice-${ind}`}>
               {numCorrect === 1 && (
                 <Radio
+                  className="multiple-choice-radio"
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}
                   disabled={attemptsExhausted || answeredCorrectly}
@@ -174,12 +187,13 @@ export default function MultipleChoice({
               )}
               {numCorrect > 1 && (
                 <Checkbox
+                  className="multiple-choice-checkbox"
                   checked={currentResponse.includes(ind) || false}
                   onChange={() => handleCurrentResponse(ind)}
                   disabled={attemptsExhausted || answeredCorrectly}
                 />
               )}
-              {parse(el.text)}
+              <Box className="answer-choice-text">{parse(el.text)}</Box>
             </Box>
           ))}
         </div>

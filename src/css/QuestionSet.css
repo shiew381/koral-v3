@@ -37,11 +37,17 @@
   padding: 10px;
 }
 
+.answer-choice-preview,
 .answer-choice-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   margin-bottom: 15px;
+}
+
+.multiple-choice-radio,
+.multiple-choice-checkbox {
+  align-self: flex-start;
 }
 
 .percent-tolerance-field-container {

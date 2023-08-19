@@ -19,7 +19,11 @@ import {
   startAfter,
   endBefore,
 } from "firebase/firestore";
-import { generateRandomCode, searchifyTags } from "./commonUtils.js";
+import {
+  generateRandomCode,
+  searchifyTags,
+  sortByTitle,
+} from "./commonUtils.js";
 
 export function addAssignment(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "assignments");
@@ -368,7 +372,7 @@ export function fetchAssignments(courseID, setAssignments, setLoading) {
       dateDue: doc.data().dateDue?.toDate(),
       dateOpen: doc.data().dateOpen?.toDate(),
     }));
-    setAssignments(fetchedItems);
+    setAssignments(sortByTitle(fetchedItems));
     setLoading(false);
   });
   return unsubscribe;
@@ -653,7 +657,7 @@ export function fetchResources(courseID, setResources, setLoading) {
       ...doc.data(),
       dateCreated: doc.data().dateCreated.toDate(),
     }));
-    setResources(fetchedItems);
+    setResources(sortByTitle(fetchedItems));
     setLoading(false);
   });
   return unsubscribe;
