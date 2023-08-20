@@ -184,28 +184,60 @@ exports.generateGradeSummary = functions.firestore
 
 exports.addUserInfoToAsgmt = functions.firestore
   .document("/courses/{courseID}/grades/{userID}")
-  .onCreate((snap, context) => {
+  .onCreate(async (snap, context) => {
     const { courseID, userID } = context.params;
 
     const ref = admin.firestore().collection("users").doc(userID);
+    const userDoc = await ref.get();
+    const values = {
+      email: userDoc.data().email,
+      firstName: userDoc.data().firstName,
+      lastName: userDoc.data().lastName,
+    };
 
-    return ref
-      .get()
-      .then((doc) => {
+    return snap.ref
+      .set(values, { merge: true })
+      .then(() => {
         functions.logger.log("adding user info to user's grade summary");
         functions.logger.log(`userID: ${userID}, courseID: ${courseID}`);
-        snap.ref.set(
-          {
-            email: doc.data().email,
-            firstName: doc.data().firstName,
-            lastName: doc.data().lastName,
-          },
-          { merge: true }
-        );
       })
       .catch(() => {
         functions.logger.log(
           "an error occurred adding grade summary...exiting function"
         );
       });
+  });
+
+exports.incrementLibQnCount = functions.firestore
+  .document("/libraries/{libID}/questions/{questionID}")
+  .onCreate(async (snap, context) => {
+    const { libID } = context.params;
+    const ref = admin.firestore().collection("libraries").doc(libID);
+
+    const libDoc = await ref.get();
+    const questionCount = libDoc.data().questionCount;
+
+    functions.logger.log(
+      "question added to library...incrementing question count"
+    );
+
+    //had difficulty using admine.firestore.FieldValue.increment(), so setting questionCount explicitly
+    return ref.update({ questionCount: questionCount + 1 });
+  });
+
+exports.decrementLibQnCount = functions.firestore
+  .document("/libraries/{libID}/questions/{questionID}")
+  .onDelete(async (snap, context) => {
+    const { libID } = context.params;
+    const ref = admin.firestore().collection("libraries").doc(libID);
+
+    const libDoc = await ref.get();
+    const questionCount = libDoc.data().questionCount;
+
+    functions.logger.log(
+      "question removed from library...decrementing question count"
+    );
+
+    //had difficulty using admine.firestore.FieldValue.increment(), so setting questionCount explicitly
+    return ref.update({ questionCount: questionCount - 1 });
   });
