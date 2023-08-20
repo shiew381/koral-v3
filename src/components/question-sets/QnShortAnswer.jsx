@@ -291,7 +291,7 @@ function ShortAnswerNumber({
     correctElem.innerHTML = question.correctAnswer.number.slice();
 
     const correctNumStr = convertElemtoStr(correctElem);
-    console.log("correct number (str): " + correctNumStr);
+    // console.log("correct number (str): " + correctNumStr);
 
     const tidiedQuestion = {
       ...question,
@@ -458,9 +458,9 @@ function ShortAnswerMeasurement({
     correctUnitElem.innerHTML = question.correctAnswer.unit.slice();
 
     const correctNumStr = convertElemtoStr(correctNumElem);
-    console.log("correct number (str): " + correctNumStr);
+    // console.log("correct number (str): " + correctNumStr);
     const correctUnitStr = convertElemtoStr(correctUnitElem);
-    console.log("correct unit: " + correctUnitStr);
+    // console.log("correct unit: " + correctUnitStr);
 
     const tidiedQuestion = {
       ...question,
@@ -586,6 +586,12 @@ function ShortAnswerMeasurement({
 function convertElemtoStr(elem) {
   let stringifiedForm = "";
 
+  const superscripts = elem.querySelectorAll("sup");
+  superscripts.forEach((superscript) => {
+    const stringEquivalent = "^" + superscript.innerText;
+    superscript.replaceWith(stringEquivalent);
+  });
+
   //quick check - if no templates used return early
   const eqFields = elem.querySelectorAll(".eq-field");
   if (eqFields.length === 0) {
@@ -595,12 +601,6 @@ function convertElemtoStr(elem) {
   }
 
   for (let i = 0; i < 5; i++) {
-    const superscripts = elem.querySelectorAll("sup");
-    superscripts.forEach((superscript) => {
-      const stringEquivalent = "^" + superscript.innerText;
-      superscript.replaceWith(stringEquivalent);
-    });
-
     const sqrts = elem.querySelectorAll(".eq-sqrt");
     sqrts.forEach((sqrt) => {
       const arg = sqrt.querySelector(".eq-sqrt-arg");

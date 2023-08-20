@@ -190,6 +190,11 @@ export function NumberField({
         }
         return;
       }
+      case "KeyX": {
+        e.preventDefault();
+        insertChar("×");
+        return;
+      }
       default:
         return;
     }

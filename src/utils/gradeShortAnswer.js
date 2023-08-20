@@ -27,7 +27,6 @@ export function gradeShortAnswer(question, response) {
     const acceptAltSpacing = question.scoring.acceptAltSpacing;
 
     if (!acceptAltCap && !acceptAltSpacing) {
-      console.log("hello");
       console.log(response);
       answeredCorrectly = response.text === correctAnswer.text;
     }
@@ -89,17 +88,17 @@ export function gradeShortAnswer(question, response) {
       return zeroScore;
     }
 
-    logStartMessage("SIMPLIFYING CORRECT NUMBER", correctNumber);
+    // logStartMessage("SIMPLIFYING CORRECT NUMBER", correctNumber);
     for (let i = 0; i < maxRounds; i++) {
-      logRoundStartMessage(correctNumber, i + 1);
+      // logRoundStartMessage(correctNumber, i + 1);
       if (isNumber(correctNumber)) {
         break;
       }
 
       correctNumber = simplifyNumber(correctNumber);
-      logRoundEndMessage(correctNumber, i + 1);
+      // logRoundEndMessage(correctNumber, i + 1);
     }
-    logEndMessage(correctNumber);
+    // logEndMessage(correctNumber);
 
     logStartMessage("SIMPLIFYING SUBMITTED NUMBER", submittedNumber);
     for (let i = 0; i < maxRounds; i++) {
@@ -155,17 +154,17 @@ export function gradeShortAnswer(question, response) {
       return zeroScore;
     }
 
-    logStartMessage("SIMPLIFYING CORRECT NUMBER", correctNumber);
+    // logStartMessage("SIMPLIFYING CORRECT NUMBER", correctNumber);
     for (let i = 0; i < maxRounds; i++) {
-      logRoundStartMessage(correctNumber, i + 1);
+      // logRoundStartMessage(correctNumber, i + 1);
       if (isNumber(correctNumber)) {
         break;
       }
 
       correctNumber = simplifyNumber(correctNumber);
-      logRoundEndMessage(correctNumber, i + 1);
+      // logRoundEndMessage(correctNumber, i + 1);
     }
-    logEndMessage(correctNumber);
+    // logEndMessage(correctNumber);
 
     logStartMessage("SIMPLIFYING SUBMITTED NUMBER", submittedNumber);
     for (let i = 0; i < maxRounds; i++) {
@@ -257,20 +256,20 @@ export function gradeShortAnswer(question, response) {
     correctUnit = simplifyFractions(correctUnit);
     submittedUnit = simplifyFractions(submittedUnit);
 
-    logStartMessage("CANONICALIZING CORRECT UNIT", correctUnit);
+    // logStartMessage("CANONICALIZING CORRECT UNIT", correctUnit);
     for (let i = 0; i < maxRounds; i++) {
-      logRoundStartMessage(submittedNumber, i + 1);
+      // logRoundStartMessage(correctUnit, i + 1);
       correctUnit = canonicalizeUnit(correctUnit);
-      logRoundEndMessage(correctUnit, i + 1);
+      // logRoundEndMessage(correctUnit, i + 1);
     }
     correctUnit = standardizeUnitString(correctUnit);
-    logEndMessage(correctUnit);
+    // logEndMessage(correctUnit);
 
     logStartMessage("CANONICALIZING SUBMITTED UNIT", submittedUnit);
     for (let i = 0; i < maxRounds; i++) {
-      logRoundStartMessage(submittedNumber, i + 1);
+      logRoundStartMessage(submittedUnit, i + 1);
       submittedUnit = canonicalizeUnit(submittedUnit);
-      logRoundEndMessage(correctUnit, i + 1);
+      logRoundEndMessage(submittedUnit, i + 1);
     }
     submittedUnit = standardizeUnitString(submittedUnit);
     logEndMessage(submittedUnit);
@@ -340,9 +339,7 @@ function canonicalizeUnit(str) {
   }
 
   if (maxDepth === 0) {
-    console.log("simplifying: " + canonicalForm);
     canonicalForm = toProductForm(canonicalForm);
-    console.log("simplified to: " + canonicalForm);
     return canonicalForm;
   }
 
@@ -695,6 +692,8 @@ function preCheckNumber(str) {
     .replace(/sin/g, "")
     .replace(/cos/g, "")
     .replace(/tan/g, "")
+    .replace(/E/g, "")
+    .replace(/x/g, "")
     .match(/[a-zA-Z]+/g, "");
 
   // check if number of open and close parentheses match
@@ -773,11 +772,14 @@ function sanitizeNumber(str) {
     .trim()
     .replace(/\s+/g, " ")
     .replace(/\\/g, "/")
+    .replace(/−/g, "-")
+    .replace(/(x|×)/g, "*")
     .replace(/\)(?=\w)/g, ")*")
     .replace(/\s*\/\s*/g, "/")
     .replace(/\s*\(\s*/g, "(")
     .replace(/\s*\)\s*/g, ")")
     .replace(/\s*\^\s*/g, "^")
+    .replace(/\*\s*10\^/g, "E")
     .replace(/\s/g, "*");
 
   return sanitizedStr;
@@ -950,6 +952,28 @@ function simplifyNumExpr(str) {
       const angleRad = (angleDeg * 3.1415) / 180;
 
       strCopy = strCopy.replace(el, angleRad);
+    });
+    strCopy = sanitizeNumber(strCopy);
+  }
+
+  const scientifics = strCopy.match(/E-{0,1}[0-9]+/g);
+  if (scientifics) {
+    console.log("scientific notation detected");
+
+    scientifics.forEach((el) => {
+      let exponent = el.match(/-{0,1}[0-9]+/g).at(0);
+      exponent = Number(exponent);
+
+      const tooBig = Math.abs(exponent) > 5;
+
+      //cannot handle scientific exponents less than -7, so take module 5 in such cases
+      if (tooBig) {
+        console.log("scientific exponent is too big...replacing with modulo 5");
+        exponent = exponent % 5;
+      }
+
+      const value = Number("1E" + exponent);
+      strCopy = strCopy.replace(el, `*${value}`);
     });
     strCopy = sanitizeNumber(strCopy);
   }
