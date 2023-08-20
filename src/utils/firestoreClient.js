@@ -292,9 +292,9 @@ export function deleteCourseResource(course, resource) {
   deleteDoc(ref);
 }
 
-export function deleteLibraryQuestion(question, libraryID) {
+export function deleteLibraryQuestion(question, libraryID, setTotalCount) {
   const ref = doc(db, "libraries", libraryID, "questions", question.id);
-  deleteDoc(ref);
+  deleteDoc(ref).then(() => setTotalCount((prev) => prev - 1));
 }
 
 export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
@@ -451,8 +451,7 @@ export function fetchLibraryQuestions(
   setLastDoc,
   setTotalCount,
   setPage,
-  setFetching,
-  resetTotalCount
+  setFetching
 ) {
   const ref = collection(db, "libraries", libraryID, "questions");
 
@@ -470,7 +469,6 @@ export function fetchLibraryQuestions(
         ...doc.data(),
       }));
 
-      console.log(snapshot.docs);
       setFetching(true);
       setPage(1);
       setTimeout(() => {
@@ -496,7 +494,6 @@ export function fetchLibraryQuestions(
       setTimeout(() => {
         setQuestions(fetchedItems);
         setLastDoc(snapshot.docs?.at(-1));
-        resetTotalCount();
         setFetching(false);
       }, 300);
     });
