@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import {
-  // countLibraryQuestions,
+  countLibraryQuestions,
   deleteLibraryQuestion,
   fetchLibrary,
   fetchLibraryQnsAfter,
@@ -9,6 +10,7 @@ import {
   fetchLibraryQuestions,
   updateTags,
 } from "../utils/firestoreClient";
+import parse from "html-react-parser";
 import {
   Box,
   Button,
@@ -18,7 +20,6 @@ import {
   CircularProgress,
   Divider,
   IconButton,
-  Link,
   List,
   ListItem,
   ListItemButton,
@@ -33,16 +34,16 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import RedoIcon from "@mui/icons-material/Redo";
 import { LoadingIndicator, Page } from "../components/common/Pages";
-import { QnBuilder } from "../components/forms/QnBuilder";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
+import { QnBuilder } from "../components/forms/QnBuilder";
+import { QnImporter } from "../components/forms/QnImporter";
 import { TagsForm } from "../components/forms/TagsForm";
 import { Panel } from "../components/common/DashboardCpnts";
 import { SearchField } from "../components/common/InputFields";
-import parse from "html-react-parser";
-import "../css/Library.css";
 import { BtnContainer } from "../components/common/Buttons";
+import "../css/Library.css";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -120,6 +121,7 @@ export default function LibraryPage() {
 function QuestionSetsPanel({ libID, library }) {
   const [openBuilder, setOpenBuilder] = useState(false);
   const [openTag, setOpenTag] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
   const [checkedQns, setCheckedQns] = useState([]);
@@ -131,6 +133,10 @@ function QuestionSetsPanel({ libID, library }) {
   const [fetching, setFetching] = useState(false);
   const [page, setPage] = useState(1);
   const [edit, setEdit] = useState(false);
+  const [viewChecked, setViewChecked] = useState(false);
+  const { user } = useAuth();
+
+  const isEditor = library.editorIDs?.includes(user.uid);
 
   const countPerPage = 10;
 
@@ -141,6 +147,7 @@ function QuestionSetsPanel({ libID, library }) {
   const type = selQuestion?.type;
   const listStyle = {
     padding: 0,
+    paddingBottom: 4,
     width: "300px",
     height: "500px",
     overflow: "auto",
@@ -211,6 +218,14 @@ function QuestionSetsPanel({ libID, library }) {
     setOpenBuilder(true);
   }
 
+  function handleOpenImport() {
+    setOpenImport(true);
+  }
+
+  function handleCloseImport() {
+    setOpenImport(false);
+  }
+
   function handleOpenEdit() {
     setOpenBuilder(true);
     setEdit(true);
@@ -234,7 +249,7 @@ function QuestionSetsPanel({ libID, library }) {
     );
   }
 
-  function handleToggle(e) {
+  function handleCheck(e) {
     const qID = e.target.value;
     const foundQuestion = questions.find((question) => question.id === qID);
 
@@ -257,9 +272,16 @@ function QuestionSetsPanel({ libID, library }) {
     setTotalCount(library.questionCount);
   }
 
-  function seeSelected() {
+  function showChecked() {
     setQuestions(checkedQns);
     setTotalCount(checkedQns.length);
+    setViewChecked(true);
+  }
+
+  function showAll() {
+    handleSearch();
+    resetTotalCount();
+    setViewChecked(false);
   }
 
   useEffect(handleSearch, []);
@@ -290,94 +312,113 @@ function QuestionSetsPanel({ libID, library }) {
 
               {fetching && <CircularProgress size={25} sx={{ mr: "15px" }} />}
             </Box>
-            <List sx={listStyle}>
-              {questions.map((question) => (
-                <ListItem
-                  disablePadding
-                  key={question.id}
-                  secondaryAction={
-                    <Checkbox
-                      edge="end"
-                      onChange={handleToggle}
-                      value={question.id}
-                      checked={checkedQnIDs?.includes(question.id) || false}
-                    />
-                  }
-                >
-                  <ListItemButton
-                    onClick={() => setSelQuestion(question)}
-                    sx={{
-                      bgcolor:
-                        question?.id === selQuestion?.id
-                          ? "rgba(0,180,235,0.1)"
-                          : "transparent",
-                    }}
+            <Box className="relative">
+              <List sx={listStyle}>
+                {questions.map((question) => (
+                  <ListItem
+                    disablePadding
+                    key={question.id}
+                    secondaryAction={
+                      <Checkbox
+                        edge="end"
+                        onChange={handleCheck}
+                        value={question.id}
+                        checked={checkedQnIDs?.includes(question.id) || false}
+                      />
+                    }
                   >
-                    <ListItemText>
-                      {parse(formatPrompt(question.prompt))}
-                    </ListItemText>
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>{" "}
-            <div className="question-counter">
-              <IconButton
-                disabled={page === 1 || fetching}
-                onClick={handleBack}
-                size="small"
-              >
-                <ArrowLeftIcon />
-              </IconButton>
-              <span
-                style={{
-                  marginLeft: "2px",
-                  marginRight: "2px",
-                  position: "relative",
-                  top: "1px",
-                }}
-              >
-                {(page - 1) * countPerPage + 1} -{" "}
-                {(page - 1) * countPerPage + questions.length} of {totalCount}{" "}
-                questions
-              </span>
-              <IconButton
-                disabled={page === lastPage || fetching}
-                onClick={handleNext}
-                size="small"
-              >
-                <ArrowRightIcon />
-              </IconButton>
-            </div>
-            <Divider />
-            {/* <Button
-              fullWidth
-              onClick={handleOpenBuilder}
-              startIcon={<AddIcon />}
-            >
-              ADD QUESTION
-            </Button> */}
-            <BtnContainer center>
-              <Link
-                href="#"
-                onClick={seeSelected}
-                fullWidth
-                underline="none"
-                sx={{ fontFamily: "roboto", my: "8px" }}
-              >
-                VIEW SELECTED
-              </Link>
+                    <ListItemButton
+                      onClick={() => setSelQuestion(question)}
+                      sx={{
+                        bgcolor:
+                          question?.id === selQuestion?.id
+                            ? "rgba(0,180,235,0.1)"
+                            : "transparent",
+                      }}
+                    >
+                      <ListItemText>
+                        {parse(formatPrompt(question.prompt))}
+                      </ListItemText>
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+              <div className="question-counter">
+                <IconButton
+                  disabled={page === 1 || fetching}
+                  onClick={handleBack}
+                  size="small"
+                >
+                  <ArrowLeftIcon />
+                </IconButton>
+                <span
+                  style={{
+                    marginLeft: "2px",
+                    marginRight: "2px",
+                    position: "relative",
+                    top: "1px",
+                  }}
+                >
+                  {(page - 1) * countPerPage + 1} -{" "}
+                  {(page - 1) * countPerPage + questions.length} of {totalCount}{" "}
+                  questions
+                </span>
+                <IconButton
+                  disabled={page === lastPage || fetching}
+                  onClick={handleNext}
+                  size="small"
+                >
+                  <ArrowRightIcon />
+                </IconButton>
+              </div>
+            </Box>
+
+            <Divider sx={{ mb: 1 }} />
+
+            <BtnContainer>
+              {viewChecked ? (
+                <Button
+                  fullWidth
+                  onClick={handleOpenImport}
+                  startIcon={<RedoIcon />}
+                  variant="contained"
+                >
+                  COPY TO QUESTION SET
+                </Button>
+              ) : (
+                <Button
+                  disabled={checkedQns.length === 0}
+                  onClick={showChecked}
+                  fullWidth
+                >
+                  VIEW SELECTED
+                </Button>
+              )}
             </BtnContainer>
-            <Button
-              fullWidth
-              onClick={handleOpenBuilder}
-              startIcon={<RedoIcon />}
-              variant="contained"
-            >
-              COPY TO MY QUESTIONS
-            </Button>{" "}
-            {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
-              Count Questions
-            </Button> */}
+
+            {viewChecked && (
+              <BtnContainer center>
+                <Button onClick={showAll} fullWidth>
+                  VIEW ALL
+                </Button>
+              </BtnContainer>
+            )}
+
+            {isEditor && (
+              <Button
+                fullWidth
+                onClick={handleOpenBuilder}
+                startIcon={<AddIcon />}
+              >
+                ADD QUESTION
+              </Button>
+            )}
+
+            {isEditor && (
+              <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
+                Count Questions
+              </Button>
+            )}
             <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
@@ -413,24 +454,31 @@ function QuestionSetsPanel({ libID, library }) {
                 <span style={{ marginLeft: "10px", marginRight: "10px" }}>
                   Tags:
                 </span>
-                {tags?.map((tag, ind) => (
+                {isEditor &&
+                  tags?.map((tag, ind) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      sx={{ mr: 1, mb: 1 }}
+                      onDelete={() => deleteTag(ind)}
+                    />
+                  ))}
+                {!isEditor &&
+                  tags?.map((tag) => (
+                    <Chip key={tag} label={tag} sx={{ mr: 1, mb: 1 }} />
+                  ))}
+                {isEditor && (
                   <Chip
-                    key={tag}
-                    label={tag}
+                    icon={<AddIcon />}
+                    onClick={handleOpenTag}
+                    label="add tag"
                     sx={{ mr: 1, mb: 1 }}
-                    onDelete={() => deleteTag(ind)}
+                    variant="outlined"
                   />
-                ))}
-                <Chip
-                  icon={<AddIcon />}
-                  onClick={handleOpenTag}
-                  label="add tag"
-                  sx={{ mr: 1, mb: 1 }}
-                  variant="outlined"
-                />
+                )}
               </Card>
             )}
-            {selQuestion && (
+            {isEditor && selQuestion && (
               <Box
                 className="flex flex-center"
                 width="600px"
@@ -459,6 +507,12 @@ function QuestionSetsPanel({ libID, library }) {
         open={openTag}
         selQuestion={selQuestion}
         setSelQuestion={setSelQuestion}
+      />
+      <QnImporter
+        handleClose={handleCloseImport}
+        open={openImport}
+        checkedQns={checkedQns}
+        user={user}
       />
     </>
   );

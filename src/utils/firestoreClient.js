@@ -19,7 +19,11 @@ import {
   startAfter,
   endBefore,
 } from "firebase/firestore";
-import { generateRandomCode, searchifyTags } from "./commonUtils.js";
+import {
+  generateRandomCode,
+  searchifyTags,
+  sortByTitle,
+} from "./commonUtils.js";
 
 export function addAssignment(course, values, handleClose, setSubmitting) {
   const ref = collection(db, "courses", course.id, "assignments");
@@ -179,7 +183,7 @@ export function addUserLink(user, values, setSubmitting, handleClose) {
 export function addUserQSet(user, values, setSubmitting, handleClose) {
   const ref = collection(db, "users", user.uid, "question-sets");
   setSubmitting(true);
-  addDoc(ref, { ...values, questions: [], dateCreated: serverTimestamp() })
+  addDoc(ref, { ...values, dateCreated: serverTimestamp() })
     .then(() => setTimeout(() => handleClose(), 500))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 300));
@@ -247,6 +251,27 @@ export function autoAddUserQn(
   return tidiedValues.id;
 }
 
+export function copyLibrayQnToUser(
+  questions,
+  refParams,
+  setSubmitting,
+  handleClose
+) {
+  console.log(questions);
+  console.log(refParams);
+  const { userID, qSetID } = refParams;
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
+
+  setSubmitting(true);
+  updateDoc(ref, {
+    questions: questions,
+  })
+    .then(() => {
+      setTimeout(() => handleClose(), 600);
+    })
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
+}
+
 export function deleteCourseAnncmt(course, anncmt) {
   const ref = doc(db, "courses", course.id, "announcements", anncmt.id);
   deleteDoc(ref);
@@ -301,6 +326,21 @@ export function deleteQuestionSubmissions(selQuestion, docRefParams) {
   });
 }
 
+export function deleteUserSubmissionHistory(docRefParams) {
+  const { courseID, asgmtID, userID } = docRefParams;
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  deleteDoc(ref);
+}
+
 export function deleteUserContent(user, colName, docID) {
   const ref = doc(db, "users", user.uid, colName, docID);
   deleteDoc(ref);
@@ -332,7 +372,7 @@ export function fetchAssignments(courseID, setAssignments, setLoading) {
       dateDue: doc.data().dateDue?.toDate(),
       dateOpen: doc.data().dateOpen?.toDate(),
     }));
-    setAssignments(fetchedItems);
+    setAssignments(sortByTitle(fetchedItems));
     setLoading(false);
   });
   return unsubscribe;
@@ -617,7 +657,7 @@ export function fetchResources(courseID, setResources, setLoading) {
       ...doc.data(),
       dateCreated: doc.data().dateCreated.toDate(),
     }));
-    setResources(fetchedItems);
+    setResources(sortByTitle(fetchedItems));
     setLoading(false);
   });
   return unsubscribe;
@@ -824,7 +864,7 @@ export function getUserImages(user, setImages, setSelItem) {
 
 export function getUserQSets(user, setQSets, setSelItem) {
   const ref = collection(db, "users", user.uid, "question-sets");
-  const q = query(ref);
+  const q = query(ref, orderBy("title", "asc"));
 
   function calcTotalPossiblePoints(qSet) {
     const questions = qSet.questions;
@@ -840,7 +880,7 @@ export function getUserQSets(user, setQSets, setSelItem) {
   getDocs(q).then((snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
-      title: doc.data().title,
+      ...doc.data(),
       totalPointsPossible: calcTotalPossiblePoints(doc.data()),
     }));
     setQSets(fetchedItems);
@@ -1080,7 +1120,7 @@ export function updateAssignment(
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
-export async function updateTags(tags, libraryID, questionID) {
+export function updateTags(tags, libraryID, questionID) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
   const tagsSearchable = searchifyTags(tags);
   updateDoc(docRef, { tags: tags, tags_searchable: tagsSearchable });

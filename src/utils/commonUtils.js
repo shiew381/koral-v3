@@ -99,10 +99,20 @@ export function truncateString(str, maxLength) {
 
 export function alphabetize(arr) {
   // alphabetizes an array of strings
-
   function compare(a, b) {
     if (a.toLowerCase() < b.toLowerCase()) return -1;
     if (a.toLowerCase() > b.toLowerCase()) return 1;
+    return 0;
+  }
+
+  const sortedArr = arr.sort(compare);
+  return sortedArr;
+}
+
+export function sortByTitle(arr) {
+  function compare(a, b) {
+    if (a.title.toLowerCase() < b.title.toLowerCase()) return -1;
+    if (a.title.toLowerCase() > b.title.toLowerCase()) return 1;
     return 0;
   }
 

@@ -13,10 +13,11 @@ export default function LibrariesPage() {
   return (
     <Page>
       <PageHeader title="Libraries" />
-
-      {libraries.map((library) => (
-        <LibraryCard key={library.id} library={library} />
-      ))}
+      <Box className="flex flex-wrap">
+        {libraries.map((library) => (
+          <LibraryCard key={library.id} library={library} />
+        ))}
+      </Box>
     </Page>
   );
 }
