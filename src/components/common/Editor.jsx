@@ -178,13 +178,41 @@ export function Editor({
     const endOffset = selRange.endOffset;
     const commonAncestorContainer = selRange.commonAncestorContainer;
     const isSingleTextNode = commonAncestorContainer.nodeType === 3;
+    const formatted = startContainer.parentElement.tagName === tagName;
+
+    if (selRange.collapsed && formatted) {
+      const nodeData = startContainer.data;
+      const preText = nodeData.substring(0, sel.anchorOffset);
+      const postText = nodeData.substring(sel.focusOffset, nodeData.length);
+
+      const textNode = document.createTextNode(" ");
+
+      startContainer.parentElement.replaceWith(textNode);
+
+      if (preText) {
+        const preElem = document.createElement(tagName);
+        preElem.append(preText);
+        textNode.before(preElem);
+      }
+
+      if (postText) {
+        const postElem = document.createElement(tagName);
+        const nextSibling = textNode.nextSibling;
+        postElem.append(postText);
+        textNode.parentElement.insertBefore(postElem, nextSibling);
+      }
+
+      selectNewRange(textNode);
+
+      textNode.parentElement.normalize();
+      return;
+    }
 
     if (selRange.collapsed) {
       return;
     }
 
     if (isSingleTextNode) {
-      const formatted = startContainer.parentElement.tagName === tagName;
       const touchesStart = startOffset === 0;
       const touchesEnd = selRange.endOffset === endContainer.length;
 
@@ -197,6 +225,18 @@ export function Editor({
         const newElem = document.createElement(tagName);
 
         if (!touchesStart && !touchesEnd) {
+          selRange.surroundContents(newElem);
+          selectNewRange(newElem.firstChild);
+          return;
+        }
+
+        if (touchesEnd && !nextSiblingSharesTag) {
+          selRange.surroundContents(newElem);
+          selectNewRange(newElem.firstChild);
+          return;
+        }
+
+        if (touchesStart && !prevSiblingSharesTag) {
           selRange.surroundContents(newElem);
           selectNewRange(newElem.firstChild);
           return;
@@ -441,8 +481,15 @@ export function Editor({
       }
       case "Space": {
         const preCaretText = anchorNode.data?.slice(0, anchorOffset);
-        const superscripts = preCaretText.match(/\^(\w|−)+/);
-        const subscripts = preCaretText.match(/_(\w|−)+/);
+        const superscripts = preCaretText.match(/\^(\w|-)+/);
+        const subscripts = preCaretText.match(/_(\w|-)+/);
+
+        const longUnderline = preCaretText.match(/_{2,10}/);
+
+        // return if long series of underscores (user probably intends fill-in-the-blank)
+        if (longUnderline?.length > 0) {
+          return;
+        }
 
         if (superscripts?.length > 0) {
           e.preventDefault();
@@ -453,7 +500,7 @@ export function Editor({
           const endNode = tempNode.splitText(textFragment.length + 1);
           endNode.previousSibling.remove();
           const newElem = document.createElement("sup");
-          newElem.innerText = textFragment;
+          newElem.innerText = textFragment.replace("-", "−");
           endNode.before(newElem);
 
           const range = new Range();
@@ -473,7 +520,7 @@ export function Editor({
           const endNode = tempNode.splitText(textFragment.length + 1);
           endNode.previousSibling.remove();
           const newElem = document.createElement("sub");
-          newElem.innerText = textFragment;
+          newElem.innerText = textFragment.replace("-", "−");
           endNode.before(newElem);
 
           const range = new Range();
