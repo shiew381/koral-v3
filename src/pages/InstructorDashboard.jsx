@@ -15,6 +15,7 @@ import {
   fetchCourse,
   fetchGrades,
   fetchResources,
+  fetchStudents,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import { formatGrade } from "../utils/gradeUtils";
@@ -136,6 +137,7 @@ export default function InstructorDashboard() {
           <Tab label="Assignments" />
           <Tab label="Resources" />
           <Tab label="Grades" />
+          <Tab label="Roster" />
         </Tabs>
       </div>
       <div className="tabs-horiz-container">
@@ -145,6 +147,7 @@ export default function InstructorDashboard() {
           <Tab label="Assignments" />
           <Tab label="Resources" />
           <Tab label="Grades" />
+          <Tab label="Roster" />
         </Tabs>
       </div>
 
@@ -171,6 +174,7 @@ export default function InstructorDashboard() {
         <Resources course={course} handleOpen={handleResourceOpen} />
       )}
       {tabIndex === 4 && <Grades course={course} />}
+      {tabIndex === 5 && <Roster course={course} />}
       <ResourceForm
         course={course}
         handleClose={handleResourceClose}
@@ -779,4 +783,59 @@ function Grades({ course }) {
       </Box>
     </Panel>
   );
+}
+
+function Roster({ course }) {
+  const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState([]);
+
+  useEffect(
+    () => fetchStudents(course.id, setStudents, setLoading),
+    //eslint-disable-next-line
+    []
+  );
+
+  if (loading) {
+    return (
+      <Panel center>
+        <LoadingIndicator />
+      </Panel>
+    );
+  }
+
+  if (students?.length === 0) {
+    return (
+      <Panel center>
+        <div style={{ position: "relative", bottom: "80px" }}>
+          <Typography sx={{ mb: 2 }}>No students registered yet</Typography>
+        </div>
+      </Panel>
+    );
+  }
+
+  if (students?.length > 0) {
+    return (
+      <Panel>
+        <Box className="course-list-actions-container">
+          <Typography sx={{ pl: 2 }}>
+            Number of students: {students.length}
+          </Typography>
+        </Box>
+
+        <List className="course-item-list">
+          {students.map((student) => (
+            <div key={student.id}>
+              <ListItem>
+                <ListItemText
+                  primary={student.firstName + " " + student.lastName}
+                  secondary={student.email}
+                />
+              </ListItem>
+              <Divider />
+            </div>
+          ))}
+        </List>
+      </Panel>
+    );
+  }
 }

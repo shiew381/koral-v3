@@ -660,6 +660,21 @@ export function fetchResources(courseID, setResources, setLoading) {
   return unsubscribe;
 }
 
+export function fetchStudents(courseID, setStudents, setLoading) {
+  const ref = collection(db, "courses", courseID, "students");
+  const q = query(ref, orderBy("firstName", "asc"));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      dateJoined: doc.data().dateJoined.toDate(),
+    }));
+    setStudents(fetchedItems);
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
 export function fetchUserDocuments(user, setDocuments, setLoading) {
   function compareNames(a, b) {
     if (a.name.toLowerCase() < b.name.toLowerCase()) return -1;
