@@ -10,6 +10,7 @@ export default function LibrariesPage() {
   useEffect(() => {
     fetchLibraries(setLibraries);
   }, []);
+
   return (
     <Page>
       <PageHeader title="Libraries" />

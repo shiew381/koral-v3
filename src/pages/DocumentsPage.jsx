@@ -110,7 +110,9 @@ export default function DocumentsPage() {
 
   useStorage(file, setFile, filePath, setUploadProgress, handleUploadSuccess);
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   if (loading)
     return (
