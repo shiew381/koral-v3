@@ -362,7 +362,13 @@ function Grades({ course, user }) {
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const cellStyle = { padding: "10px", textAlign: "center", maxWidth: "200px" };
+  const cellStyle = { padding: "10px", textAlign: "center", width: "300px" };
+
+  const cellStyle2 = {
+    padding: "10px",
+    textAlign: "center",
+    width: "150px",
+  };
 
   function compareTitles(a, b) {
     if (a.title.toLowerCase() < b.title.toLowerCase()) return -1;
@@ -371,11 +377,6 @@ function Grades({ course, user }) {
   }
 
   const sorted = assignments.sort(compareTitles);
-  const cellStyle2 = {
-    padding: "10px",
-    textAlign: "center",
-    maxWidth: "140px",
-  };
 
   useEffect(
     () => {
@@ -403,11 +404,11 @@ function Grades({ course, user }) {
   return (
     <Panel>
       <Box sx={{ pt: "50px" }}>
-        <table style={{ width: "300px", textAlign: "center" }}>
+        <table style={{ textAlign: "center" }}>
           <thead>
             <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
               <th style={cellStyle}>Assignment</th>
-              <th style={cellStyle}>Score</th>
+              <th style={cellStyle2}>Score</th>
             </tr>
           </thead>
           <tbody>
@@ -425,6 +426,8 @@ function Grades({ course, user }) {
             ))}
           </tbody>
         </table>
+        <br />
+        <br />
       </Box>
     </Panel>
   );
