@@ -1155,3 +1155,19 @@ export function updateUserQSet(
       () => setSubmitting && setTimeout(() => setSubmitting(false), 200)
     );
 }
+
+export function updateAdaptiveFullPoints(docRefParams, adaptiveParams) {
+  const { courseID, userID, asgmtID } = docRefParams;
+  if (!courseID) return;
+  if (!userID) return;
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  const totalPointsPossible = adaptiveParams?.totalPointsPossible;
+
+  updateDoc(ref, {
+    [asgmtID]: {
+      totalPointsAwarded: totalPointsPossible,
+      totalPointsPossible: totalPointsPossible,
+      type: "question set",
+    },
+  });
+}
