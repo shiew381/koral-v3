@@ -360,6 +360,10 @@ export function selectionInEditor() {
     if (anchorNode.parentElement.classList?.contains(className)) {
       return true;
     }
+
+    if (anchorNode.parentElement.parentElement.classList?.contains(className)) {
+      return true;
+    }
   }
   return false;
 }

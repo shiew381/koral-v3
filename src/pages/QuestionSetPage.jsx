@@ -21,7 +21,6 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-
 import { VertDivider } from "../components/common/Dividers";
 import { Page, PageHeader, LoadingIndicator } from "../components/common/Pages";
 import {
@@ -150,6 +149,10 @@ export default function QuestionSetPage() {
     //eslint-disable-next-line
     [qSet?.id]
   );
+
+  if (!user) {
+    return null;
+  }
 
   if (loading) {
     return (

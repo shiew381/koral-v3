@@ -292,9 +292,9 @@ export function deleteCourseResource(course, resource) {
   deleteDoc(ref);
 }
 
-export function deleteLibraryQuestion(question, libraryID) {
+export function deleteLibraryQuestion(question, libraryID, setTotalCount) {
   const ref = doc(db, "libraries", libraryID, "questions", question.id);
-  deleteDoc(ref);
+  deleteDoc(ref).then(() => setTotalCount((prev) => prev - 1));
 }
 
 export function deleteQuestion(question, qIndex, qSet, user, setSelQuestion) {
@@ -451,8 +451,7 @@ export function fetchLibraryQuestions(
   setLastDoc,
   setTotalCount,
   setPage,
-  setFetching,
-  resetTotalCount
+  setFetching
 ) {
   const ref = collection(db, "libraries", libraryID, "questions");
 
@@ -470,7 +469,6 @@ export function fetchLibraryQuestions(
         ...doc.data(),
       }));
 
-      console.log(snapshot.docs);
       setFetching(true);
       setPage(1);
       setTimeout(() => {
@@ -496,7 +494,6 @@ export function fetchLibraryQuestions(
       setTimeout(() => {
         setQuestions(fetchedItems);
         setLastDoc(snapshot.docs?.at(-1));
-        resetTotalCount();
         setFetching(false);
       }, 300);
     });
@@ -658,6 +655,21 @@ export function fetchResources(courseID, setResources, setLoading) {
       dateCreated: doc.data().dateCreated.toDate(),
     }));
     setResources(sortByTitle(fetchedItems));
+    setLoading(false);
+  });
+  return unsubscribe;
+}
+
+export function fetchStudents(courseID, setStudents, setLoading) {
+  const ref = collection(db, "courses", courseID, "students");
+  const q = query(ref, orderBy("firstName", "asc"));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      dateJoined: doc.data().dateJoined.toDate(),
+    }));
+    setStudents(fetchedItems);
     setLoading(false);
   });
   return unsubscribe;
@@ -1142,4 +1154,20 @@ export function updateUserQSet(
     .finally(
       () => setSubmitting && setTimeout(() => setSubmitting(false), 200)
     );
+}
+
+export function updateAdaptiveFullPoints(docRefParams, adaptiveParams) {
+  const { courseID, userID, asgmtID } = docRefParams;
+  if (!courseID) return;
+  if (!userID) return;
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  const totalPointsPossible = adaptiveParams?.totalPointsPossible;
+
+  updateDoc(ref, {
+    [asgmtID]: {
+      totalPointsAwarded: totalPointsPossible,
+      totalPointsPossible: totalPointsPossible,
+      type: "question set",
+    },
+  });
 }

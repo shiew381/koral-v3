@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
-  countLibraryQuestions,
+  // countLibraryQuestions,
   deleteLibraryQuestion,
   fetchLibrary,
   fetchLibraryQnsAfter,
@@ -154,7 +154,7 @@ function QuestionSetsPanel({ libID, library }) {
   };
 
   function deleteQuestion() {
-    deleteLibraryQuestion(selQuestion, libID);
+    deleteLibraryQuestion(selQuestion, libID, setTotalCount);
   }
 
   function deleteTag(ind) {
@@ -197,6 +197,7 @@ function QuestionSetsPanel({ libID, library }) {
 
     if (e.code === "Backspace" && e.target.value === "") {
       handleSearch();
+      resetTotalCount();
     }
   }
 
@@ -244,8 +245,7 @@ function QuestionSetsPanel({ libID, library }) {
       setLastDoc,
       setTotalCount,
       setPage,
-      setFetching,
-      resetTotalCount
+      setFetching
     );
   }
 
@@ -261,6 +261,10 @@ function QuestionSetsPanel({ libID, library }) {
       copy.splice(index, 1);
       setCheckedQns(copy);
     }
+  }
+
+  function incrementQnCount() {
+    setTotalCount((prev) => prev + 1);
   }
 
   function refreshQuestion() {
@@ -414,11 +418,10 @@ function QuestionSetsPanel({ libID, library }) {
               </Button>
             )}
 
-            {isEditor && (
-              <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
-                Count Questions
-              </Button>
-            )}
+            {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
+              Count Questions
+            </Button> */}
+
             <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
@@ -499,6 +502,7 @@ function QuestionSetsPanel({ libID, library }) {
         selQuestion={selQuestion}
         setEdit={setEdit}
         setSelQuestion={setSelQuestion}
+        incrementQnCount={incrementQnCount}
       />
       <TagsForm
         handleClose={handleCloseTag}

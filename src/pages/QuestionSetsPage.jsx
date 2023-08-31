@@ -218,6 +218,10 @@ function QSetCard({
     [qSet]
   );
 
+  if (!user) {
+    return null;
+  }
+
   if (!qSet) return null;
 
   return (

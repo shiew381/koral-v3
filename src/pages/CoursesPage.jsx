@@ -58,6 +58,10 @@ export default function CoursesPage() {
     fetchStudentCourses(user, setStudentCourses, setLoading);
   }, [user]);
 
+  if (!user) {
+    return null;
+  }
+
   if (loading || !userInfo) {
     return (
       <Page>

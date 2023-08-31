@@ -28,6 +28,7 @@ export function QnBuilder({
   collection,
   edit,
   handleClose,
+  incrementQnCount,
   libID,
   open,
   qSet,
@@ -51,10 +52,14 @@ export function QnBuilder({
   }
 
   function autoSaveQuestion(values) {
-    if (collection === "library") {
-      add
-        ? autoAddLibraryQn(values, libID, libQID, setEdit, setSelQuestion)
-        : autoSaveLibraryQn(values, libID, libQID, setSelQuestion);
+    if (collection === "library" && add) {
+      autoAddLibraryQn(values, libID, libQID, setEdit, setSelQuestion);
+      incrementQnCount();
+      return;
+    }
+
+    if (collection === "library" && edit) {
+      autoSaveLibraryQn(values, libID, libQID, setSelQuestion);
       return;
     }
 
@@ -67,10 +72,13 @@ export function QnBuilder({
   }
 
   function saveQuestion(values) {
-    if (collection === "library") {
-      add
-        ? addLibraryQn(values, libID, handleClose, setSubmitting)
-        : saveLibraryQn(values, libID, handleClose, setSubmitting);
+    if (collection === "library" && add) {
+      addLibraryQn(values, libID, handleClose, setSubmitting);
+      incrementQnCount();
+    }
+
+    if (collection === "library" && edit) {
+      saveLibraryQn(values, libID, handleClose, setSubmitting);
       return;
     }
 
