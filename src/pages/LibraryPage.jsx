@@ -17,7 +17,6 @@ import {
   Card,
   Checkbox,
   Chip,
-  CircularProgress,
   Divider,
   IconButton,
   List,
@@ -134,7 +133,13 @@ function QuestionSetsPanel({ libID, library }) {
   const [page, setPage] = useState(1);
   const [edit, setEdit] = useState(false);
   const [viewChecked, setViewChecked] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const { user } = useAuth();
+
+  const suggestions = library.searchSuggestions || [];
+  const suggestionsFiltered = suggestions?.filter((el) =>
+    el.includes(searchTerm)
+  );
 
   const isEditor = library.editorIDs?.includes(user.uid);
 
@@ -236,10 +241,12 @@ function QuestionSetsPanel({ libID, library }) {
     setOpenTag(true);
   }
 
-  function handleSearch() {
+  function handleSearch(term) {
+    const activeTerm = term || searchTerm;
+
     fetchLibraryQuestions(
       libID,
-      searchTerm,
+      activeTerm,
       countPerPage,
       setQuestions,
       setLastDoc,
@@ -247,6 +254,18 @@ function QuestionSetsPanel({ libID, library }) {
       setPage,
       setFetching
     );
+  }
+
+  function handleSearchFocus() {
+    setSearchFocused(true);
+  }
+
+  function handleSearchBlur(e) {
+    const classList = e.relatedTarget?.classList;
+    if (classList?.contains("search-suggestion")) {
+      return;
+    }
+    setSearchFocused(false);
   }
 
   function handleCheck(e) {
@@ -304,18 +323,22 @@ function QuestionSetsPanel({ libID, library }) {
     <>
       <Panel>
         <Box className="flex flex-row" sx={{ pt: "40px" }}>
-          <Box>
-            <Box className="flex flex-center flex-space-between">
+          <Box className="relative">
+            <Box className="flex flex-center">
               <SearchField
+                fullWidth
+                library
+                fetching={fetching}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
                 onClick={handleSearch}
                 onChange={handleChange}
                 onKeyUp={handleKeyUp}
                 placeholder="search by topic"
                 value={searchTerm}
               />
-
-              {fetching && <CircularProgress size={25} sx={{ mr: "15px" }} />}
             </Box>
+            <br />
             <Box className="relative">
               <List sx={listStyle}>
                 {questions.map((question) => (
@@ -376,9 +399,7 @@ function QuestionSetsPanel({ libID, library }) {
                 </IconButton>
               </div>
             </Box>
-
             <Divider sx={{ mb: 1 }} />
-
             <BtnContainer>
               {viewChecked ? (
                 <Button
@@ -399,7 +420,6 @@ function QuestionSetsPanel({ libID, library }) {
                 </Button>
               )}
             </BtnContainer>
-
             {viewChecked && (
               <BtnContainer center>
                 <Button onClick={showAll} fullWidth>
@@ -407,7 +427,6 @@ function QuestionSetsPanel({ libID, library }) {
                 </Button>
               </BtnContainer>
             )}
-
             {isEditor && (
               <Button
                 fullWidth
@@ -417,11 +436,34 @@ function QuestionSetsPanel({ libID, library }) {
                 ADD QUESTION
               </Button>
             )}
-
             {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
               Count Questions
             </Button> */}
 
+            {searchFocused && (
+              <Box sx={{ position: "absolute", top: "57px", width: "300px" }}>
+                {suggestionsFiltered.map((term) => (
+                  <List key={term} disablePadding>
+                    <ListItemButton
+                      className="search-suggestion"
+                      onClick={() => {
+                        setSearchTerm(term);
+                        setSearchFocused(false);
+                        handleSearch(term);
+                      }}
+                      sx={{
+                        bgcolor: "rgba(239, 248, 251,0.9)",
+                        "&:hover": {
+                          backgroundColor: "rgba(201, 231, 240, 0.9)",
+                        },
+                      }}
+                    >
+                      <ListItemText primary={term} />
+                    </ListItemButton>
+                  </List>
+                ))}
+              </Box>
+            )}
             <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
@@ -524,8 +566,7 @@ function QuestionSetsPanel({ libID, library }) {
 
 function formatPrompt(str) {
   const newStr = str
-    .replaceAll(/<\/{0,1}div>/g, "")
-    .replaceAll(/<\/{0,1}strong>/g, "")
+    // .replaceAll(/<\/{0,1}div>/g, "")
     .replaceAll(/<br\/{0,1}>/g, "");
   return newStr;
 }

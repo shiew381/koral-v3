@@ -1,4 +1,4 @@
-import { IconButton, TextField } from "@mui/material";
+import { CircularProgress, IconButton, TextField } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
@@ -295,6 +295,11 @@ export function PointsField({ onChange, value }) {
 }
 
 export function SearchField({
+  fullWidth,
+  fetching,
+  library,
+  onBlur,
+  onFocus,
   onClick,
   onKeyUp,
   onChange,
@@ -303,17 +308,26 @@ export function SearchField({
 }) {
   return (
     <TextField
+      fullWidth={fullWidth}
       placeholder={placeholder}
+      onBlur={onBlur}
+      onFocus={onFocus}
       onChange={onChange}
       onKeyUp={onKeyUp}
       value={value}
-      InputProps={{
-        endAdornment: (
-          <IconButton onClick={onClick} edge="end">
-            <SearchIcon />
-          </IconButton>
-        ),
-      }}
+      InputProps={
+        library && fetching
+          ? {
+              endAdornment: <CircularProgress />,
+            }
+          : {
+              endAdornment: (
+                <IconButton onClick={onClick} edge="end">
+                  <SearchIcon />
+                </IconButton>
+              ),
+            }
+      }
       variant="outlined"
     />
   );
