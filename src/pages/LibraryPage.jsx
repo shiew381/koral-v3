@@ -43,6 +43,7 @@ import { Panel } from "../components/common/DashboardCpnts";
 import { SearchField } from "../components/common/InputFields";
 import { BtnContainer } from "../components/common/Buttons";
 import "../css/Library.css";
+import { SearchSuggestionForm } from "../components/forms/SearchSuggestionForm";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -119,8 +120,9 @@ export default function LibraryPage() {
 
 function QuestionSetsPanel({ libID, library }) {
   const [openBuilder, setOpenBuilder] = useState(false);
-  const [openTag, setOpenTag] = useState(false);
   const [openImport, setOpenImport] = useState(false);
+  const [openSearchSuggestion, setOpenSearchSuggestion] = useState(false);
+  const [openTag, setOpenTag] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
   const [checkedQns, setCheckedQns] = useState([]);
@@ -150,12 +152,20 @@ function QuestionSetsPanel({ libID, library }) {
   const tags = selQuestion?.tags || null;
 
   const type = selQuestion?.type;
+
   const listStyle = {
     padding: 0,
     paddingBottom: 4,
     width: "300px",
     height: "500px",
     overflow: "auto",
+  };
+
+  const suggestionStyle = {
+    bgcolor: "rgba(239, 248, 251,0.9)",
+    "&:hover": {
+      backgroundColor: "rgba(201, 231, 240, 0.9)",
+    },
   };
 
   function deleteQuestion() {
@@ -171,6 +181,10 @@ function QuestionSetsPanel({ libID, library }) {
   function handleCloseBuilder() {
     setOpenBuilder(false);
     setEdit(false);
+  }
+
+  function handleCloseSearchSuggestion() {
+    setOpenSearchSuggestion(false);
   }
 
   function handleCloseTag() {
@@ -235,6 +249,11 @@ function QuestionSetsPanel({ libID, library }) {
   function handleOpenEdit() {
     setOpenBuilder(true);
     setEdit(true);
+  }
+
+  function handleOpenSearchSuggestion() {
+    setOpenSearchSuggestion(true);
+    setSearchFocused(false);
   }
 
   function handleOpenTag() {
@@ -441,27 +460,44 @@ function QuestionSetsPanel({ libID, library }) {
             </Button> */}
 
             {searchFocused && (
-              <Box sx={{ position: "absolute", top: "57px", width: "300px" }}>
-                {suggestionsFiltered.map((term) => (
-                  <List key={term} disablePadding>
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "57px",
+                  width: "300px",
+                  overflow: "auto",
+                  maxHeight: "70vh",
+                }}
+              >
+                <List disablePadding>
+                  {isEditor && (
                     <ListItemButton
                       className="search-suggestion"
+                      onClick={() => {
+                        console.log("pizza");
+                        handleOpenSearchSuggestion();
+                      }}
+                      sx={suggestionStyle}
+                    >
+                      <ListItemText primary="+ search suggestion" />
+                    </ListItemButton>
+                  )}
+                  {isEditor && <Divider sx={{ border: "1px solid silver" }} />}
+                  {suggestionsFiltered.map((term) => (
+                    <ListItemButton
+                      className="search-suggestion"
+                      key={term}
                       onClick={() => {
                         setSearchTerm(term);
                         setSearchFocused(false);
                         handleSearch(term);
                       }}
-                      sx={{
-                        bgcolor: "rgba(239, 248, 251,0.9)",
-                        "&:hover": {
-                          backgroundColor: "rgba(201, 231, 240, 0.9)",
-                        },
-                      }}
+                      sx={suggestionStyle}
                     >
                       <ListItemText primary={term} />
                     </ListItemButton>
-                  </List>
-                ))}
+                  ))}
+                </List>
               </Box>
             )}
             <div style={{ height: "50px" }}></div>
@@ -545,6 +581,13 @@ function QuestionSetsPanel({ libID, library }) {
         setEdit={setEdit}
         setSelQuestion={setSelQuestion}
         incrementQnCount={incrementQnCount}
+      />
+      <SearchSuggestionForm
+        handleClose={handleCloseSearchSuggestion}
+        libID={libID}
+        open={openSearchSuggestion}
+        searchTerm={searchTerm}
+        suggestions={suggestions}
       />
       <TagsForm
         handleClose={handleCloseTag}

@@ -43,7 +43,23 @@ export function addAnnouncement(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export async function addTags(
+export function updateSearchSuggestions(
+  suggestions,
+  libID,
+  setSubmitting,
+  handleClose
+) {
+  setSubmitting(true);
+  console.log(suggestions);
+  console.log(libID);
+  const docRef = doc(db, "libraries", libID);
+  updateDoc(docRef, { searchSuggestions: suggestions })
+    .then(() => setTimeout(() => handleClose(), 500))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
+}
+
+export function addTags(
   tags,
   libraryID,
   questionID,
