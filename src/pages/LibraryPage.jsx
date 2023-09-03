@@ -17,7 +17,6 @@ import {
   Card,
   Checkbox,
   Chip,
-  CircularProgress,
   Divider,
   IconButton,
   List,
@@ -44,6 +43,7 @@ import { Panel } from "../components/common/DashboardCpnts";
 import { SearchField } from "../components/common/InputFields";
 import { BtnContainer } from "../components/common/Buttons";
 import "../css/Library.css";
+import { SearchSuggestionForm } from "../components/forms/SearchSuggestionForm";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -120,8 +120,9 @@ export default function LibraryPage() {
 
 function QuestionSetsPanel({ libID, library }) {
   const [openBuilder, setOpenBuilder] = useState(false);
-  const [openTag, setOpenTag] = useState(false);
   const [openImport, setOpenImport] = useState(false);
+  const [openSearchSuggestion, setOpenSearchSuggestion] = useState(false);
+  const [openTag, setOpenTag] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [questions, setQuestions] = useState([]);
   const [checkedQns, setCheckedQns] = useState([]);
@@ -134,7 +135,13 @@ function QuestionSetsPanel({ libID, library }) {
   const [page, setPage] = useState(1);
   const [edit, setEdit] = useState(false);
   const [viewChecked, setViewChecked] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const { user } = useAuth();
+
+  const suggestions = library.searchSuggestions || [];
+  const suggestionsFiltered = suggestions?.filter((el) =>
+    el.includes(searchTerm)
+  );
 
   const isEditor = library.editorIDs?.includes(user.uid);
 
@@ -145,12 +152,20 @@ function QuestionSetsPanel({ libID, library }) {
   const tags = selQuestion?.tags || null;
 
   const type = selQuestion?.type;
+
   const listStyle = {
     padding: 0,
     paddingBottom: 4,
     width: "300px",
     height: "500px",
     overflow: "auto",
+  };
+
+  const suggestionStyle = {
+    bgcolor: "rgba(239, 248, 251,0.9)",
+    "&:hover": {
+      backgroundColor: "rgba(201, 231, 240, 0.9)",
+    },
   };
 
   function deleteQuestion() {
@@ -166,6 +181,10 @@ function QuestionSetsPanel({ libID, library }) {
   function handleCloseBuilder() {
     setOpenBuilder(false);
     setEdit(false);
+  }
+
+  function handleCloseSearchSuggestion() {
+    setOpenSearchSuggestion(false);
   }
 
   function handleCloseTag() {
@@ -232,14 +251,21 @@ function QuestionSetsPanel({ libID, library }) {
     setEdit(true);
   }
 
+  function handleOpenSearchSuggestion() {
+    setOpenSearchSuggestion(true);
+    setSearchFocused(false);
+  }
+
   function handleOpenTag() {
     setOpenTag(true);
   }
 
-  function handleSearch() {
+  function handleSearch(term) {
+    const activeTerm = term || searchTerm;
+
     fetchLibraryQuestions(
       libID,
-      searchTerm,
+      activeTerm,
       countPerPage,
       setQuestions,
       setLastDoc,
@@ -247,6 +273,18 @@ function QuestionSetsPanel({ libID, library }) {
       setPage,
       setFetching
     );
+  }
+
+  function handleSearchFocus() {
+    setSearchFocused(true);
+  }
+
+  function handleSearchBlur(e) {
+    const classList = e.relatedTarget?.classList;
+    if (classList?.contains("search-suggestion")) {
+      return;
+    }
+    setSearchFocused(false);
   }
 
   function handleCheck(e) {
@@ -304,18 +342,22 @@ function QuestionSetsPanel({ libID, library }) {
     <>
       <Panel>
         <Box className="flex flex-row" sx={{ pt: "40px" }}>
-          <Box>
-            <Box className="flex flex-center flex-space-between">
+          <Box className="relative">
+            <Box className="flex flex-center">
               <SearchField
+                fullWidth
+                library
+                fetching={fetching}
+                onFocus={handleSearchFocus}
+                onBlur={handleSearchBlur}
                 onClick={handleSearch}
                 onChange={handleChange}
                 onKeyUp={handleKeyUp}
                 placeholder="search by topic"
                 value={searchTerm}
               />
-
-              {fetching && <CircularProgress size={25} sx={{ mr: "15px" }} />}
             </Box>
+            <br />
             <Box className="relative">
               <List sx={listStyle}>
                 {questions.map((question) => (
@@ -376,9 +418,7 @@ function QuestionSetsPanel({ libID, library }) {
                 </IconButton>
               </div>
             </Box>
-
             <Divider sx={{ mb: 1 }} />
-
             <BtnContainer>
               {viewChecked ? (
                 <Button
@@ -399,7 +439,6 @@ function QuestionSetsPanel({ libID, library }) {
                 </Button>
               )}
             </BtnContainer>
-
             {viewChecked && (
               <BtnContainer center>
                 <Button onClick={showAll} fullWidth>
@@ -407,7 +446,6 @@ function QuestionSetsPanel({ libID, library }) {
                 </Button>
               </BtnContainer>
             )}
-
             {isEditor && (
               <Button
                 fullWidth
@@ -417,11 +455,51 @@ function QuestionSetsPanel({ libID, library }) {
                 ADD QUESTION
               </Button>
             )}
-
             {/* <Button fullWidth onClick={() => countLibraryQuestions(libID)}>
               Count Questions
             </Button> */}
 
+            {searchFocused && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "57px",
+                  width: "300px",
+                  overflow: "auto",
+                  maxHeight: "70vh",
+                }}
+              >
+                <List disablePadding>
+                  {isEditor && (
+                    <ListItemButton
+                      className="search-suggestion"
+                      onClick={() => {
+                        console.log("pizza");
+                        handleOpenSearchSuggestion();
+                      }}
+                      sx={suggestionStyle}
+                    >
+                      <ListItemText primary="+ search suggestion" />
+                    </ListItemButton>
+                  )}
+                  {isEditor && <Divider sx={{ border: "1px solid silver" }} />}
+                  {suggestionsFiltered.map((term) => (
+                    <ListItemButton
+                      className="search-suggestion"
+                      key={term}
+                      onClick={() => {
+                        setSearchTerm(term);
+                        setSearchFocused(false);
+                        handleSearch(term);
+                      }}
+                      sx={suggestionStyle}
+                    >
+                      <ListItemText primary={term} />
+                    </ListItemButton>
+                  ))}
+                </List>
+              </Box>
+            )}
             <div style={{ height: "50px" }}></div>
           </Box>
           <Box>
@@ -504,6 +582,13 @@ function QuestionSetsPanel({ libID, library }) {
         setSelQuestion={setSelQuestion}
         incrementQnCount={incrementQnCount}
       />
+      <SearchSuggestionForm
+        handleClose={handleCloseSearchSuggestion}
+        libID={libID}
+        open={openSearchSuggestion}
+        searchTerm={searchTerm}
+        suggestions={suggestions}
+      />
       <TagsForm
         handleClose={handleCloseTag}
         libraryID={libID}
@@ -524,8 +609,7 @@ function QuestionSetsPanel({ libID, library }) {
 
 function formatPrompt(str) {
   const newStr = str
-    .replaceAll(/<\/{0,1}div>/g, "")
-    .replaceAll(/<\/{0,1}strong>/g, "")
+    // .replaceAll(/<\/{0,1}div>/g, "")
     .replaceAll(/<br\/{0,1}>/g, "");
   return newStr;
 }
