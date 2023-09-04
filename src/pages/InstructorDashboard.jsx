@@ -647,6 +647,7 @@ function Grades({ course }) {
     maxWidth: "200px",
     minWidth: "140px",
   };
+
   const cellStyle2 = {
     padding: "10px",
     textAlign: "center",
@@ -740,45 +741,70 @@ function Grades({ course }) {
 
   return (
     <Panel>
-      <Box sx={{ pt: "50px" }}>
+      <Box sx={{ pt: "20px" }}>
         <BtnContainer right>
           <Button onClick={downloadGradebook} startIcon={<DownloadIcon />}>
             Download CSV
           </Button>
         </BtnContainer>
-        <table>
-          <thead>
-            <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
-              <th style={cellStyle}>Student</th>
-              {assignments?.map((asgmt) => (
-                <th key={asgmt.id} style={cellStyle2}>
-                  {asgmt.title}
+        <div className="gradebook-container">
+          <table>
+            <thead>
+              <tr>
+                <th
+                  className="sticky sticky-top sticky-left"
+                  style={{
+                    zIndex: 2,
+                    backgroundColor: "#c1dee5",
+                    ...cellStyle,
+                  }}
+                >
+                  Student
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {grades.map((userGrades, ind) => (
-              <tr
-                key={userGrades.id}
-                style={{
-                  backgroundColor:
-                    ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
-                }}
-              >
-                <td style={cellStyle}>
-                  {userGrades.firstName + " " + userGrades.lastName}
-                </td>
                 {assignments?.map((asgmt) => (
-                  <td key={asgmt.id} style={cellStyle2}>
-                    {formatGrade(asgmt, userGrades)}
-                  </td>
+                  <th
+                    className="sticky sticky-top"
+                    key={asgmt.id}
+                    style={{
+                      backgroundColor: "#d6e8ed",
+                      ...cellStyle2,
+                    }}
+                  >
+                    {asgmt.title}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <br />
+            </thead>
+            <tbody>
+              {grades.map((userGrades, ind) => (
+                <tr
+                  key={userGrades.id}
+                  style={{
+                    zIndex: 1,
+                    backgroundColor:
+                      ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
+                  }}
+                >
+                  <td
+                    className="sticky sticky-left"
+                    style={{
+                      backgroundColor: ind % 2 === 0 ? "#e1ecef" : "white",
+                      ...cellStyle,
+                      zIndex: 1,
+                    }}
+                  >
+                    {userGrades.firstName + " " + userGrades.lastName}
+                  </td>
+                  {assignments?.map((asgmt) => (
+                    <td key={asgmt.id} style={cellStyle2}>
+                      {formatGrade(asgmt, userGrades)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <br />
       </Box>
     </Panel>

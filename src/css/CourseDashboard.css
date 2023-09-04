@@ -55,8 +55,8 @@
 
 .tabs-horiz-container {
   display: none;
-  margin-top: 30px;
-  margin-bottom: 30px;
+  margin-top: 20px;
+  margin-bottom: 10px;
 }
 
 @media only screen and (max-width: 1100px) {
