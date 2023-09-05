@@ -804,6 +804,27 @@ export function getAssignment(courseID, asgmtID, setAsgmt) {
   getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
 }
 
+export function getQSetSubmissionHistory(
+  courseID,
+  asgmtID,
+  userID,
+  setSubmissionHistory
+) {
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  getDoc(ref).then((doc) => {
+    setSubmissionHistory({ id: doc.id, ...doc.data() });
+  });
+}
+
 export function getResource(courseID, resourceID, setResource) {
   const ref = doc(db, "courses", courseID, "resources", resourceID);
   getDoc(ref).then((doc) => setResource({ id: doc.id, ...doc.data() }));

@@ -33,6 +33,7 @@ import {
   Tabs,
   Tab,
   Typography,
+  Link,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -54,6 +55,7 @@ import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
 import { AnnouncementForm } from "../components/forms/AnnouncementForm";
+import { AsgmtAnalytics } from "../components/student-analytics/asgmtAnalytics";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -173,7 +175,7 @@ export default function InstructorDashboard() {
       {tabIndex == 3 && (
         <Resources course={course} handleOpen={handleResourceOpen} />
       )}
-      {tabIndex === 4 && <Grades course={course} />}
+      {tabIndex === 4 && <Grades course={course} user={user} />}
       {tabIndex === 5 && <Roster course={course} />}
       <ResourceForm
         course={course}
@@ -637,10 +639,13 @@ function Resources({ course, handleOpen }) {
   }
 }
 
-function Grades({ course }) {
+function Grades({ course, user }) {
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [asgmtInfo, setAsgmtInfo] = useState(null);
+  const [asgmtInfoOpen, setAsgmtInfoOpen] = useState(false);
+
   const cellStyle = {
     padding: "10px",
     textAlign: "left",
@@ -652,6 +657,7 @@ function Grades({ course }) {
     padding: "10px",
     textAlign: "center",
     maxWidth: "140px",
+    minWidth: "100px",
   };
 
   function downloadGradebook() {
@@ -705,6 +711,14 @@ function Grades({ course }) {
     );
     link.click();
     link.remove();
+  }
+
+  function openAsgmtInfo() {
+    setAsgmtInfoOpen(true);
+  }
+
+  function closeAsgmtInfo() {
+    setAsgmtInfoOpen(false);
   }
 
   useEffect(
@@ -797,7 +811,31 @@ function Grades({ course }) {
                   </td>
                   {assignments?.map((asgmt) => (
                     <td key={asgmt.id} style={cellStyle2}>
-                      {formatGrade(asgmt, userGrades)}
+                      {userGrades[asgmt.id] ? (
+                        <Link
+                          href="#"
+                          underline="none"
+                          onClick={() => {
+                            openAsgmtInfo();
+                            setAsgmtInfo({
+                              ...asgmt,
+                              userID: userGrades.id,
+                              userDisplayName:
+                                userGrades.firstName +
+                                " " +
+                                userGrades.lastName,
+                              totalPointsAwarded:
+                                userGrades[asgmt.id].totalPointsAwarded,
+                            });
+                          }}
+                        >
+                          {formatGrade(asgmt, userGrades)}
+                        </Link>
+                      ) : (
+                        <span style={{ color: "gray" }}>
+                          {formatGrade(asgmt, userGrades)}
+                        </span>
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -807,6 +845,13 @@ function Grades({ course }) {
         </div>
         <br />
       </Box>
+      <AsgmtAnalytics
+        asgmt={asgmtInfo}
+        course={course}
+        open={asgmtInfoOpen}
+        handleClose={closeAsgmtInfo}
+        user={user}
+      />
     </Panel>
   );
 }
