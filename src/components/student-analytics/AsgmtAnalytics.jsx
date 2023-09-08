@@ -9,22 +9,45 @@ import {
   Typography,
 } from "@mui/material";
 import { formatTimeAndDate } from "../../utils/dateUtils";
-import { calculateProgress } from "../../utils/questionSetUtils";
+import {
+  calculateProgress,
+  getSubmissions,
+} from "../../utils/questionSetUtils";
 import DoneIcon from "@mui/icons-material/Done";
+import MultipleChoice from "../question-sets/QnMultipleChoice";
+import { QuestionNav } from "../question-sets/QSetSharedCpnts";
 
 export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
   const [submissionHistory, setSubmissionHistory] = useState(null);
   const [qSet, setQSet] = useState(null);
+  const [selQuestion, setSelQuestion] = useState(null);
   const [loading, setLoading] = useState(false);
   const asgmtID = asgmt?.id;
   const courseID = course?.id;
   const userID = asgmt?.userID;
   const userDisplayName = asgmt?.userDisplayName;
 
+  const questions = qSet?.questions || [];
+  const qIndex = questions.findIndex((el) =>
+    selQuestion ? el.id === selQuestion.id : 0
+  );
+
+  const backDisabled = qIndex <= 0;
+  const nextDisabled = qIndex + 1 >= questions.length;
+
+  function goForward() {
+    setSelQuestion(() => questions[qIndex + 1]);
+  }
+
+  function goBack() {
+    setSelQuestion(() => questions[qIndex - 1]);
+  }
+
   useEffect(() => {
     if (!open) {
       return;
     }
+
     getQSetSubmissionHistory(courseID, asgmtID, userID, setSubmissionHistory);
   }, [open]);
 
@@ -45,6 +68,12 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
     [open]
   );
 
+  useEffect(() => {
+    if (qSet?.questions?.length > 0) {
+      setSelQuestion(qSet.questions[0]);
+    }
+  }, [qSet?.id]);
+
   if (!asgmt || loading) {
     return null;
   }
@@ -60,11 +89,7 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
           Adaptive Question Set -
         </Typography>
       )}
-      {!asgmt.hasDateOpen && !asgmt.hasDateDue && (
-        <Typography color="text.secondary" display="inline">
-          always available
-        </Typography>
-      )}
+
       {asgmt.hasDateOpen && `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
       {asgmt.hasDateOpen && <br />}
       {asgmt.hasDateDue && `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
@@ -72,10 +97,17 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
       <Typography color="primary" variant="h6">
         {asgmt.title}
       </Typography>
-
-      <Typography color="primary">analytics for {userDisplayName}</Typography>
+      {!asgmt.hasDateOpen && !asgmt.hasDateDue && (
+        <Typography color="text.secondary" display="inline">
+          always available
+        </Typography>
+      )}
 
       <Divider />
+      <br />
+      <Typography color="primary">
+        Results for <strong>{userDisplayName}</strong>
+      </Typography>
       <br />
       <br />
 
@@ -83,11 +115,79 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
         <ProgressMeters qSet={qSet} submissionHistory={submissionHistory} />
       )}
 
+      <QuestionNav
+        backDisabled={backDisabled}
+        nextDisabled={nextDisabled}
+        goBack={goBack}
+        goForward={goForward}
+        qIndex={qIndex}
+        questions={questions}
+      />
+
+      {qSet?.mode !== "adaptive" && (
+        <QuestionCard
+          qSet={qSet}
+          question={selQuestion}
+          submissionHistory={submissionHistory}
+        />
+      )}
+
       {/* <pre>{JSON.stringify(qSet.adaptiveParams, null, 2)}</pre> */}
 
       {/* <pre>{JSON.stringify(asgmt, null, 2)}</pre> */}
       {/* <pre>{JSON.stringify(submissionHistory, null, 2)}</pre> */}
     </Lightbox>
+  );
+}
+
+function QuestionCard({ question, submissionHistory }) {
+  // const docRefParams = {
+  //   qSetID: qSet.id,
+  //   userID: user.uid,
+  // };
+
+  if (!question) {
+    return (
+      <div className="question-card-placeholder">
+        <Typography color="text.secondary">
+          please select a question from the list
+        </Typography>
+      </div>
+    );
+  }
+
+  if (question) {
+    const { type } = question;
+    const submissions = getSubmissions(submissionHistory, question);
+
+    return (
+      <Card className="question-card" sx={{ bgcolor: "rgba(255,255,255,0.2)" }}>
+        <Box className="question-card-actions">
+          <Points question={question} submissions={submissions} />
+        </Box>
+        {type === "multiple choice" && (
+          <MultipleChoice
+            question={question}
+            mode="gradebook"
+            submissions={submissions}
+          />
+        )}
+      </Card>
+    );
+  }
+}
+
+function Points({ question, submissions }) {
+  if (!question) return;
+  const lastSubmission = submissions?.at(-1) || null;
+  const pointsPossible = question.pointsPossible;
+  const pointsAwarded = lastSubmission?.pointsAwarded || 0;
+  const label = pointsPossible === 1 ? "point" : "points";
+
+  return (
+    <Typography>
+      {pointsAwarded} / {pointsPossible + " " + label}
+    </Typography>
   );
 }
 
@@ -119,10 +219,7 @@ function ProgressMeters({ currentObjective, qSet, submissionHistory }) {
 function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
   const name = objective.name;
   const active = currentObjective?.name === name;
-  // const questionIDs = objective.questionIDs;
-
   const progress = calculateProgress(rule, objective, submissionHistory);
-
   const threshold = objective.completionThreshold;
   const progressLabel = progress.count + "/" + threshold;
 
@@ -137,7 +234,6 @@ function ProgressRow({ currentObjective, objective, rule, submissionHistory }) {
   const correctSubmissions = submissions.filter(
     (submission) => submission.at(-1).answeredCorrectly
   );
-  // const flattened = submissions.flat();
 
   return (
     <>

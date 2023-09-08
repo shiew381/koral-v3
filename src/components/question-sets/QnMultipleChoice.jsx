@@ -125,7 +125,7 @@ export default function MultipleChoice({
     [question.id]
   );
 
-  if (mode === "preview") {
+  if (mode === "preview" || mode == "gradebook") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
@@ -139,14 +139,22 @@ export default function MultipleChoice({
               {numCorrect <= 1 && (
                 <Radio
                   className="multiple-choice-radio"
-                  checked={el.isCorrect}
+                  checked={
+                    mode === "gradebook"
+                      ? lastResponse.includes(ind)
+                      : el.isCorrect
+                  }
                   disabled
                 />
               )}
               {numCorrect > 1 && (
                 <Checkbox
                   className="multiple-choice-checkbox"
-                  checked={el.isCorrect}
+                  checked={
+                    mode === "gradebook"
+                      ? lastResponse.includes(ind)
+                      : el.isCorrect
+                  }
                   disabled
                 />
               )}
