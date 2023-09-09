@@ -35,7 +35,6 @@ import {
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
-import { BtnContainer } from "../components/common/Buttons";
 import { BackToStudentDashboard } from "../components/common/CourseCpnts";
 import "../css/QuestionSet.css";
 
@@ -455,7 +454,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
             className="adaptive-qset-complete-container"
             sx={{ backgroundImage: `url(${import.meta.env.VITE_CONFETTI})` }}
           >
-            <Box sx={{ bgcolor: "rgba(255,255,255,0.5)", p: 3 }}>
+            <Box sx={{ bgcolor: "rgba(255,255,255,0.9)", p: 3 }}>
               <Typography
                 color="primary"
                 sx={{ bgcolor: "white", p: 3 }}
@@ -589,7 +588,7 @@ function AdaptiveQuestionCard({
   selQuestion,
   submissionHistory,
 }) {
-  const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
+  const cardColor = { bgColor: "rgba(255, 255, 255, 0.9)" };
   const type = selQuestion?.type;
   const submissions = getSubmissions(submissionHistory, selQuestion);
   const lastSubmission = submissions?.at(-1) || null;
@@ -598,7 +597,7 @@ function AdaptiveQuestionCard({
 
   return (
     <Card className="adaptive-card" sx={cardColor}>
-      <BtnContainer right>
+      <div className="skip-container">
         {lastSubmission?.answeredCorrectly ? (
           <Box
             className="flex flex-center"
@@ -611,7 +610,7 @@ function AdaptiveQuestionCard({
             <Button onClick={handlePickQuestion}>SKIP</Button>
           </Tooltip>
         )}
-      </BtnContainer>
+      </div>
 
       {type === "multiple choice" && (
         <MultipleChoice
@@ -662,7 +661,7 @@ function QuestionCard({
   if (question) {
     const { type } = question;
     const submissions = getSubmissions(submissionHistory, question);
-    const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
+    const cardColor = { bgColor: "rgba(255, 255, 255, 0.9)" };
     const totalPointsAwarded = getTotalPointsAwarded(submissionHistory, qSet);
 
     return (

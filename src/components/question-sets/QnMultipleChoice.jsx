@@ -125,7 +125,7 @@ export default function MultipleChoice({
     [question.id]
   );
 
-  if (mode === "preview" || mode == "gradebook") {
+  if (mode === "preview") {
     return (
       <CardContent className="question-content">
         <PromptPreview question={question} />
@@ -166,6 +166,45 @@ export default function MultipleChoice({
     );
   }
 
+  if (mode == "gradebook") {
+    return (
+      <CardContent className="question-content">
+        <PromptPreview question={question} />
+        <Divider sx={{ my: 2 }} />
+        <CorrectIndicator
+          attemptsExhausted={attemptsExhausted}
+          lastSubmission={lastSubmission}
+          mode={mode}
+          submitting={submitting}
+        />
+        {numCorrect === 0 && (
+          <Alert severity="warning">no correct answer selected</Alert>
+        )}
+        <div className="answer-choice-area">
+          {answerChoices.map((el, ind) => (
+            <Box className="answer-choice-preview" key={`choice-${ind}`}>
+              {numCorrect <= 1 && (
+                <Radio
+                  className="multiple-choice-radio"
+                  checked={lastResponse.includes(ind)}
+                  disabled
+                />
+              )}
+              {numCorrect > 1 && (
+                <Checkbox
+                  className="multiple-choice-checkbox"
+                  checked={lastResponse.includes(ind)}
+                  disabled
+                />
+              )}
+              <Box className="answer-choice-text">{parse(el.text)}</Box>
+            </Box>
+          ))}
+        </div>
+      </CardContent>
+    );
+  }
+
   if (mode === "test" || mode === "course") {
     return (
       <CardContent className="question-content">
@@ -174,6 +213,7 @@ export default function MultipleChoice({
         <CorrectIndicator
           attemptsExhausted={attemptsExhausted}
           lastSubmission={lastSubmission}
+          mode={mode}
           submitting={submitting}
         />
         {numCorrect === 0 && (

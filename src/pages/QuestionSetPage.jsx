@@ -174,7 +174,7 @@ export default function QuestionSetPage() {
         />
       )}
       {questions.length > 0 && (
-        <Box sx={{ px: 2 }}>
+        <Box sx={{ px: 1 }}>
           <Divider />
           <QSetContainer>
             <Box className="question-list-container">
@@ -198,29 +198,29 @@ export default function QuestionSetPage() {
                 </Button>
               </Box>
             </Box>
-            <QuestionNav
-              backDisabled={backDisabled}
-              goBack={goBack}
-              goForward={goForward}
-              nextDisabled={nextDisabled}
-              qIndex={qIndex}
-              questions={questions}
-            />
-
             <QuestionCardPanel>
-              {questions.length > 0 && (
-                <ToggleButtonGroup
-                  color="primary"
-                  exclusive
-                  onChange={handleMode}
-                  size="small"
-                  sx={{ position: "absolute", top: -35, right: 15 }}
-                  value={mode}
-                >
-                  <ToggleButton value="preview">Preview</ToggleButton>
-                  <ToggleButton value="test">Test</ToggleButton>
-                </ToggleButtonGroup>
-              )}
+              <div className="question-card-nav-mode-container">
+                <QuestionNav
+                  backDisabled={backDisabled}
+                  goBack={goBack}
+                  goForward={goForward}
+                  nextDisabled={nextDisabled}
+                  qIndex={qIndex}
+                  questions={questions}
+                />
+                {questions.length > 0 && (
+                  <ToggleButtonGroup
+                    color="primary"
+                    exclusive
+                    onChange={handleMode}
+                    size="small"
+                    value={mode}
+                  >
+                    <ToggleButton value="preview">Preview</ToggleButton>
+                    <ToggleButton value="test">Test</ToggleButton>
+                  </ToggleButtonGroup>
+                )}
+              </div>
               <QuestionCard
                 goForward={goForward}
                 handleEditQuestion={handleEditQuestion}
