@@ -69,17 +69,9 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
     setSelQuestion(() => adaptiveQuestions[adaptiveQIndex - 1]);
   }
 
-  useEffect(() => {
-    if (open) {
-      getQSetSubmissionHistory(courseID, asgmtID, userID, setSubmissionHistory);
-    } else {
-      return;
-    }
-  }, [open]);
-
   useEffect(
     () => {
-      if (!asgmt) {
+      if (!asgmt || !open) {
         return;
       }
 
@@ -88,32 +80,39 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
       const userID = docRefArr[1];
       const qSetID = docRefArr[3];
 
-      console.log("fetching qSet");
       getQSet(userID, qSetID, setQSet, setLoading);
     },
     //eslint-disable-next-line
-    [open]
+    [open, asgmtID, userID]
   );
+
+  useEffect(() => {
+    if (!asgmt || !open) {
+      return;
+    }
+
+    getQSetSubmissionHistory(courseID, asgmtID, userID, setSubmissionHistory);
+  }, [open, asgmtID, userID]);
 
   useEffect(
     () => {
-      if (questions?.length > 0 && qSet?.mode !== "adaptive") {
+      if (qSet?.mode !== "adaptive") {
         setSelQuestion(questions[0]);
-
         return;
       }
 
       if (qSet?.mode === "adaptive") {
         setCurrentObjective(qSet?.adaptiveParams?.objectives[0] || null);
+        return;
       }
     },
     //eslint-disable-next-line
-    [open, qSet?.id, qSet.questions?.length]
+    [open, asgmtID, userID, qSet?.questions?.length, qSet?.mode]
   );
 
   useEffect(
     () => {
-      if (adaptiveQuestions?.length > 0 && qSet?.mode === "adaptive") {
+      if (qSet?.mode === "adaptive" && adaptiveQuestions?.length > 0) {
         setSelQuestion(adaptiveQuestions[0]);
         return;
       }
@@ -122,7 +121,7 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
     [currentObjective?.name]
   );
 
-  if (!asgmt || loading || !qSet) {
+  if (!open || !asgmt || loading || !qSet) {
     return null;
   }
 
@@ -170,6 +169,7 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
         results for <strong>{userDisplayName}</strong>
       </Typography>
       <br />
+
       {qSet?.mode === "adaptive" && (
         <ProgressMeters
           currentObjective={currentObjective}
@@ -315,9 +315,11 @@ function ProgressTable({
   const progressLabel = progress.count + "/" + threshold;
 
   const objectiveIDs = objective?.questionIDs || [];
-  const touchedIDs = Object.keys(submissionHistory).filter(
-    (key) => key !== "id" && key !== "totalPointsAwarded"
-  );
+  const touchedIDs = submissionHistory
+    ? Object.keys(submissionHistory).filter(
+        (key) => key !== "id" && key !== "totalPointsAwarded"
+      )
+    : [];
 
   const commonIDs = touchedIDs.filter((id) => objectiveIDs.includes(id));
   const submissions = commonIDs.map((id) => submissionHistory[id]);
