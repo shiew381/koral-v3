@@ -139,14 +139,61 @@ export default function MultipleChoice({
               {numCorrect <= 1 && (
                 <Radio
                   className="multiple-choice-radio"
-                  checked={el.isCorrect}
+                  checked={
+                    mode === "gradebook"
+                      ? lastResponse.includes(ind)
+                      : el.isCorrect
+                  }
                   disabled
                 />
               )}
               {numCorrect > 1 && (
                 <Checkbox
                   className="multiple-choice-checkbox"
-                  checked={el.isCorrect}
+                  checked={
+                    mode === "gradebook"
+                      ? lastResponse.includes(ind)
+                      : el.isCorrect
+                  }
+                  disabled
+                />
+              )}
+              <Box className="answer-choice-text">{parse(el.text)}</Box>
+            </Box>
+          ))}
+        </div>
+      </CardContent>
+    );
+  }
+
+  if (mode == "gradebook") {
+    return (
+      <CardContent className="question-content">
+        <PromptPreview question={question} />
+        <Divider sx={{ my: 2 }} />
+        <CorrectIndicator
+          attemptsExhausted={attemptsExhausted}
+          lastSubmission={lastSubmission}
+          mode={mode}
+          submitting={submitting}
+        />
+        {numCorrect === 0 && (
+          <Alert severity="warning">no correct answer selected</Alert>
+        )}
+        <div className="answer-choice-area">
+          {answerChoices.map((el, ind) => (
+            <Box className="answer-choice-preview" key={`choice-${ind}`}>
+              {numCorrect <= 1 && (
+                <Radio
+                  className="multiple-choice-radio"
+                  checked={lastResponse.includes(ind)}
+                  disabled
+                />
+              )}
+              {numCorrect > 1 && (
+                <Checkbox
+                  className="multiple-choice-checkbox"
+                  checked={lastResponse.includes(ind)}
                   disabled
                 />
               )}
@@ -166,6 +213,7 @@ export default function MultipleChoice({
         <CorrectIndicator
           attemptsExhausted={attemptsExhausted}
           lastSubmission={lastSubmission}
+          mode={mode}
           submitting={submitting}
         />
         {numCorrect === 0 && (

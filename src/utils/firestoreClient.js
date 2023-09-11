@@ -804,6 +804,27 @@ export function getAssignment(courseID, asgmtID, setAsgmt) {
   getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
 }
 
+export function getQSetSubmissionHistory(
+  courseID,
+  asgmtID,
+  userID,
+  setSubmissionHistory
+) {
+  const ref = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  getDoc(ref).then((doc) => {
+    setSubmissionHistory({ id: doc.id, ...doc.data() });
+  });
+}
+
 export function getResource(courseID, resourceID, setResource) {
   const ref = doc(db, "courses", courseID, "resources", resourceID);
   getDoc(ref).then((doc) => setResource({ id: doc.id, ...doc.data() }));
@@ -914,6 +935,26 @@ export function getUserQSets(user, setQSets, setSelItem) {
     setQSets(fetchedItems);
     setSelItem(fetchedItems[0]);
   });
+}
+
+export function deleteQSetSubmissionHistory(courseID, asgmtID, userID) {
+  const ref1 = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  const ref2 = doc(db, "courses", courseID, "grades", userID);
+
+  deleteDoc(ref1).catch((err) => console.log(err));
+
+  updateDoc(ref2, {
+    [asgmtID]: deleteField(),
+  }).catch((err) => console.log(err));
 }
 
 export function saveAdaptivePointsAwarded(docRefParams, points) {

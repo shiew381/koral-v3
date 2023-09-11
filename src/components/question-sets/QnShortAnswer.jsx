@@ -76,7 +76,6 @@ export default function ShortAnswer({
           totalPointsAwarded={totalPointsAwarded}
         />
       )}
-
       {subtype === "number" && (
         <ShortAnswerNumber
           adaptive={adaptive}
@@ -178,7 +177,11 @@ function ShortAnswerText({
 
   useEffect(
     () => {
-      if (mode !== "preview" && submissions?.length > 0) {
+      if (
+        mode !== "preview" &&
+        mode !== "gradebook" &&
+        submissions?.length > 0
+      ) {
         setCurrentResponse(lastResponse);
       } else {
         setCurrentResponse(null);
@@ -197,6 +200,18 @@ function ShortAnswerText({
         <div className="correct-answer-field-area">
           <div className="correct-answer-field-container">
             {parse(question.correctAnswer?.text || "")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode == "gradebook") {
+    return (
+      <div className="correct-answer-preview-area">
+        <div className="correct-answer-field-area">
+          <div className="correct-answer-field-container">
+            {parse(lastResponse?.text || "")}
           </div>
         </div>
       </div>
@@ -331,7 +346,11 @@ function ShortAnswerNumber({
 
   useEffect(
     () => {
-      if (mode !== "preview" && submissions?.length > 0) {
+      if (
+        mode !== "preview" &&
+        mode !== "gradebook" &&
+        submissions?.length > 0
+      ) {
         numberRef.current.innerHTML = lastResponse.number;
       }
     },
@@ -348,6 +367,21 @@ function ShortAnswerNumber({
         <div className="correct-answer-field-area">
           <div className="correct-answer-field-container">
             {parse(question.correctAnswer?.number || "")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "gradebook") {
+    return (
+      <div className="correct-answer-preview-area">
+        <Typography color="text.secondary" sx={{ px: "20%" }}>
+          submitted response:
+        </Typography>
+        <div className="correct-answer-field-area">
+          <div className="correct-answer-field-container">
+            {parse(lastResponse?.number || "")}
           </div>
         </div>
       </div>
@@ -503,7 +537,11 @@ function ShortAnswerMeasurement({
 
   useEffect(
     () => {
-      if (mode !== "preview" && submissions?.length > 0) {
+      if (
+        mode !== "preview" &&
+        mode !== "gradebook" &&
+        submissions?.length > 0
+      ) {
         numberRef.current.innerHTML = lastResponse.number;
         unitRef.current.innerHTML = lastResponse.unit;
       }
@@ -524,6 +562,24 @@ function ShortAnswerMeasurement({
           </div>
           <div className="correct-answer-field-container">
             {parse(question.correctAnswer?.unit || "")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "gradebook") {
+    return (
+      <div className="correct-answer-preview-area">
+        <Typography color="text.secondary" sx={{ px: "20%" }}>
+          submitted response:
+        </Typography>
+        <div className="correct-answer-field-area">
+          <div className="correct-answer-field-container">
+            {parse(lastResponse?.number || "")}
+          </div>
+          <div className="correct-answer-field-container">
+            {parse(lastResponse?.unit || "")}
           </div>
         </div>
       </div>

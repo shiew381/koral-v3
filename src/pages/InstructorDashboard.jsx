@@ -33,6 +33,7 @@ import {
   Tabs,
   Tab,
   Typography,
+  Link,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -54,6 +55,7 @@ import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
 import { AnnouncementForm } from "../components/forms/AnnouncementForm";
+import { AsgmtAnalytics } from "../components/student-analytics/AsgmtAnalytics";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -173,7 +175,7 @@ export default function InstructorDashboard() {
       {tabIndex == 3 && (
         <Resources course={course} handleOpen={handleResourceOpen} />
       )}
-      {tabIndex === 4 && <Grades course={course} />}
+      {tabIndex === 4 && <Grades course={course} user={user} />}
       {tabIndex === 5 && <Roster course={course} />}
       <ResourceForm
         course={course}
@@ -637,20 +639,25 @@ function Resources({ course, handleOpen }) {
   }
 }
 
-function Grades({ course }) {
+function Grades({ course, user }) {
   const [loading, setLoading] = useState(true);
   const [grades, setGrades] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [asgmtInfo, setAsgmtInfo] = useState(null);
+  const [asgmtInfoOpen, setAsgmtInfoOpen] = useState(false);
+
   const cellStyle = {
     padding: "10px",
     textAlign: "left",
     maxWidth: "200px",
     minWidth: "140px",
   };
+
   const cellStyle2 = {
     padding: "10px",
     textAlign: "center",
     maxWidth: "140px",
+    minWidth: "100px",
   };
 
   function downloadGradebook() {
@@ -706,6 +713,14 @@ function Grades({ course }) {
     link.remove();
   }
 
+  function openAsgmtInfo() {
+    setAsgmtInfoOpen(true);
+  }
+
+  function closeAsgmtInfo() {
+    setAsgmtInfoOpen(false);
+  }
+
   useEffect(
     () => {
       fetchGrades(course.id, setGrades);
@@ -740,47 +755,104 @@ function Grades({ course }) {
 
   return (
     <Panel>
-      <Box sx={{ pt: "50px" }}>
+      <Box sx={{ pt: "20px" }}>
         <BtnContainer right>
           <Button onClick={downloadGradebook} startIcon={<DownloadIcon />}>
             Download CSV
           </Button>
         </BtnContainer>
-        <table>
-          <thead>
-            <tr style={{ backgroundColor: "rgba(95,161,181,0.3)" }}>
-              <th style={cellStyle}>Student</th>
-              {assignments?.map((asgmt) => (
-                <th key={asgmt.id} style={cellStyle2}>
-                  {asgmt.title}
+        <div className="gradebook-container">
+          <table>
+            <thead>
+              <tr>
+                <th
+                  className="sticky sticky-top sticky-left"
+                  style={{
+                    zIndex: 2,
+                    backgroundColor: "#c1dee5",
+                    ...cellStyle,
+                  }}
+                >
+                  Student
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {grades.map((userGrades, ind) => (
-              <tr
-                key={userGrades.id}
-                style={{
-                  backgroundColor:
-                    ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
-                }}
-              >
-                <td style={cellStyle}>
-                  {userGrades.firstName + " " + userGrades.lastName}
-                </td>
                 {assignments?.map((asgmt) => (
-                  <td key={asgmt.id} style={cellStyle2}>
-                    {formatGrade(asgmt, userGrades)}
-                  </td>
+                  <th
+                    className="sticky sticky-top"
+                    key={asgmt.id}
+                    style={{
+                      backgroundColor: "#d6e8ed",
+                      ...cellStyle2,
+                    }}
+                  >
+                    {asgmt.title}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <br />
+            </thead>
+            <tbody>
+              {grades.map((userGrades, ind) => (
+                <tr
+                  key={userGrades.id}
+                  style={{
+                    zIndex: 1,
+                    backgroundColor:
+                      ind % 2 === 0 ? "rgba(95,161,181,0.1)" : "white",
+                  }}
+                >
+                  <td
+                    className="sticky sticky-left"
+                    style={{
+                      backgroundColor: ind % 2 === 0 ? "#e1ecef" : "white",
+                      ...cellStyle,
+                      zIndex: 1,
+                    }}
+                  >
+                    {userGrades.firstName + " " + userGrades.lastName}
+                  </td>
+                  {assignments?.map((asgmt) => (
+                    <td key={asgmt.id} style={cellStyle2}>
+                      {userGrades[asgmt.id] ? (
+                        <Link
+                          href="#"
+                          underline="none"
+                          onClick={() => {
+                            openAsgmtInfo();
+                            setAsgmtInfo({
+                              ...asgmt,
+                              userID: userGrades.id,
+                              userLastName: userGrades.lastName,
+                              userDisplayName:
+                                userGrades.firstName +
+                                " " +
+                                userGrades.lastName,
+                              totalPointsAwarded:
+                                userGrades[asgmt.id].totalPointsAwarded,
+                            });
+                          }}
+                        >
+                          {formatGrade(asgmt, userGrades)}
+                        </Link>
+                      ) : (
+                        <span style={{ color: "gray" }}>
+                          {formatGrade(asgmt, userGrades)}
+                        </span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <br />
       </Box>
+      <AsgmtAnalytics
+        asgmt={asgmtInfo}
+        course={course}
+        open={asgmtInfoOpen}
+        handleClose={closeAsgmtInfo}
+        user={user}
+      />
     </Panel>
   );
 }

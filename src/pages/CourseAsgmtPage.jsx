@@ -9,8 +9,12 @@ import {
   saveAdaptivePointsAwarded,
   updateAdaptiveFullPoints,
 } from "../utils/firestoreClient";
-import { getSubmissions } from "../utils/questionSetUtils";
-import { pickRandomInt } from "../utils/commonUtils";
+import {
+  calculateProgress,
+  getSubmissions,
+  pickQuestion,
+} from "../utils/questionSetUtils";
+// import { pickRandomInt } from "../utils/commonUtils";
 import { formatTimeAndDate } from "../utils/dateUtils";
 import {
   Box,
@@ -31,7 +35,6 @@ import {
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
 import FreeResponse from "../components/question-sets/QnFreeResponse";
-import { BtnContainer } from "../components/common/Buttons";
 import { BackToStudentDashboard } from "../components/common/CourseCpnts";
 import "../css/QuestionSet.css";
 
@@ -451,7 +454,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
             className="adaptive-qset-complete-container"
             sx={{ backgroundImage: `url(${import.meta.env.VITE_CONFETTI})` }}
           >
-            <Box sx={{ bgcolor: "rgba(255,255,255,0.5)", p: 3 }}>
+            <Box sx={{ bgcolor: "rgba(255,255,255,0.9)", p: 3 }}>
               <Typography
                 color="primary"
                 sx={{ bgcolor: "white", p: 3 }}
@@ -585,7 +588,7 @@ function AdaptiveQuestionCard({
   selQuestion,
   submissionHistory,
 }) {
-  const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
+  const cardColor = { bgColor: "rgba(255, 255, 255, 0.9)" };
   const type = selQuestion?.type;
   const submissions = getSubmissions(submissionHistory, selQuestion);
   const lastSubmission = submissions?.at(-1) || null;
@@ -594,20 +597,15 @@ function AdaptiveQuestionCard({
 
   return (
     <Card className="adaptive-card" sx={cardColor}>
-      <BtnContainer right>
+      <div className="skip-container">
         {lastSubmission?.answeredCorrectly ? (
-          <Box
-            className="flex flex-center"
-            sx={{ width: "40px", height: "40px" }}
-          >
-            <Button disabled>SKIP</Button>
-          </Box>
+          <Button disabled>SKIP</Button>
         ) : (
           <Tooltip title="pick another question">
             <Button onClick={handlePickQuestion}>SKIP</Button>
           </Tooltip>
         )}
-      </BtnContainer>
+      </div>
 
       {type === "multiple choice" && (
         <MultipleChoice
@@ -658,7 +656,7 @@ function QuestionCard({
   if (question) {
     const { type } = question;
     const submissions = getSubmissions(submissionHistory, question);
-    const cardColor = { bgColor: "rgba(255, 255, 255, 0.2)" };
+    const cardColor = { bgColor: "rgba(255, 255, 255, 0.9)" };
     const totalPointsAwarded = getTotalPointsAwarded(submissionHistory, qSet);
 
     return (
@@ -699,108 +697,4 @@ function QuestionCard({
       </Card>
     );
   }
-}
-
-function pickQuestion(objective, questions, submissionHistory) {
-  const objectiveIDs = objective?.questionIDs || [];
-
-  const touchedIDs = submissionHistory
-    ? objectiveIDs.filter((id) => Object.hasOwn(submissionHistory, id))
-    : [];
-
-  const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
-
-  const qIndex = pickRandomInt(0, untouchedIDs.length);
-
-  const pickedID = untouchedIDs[qIndex];
-  const foundQuestion = questions.find((question) => question.id === pickedID);
-
-  if (untouchedIDs.length == 0) {
-    return "exhausted";
-  }
-
-  return foundQuestion;
-}
-
-function calculateProgress(rule, objective, submissionHistory) {
-  const zeroScore = { percentage: 0, count: 0 };
-  if (!submissionHistory || !objective) {
-    return zeroScore;
-  }
-
-  const objectiveIDs = objective.questionIDs;
-  const touchedIDs = objectiveIDs.filter((id) =>
-    Object.hasOwn(submissionHistory, id)
-  );
-
-  const lastSubmissions = touchedIDs.map((id) => submissionHistory[id]?.at(-1));
-
-  const correctSubmissions = lastSubmissions.filter(
-    (lastSubmission) => lastSubmission.answeredCorrectly
-  );
-
-  const numCorrect = correctSubmissions.length;
-
-  if (rule === "total correct") {
-    const count = numCorrect;
-    const percentage = 100 * (count / objective.completionThreshold);
-    return { percentage, count };
-  }
-
-  if (rule === "chutes and ladders") {
-    const count = chutesStreak(lastSubmissions);
-
-    const percentage = 100 * (count / objective.completionThreshold);
-    return { percentage, count };
-  }
-
-  if (rule === "consecutive correct") {
-    const count = correctStreak(lastSubmissions);
-    const percentage = 100 * (count / objective.completionThreshold);
-    return { percentage, count };
-  }
-
-  return zeroScore;
-}
-
-function chutesStreak(lastSubmissions) {
-  const sorted = lastSubmissions.sort(compareDates);
-
-  let count = 0;
-
-  for (let i = 0; i < sorted.length; i++) {
-    const lastSubmission = sorted[i];
-    if (lastSubmission.answeredCorrectly) {
-      count = count + 1;
-    } else {
-      count = count > 0 ? count - 1 : 0;
-    }
-  }
-
-  return count;
-}
-
-function correctStreak(lastSubmissions) {
-  const sorted = lastSubmissions.sort(compareDates);
-
-  let count = 0;
-
-  for (let i = 0; i < sorted.length; i++) {
-    const lastSubmission = sorted[i];
-    if (lastSubmission.answeredCorrectly) {
-      count = count + 1;
-    } else {
-      count = 0;
-    }
-  }
-
-  return count;
-}
-
-function compareDates(a, b) {
-  const dateA = a.dateSubmitted;
-  const dateB = b.dateSubmitted;
-  if (dateA.seconds < dateB.seconds) return -1;
-  if (dateA.seconds > dateB.seconds) return 1;
-  return 0;
 }

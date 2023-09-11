@@ -59,27 +59,45 @@
 }
 
 .adaptive-progress-card {
-  margin: 15px;
-  max-width: 630px;
-  min-width: 600px;
-  padding: 10px;
+  display: flex;
+  align-items: left;
+  flex-direction: column;
+  margin: 10px;
+  max-width: 650px;
+  min-width: 400px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+  padding-bottom: 25px;
+  width: 92%;
 }
 
 .adaptive-card {
-  margin: 15px;
-  max-width: 630px;
-  min-width: 600px;
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 10px;
+  max-width: 650px;
+  min-width: 400px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  width: 92%;
 }
 
 .question-card {
   display: flex;
   flex-direction: column;
-  margin: 15px;
-  max-width: 630px;
-  min-width: 600px;
+  margin: 10px;
+  max-width: 650px;
+  min-width: 400px;
   min-height: 500px;
-  padding: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  width: 92%;
 }
 
 .question-card-placeholder {
@@ -101,7 +119,8 @@
 }
 
 .question-list-container {
-  margin: 15px;
+  margin-left: 35px;
+  margin-right: 35px;
 }
 
 .question-card-actions {
@@ -119,6 +138,13 @@
 
 .question-nav {
   display: none;
+}
+
+.question-nav-gradebook {
+  display: block;
+  padding-top: 10px;
+  position: relative;
+  left: 10px;
 }
 
 .question-set-container {
@@ -184,6 +210,23 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  width: 800px;
+  align-items: center;
+}
+
+.skip-container {
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  left: 10px;
+}
+
+.question-card-nav-mode-container {
+  display: flex;
+  justify-content: space-between;
+  /* padding-right: 10px; */
+  width: 100%;
+  max-width: 690px;
 }
 
 .title-preview-spacer {
@@ -191,18 +234,30 @@
 }
 
 @media only screen and (max-width: 900px) {
+  .question-card-nav-mode-container {
+    width: 98%;
+  }
+
   .question-list-container {
     display: none;
   }
 
   .question-nav {
     display: flex;
-    flex-direction: column;
-    margin-bottom: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: start;
+    position: relative;
+    left: 5px;
+    top: 5px;
   }
 
   .question-set-container {
     flex-direction: column;
     align-items: center;
+  }
+
+  .right-panel {
+    width: 100%;
   }
 }

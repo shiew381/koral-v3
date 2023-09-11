@@ -55,6 +55,18 @@
   position: relative;
 }
 
+.sticky {
+  position: sticky;
+}
+
+.sticky-top {
+  top: 0;
+}
+
+.sticky-left {
+  left: 0;
+}
+
 .text-center {
   text-align: center;
 }
@@ -91,6 +103,12 @@
   flex-direction: column;
   justify-content: center;
   width: 80vw;
+}
+
+.gradebook-container {
+  max-width: 80vw;
+  max-height: calc(90vh - 80px);
+  overflow: auto;
 }
 
 .lightbox {
@@ -133,7 +151,6 @@
   padding-left: 1rem;
   padding-right: 1rem;
   margin-top: 0.5rem;
-  /* margin-bottom: 1rem; */
 }
 
 .page-container {
@@ -203,4 +220,12 @@
   position: absolute;
   text-align: center;
   width: 100%;
+}
+
+@media only screen and (max-width: 1100px) {
+  .gradebook-container {
+    max-width: 96vw;
+    max-height: calc(78vh - 80px);
+    overflow: auto;
+  }
 }

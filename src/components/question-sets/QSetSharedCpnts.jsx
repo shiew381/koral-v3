@@ -58,19 +58,35 @@ export function CorrectIndicator({
 }) {
   const answeredCorrectly = lastSubmission?.answeredCorrectly;
 
+  if (submitting) {
+    return <div style={{ height: "37px" }}></div>;
+  }
+
   if (mode === "preview") {
     return null;
   }
 
-  if (submitting || !lastSubmission) {
-    return <div style={{ height: "37px" }}></div>;
-  }
-
-  if (answeredCorrectly) {
+  if (mode === "course" && answeredCorrectly) {
     return <Alert severity="success">Nicely Done</Alert>;
   }
 
-  if (!attemptsExhausted && !answeredCorrectly) {
+  if (mode === "test" && answeredCorrectly) {
+    return <Alert severity="success">Nicely Done</Alert>;
+  }
+
+  if (mode === "gradebook" && answeredCorrectly) {
+    return <Alert severity="success">answered correctly</Alert>;
+  }
+
+  if (mode === "gradebook" && !lastSubmission) {
+    return <Alert severity="info">No submission for this question</Alert>;
+  }
+
+  if (mode === "gradebook" && !answeredCorrectly) {
+    return <Alert severity="warning">answered incorrectly</Alert>;
+  }
+
+  if (lastSubmission && !attemptsExhausted && !answeredCorrectly) {
     return (
       <Alert icon={false} severity="error">
         Try again...
@@ -240,6 +256,7 @@ function QuestionListItem({
 }
 
 export function QuestionNav({
+  gradebook,
   backDisabled,
   goBack,
   goForward,
@@ -252,12 +269,12 @@ export function QuestionNav({
   }
 
   return (
-    <div className="question-nav">
-      <div>
+    <div>
+      <div className={gradebook ? "question-nav-gradebook" : "question-nav"}>
         <IconButton disabled={backDisabled} onClick={goBack}>
           <ArrowLeftIcon />
         </IconButton>
-        <Typography display="inline" sx={{ position: "relative", top: 2 }}>
+        <Typography display="inline">
           Question {qIndex + 1} of {questions.length}
         </Typography>
         <IconButton disabled={nextDisabled} onClick={goForward}>
