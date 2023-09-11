@@ -60,7 +60,7 @@
 
 .adaptive-progress-card {
   display: flex;
-  align-items: center;
+  align-items: left;
   flex-direction: column;
   margin: 10px;
   max-width: 650px;
@@ -215,8 +215,10 @@
 }
 
 .skip-container {
-  position: absolute;
-  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  left: 10px;
 }
 
 .question-card-nav-mode-container {

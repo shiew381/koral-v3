@@ -599,12 +599,7 @@ function AdaptiveQuestionCard({
     <Card className="adaptive-card" sx={cardColor}>
       <div className="skip-container">
         {lastSubmission?.answeredCorrectly ? (
-          <Box
-            className="flex flex-center"
-            sx={{ width: "40px", height: "40px" }}
-          >
-            <Button disabled>SKIP</Button>
-          </Box>
+          <Button disabled>SKIP</Button>
         ) : (
           <Tooltip title="pick another question">
             <Button onClick={handlePickQuestion}>SKIP</Button>

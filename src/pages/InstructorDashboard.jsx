@@ -55,7 +55,7 @@ import { MenuOption, MoreOptionsMenu } from "../components/common/Menus";
 import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
 import { AnnouncementForm } from "../components/forms/AnnouncementForm";
-import { AsgmtAnalytics } from "../components/student-analytics/asgmtAnalytics";
+import { AsgmtAnalytics } from "../components/student-analytics/AsgmtAnalytics";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -820,6 +820,7 @@ function Grades({ course, user }) {
                             setAsgmtInfo({
                               ...asgmt,
                               userID: userGrades.id,
+                              userLastName: userGrades.lastName,
                               userDisplayName:
                                 userGrades.firstName +
                                 " " +

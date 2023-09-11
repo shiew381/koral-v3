@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
-import { getQSet, getQSetSubmissionHistory } from "../../utils/firestoreClient";
+import {
+  deleteQSetSubmissionHistory,
+  getQSet,
+  getQSetSubmissionHistory,
+} from "../../utils/firestoreClient";
 import { Lightbox } from "../common/Lightbox";
 import {
   Box,
@@ -7,6 +11,7 @@ import {
   Card,
   CircularProgress,
   Divider,
+  TextField,
   Typography,
 } from "@mui/material";
 import { formatTimeAndDate } from "../../utils/dateUtils";
@@ -24,12 +29,15 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
   const [selQuestion, setSelQuestion] = useState(null);
   const [currentObjective, setCurrentObjective] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [confirmPhrase, setConfirmPhrase] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const currentObjectiveIDs = currentObjective?.questionIDs || [];
   const asgmtID = asgmt?.id;
   const courseID = course?.id;
   const userID = asgmt?.userID;
   const userDisplayName = asgmt?.userDisplayName;
+  const userLastName = asgmt?.userLastName || "reset";
 
   const questions = qSet?.questions || [];
   const adaptiveQuestions =
@@ -69,6 +77,18 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
     setSelQuestion(() => adaptiveQuestions[adaptiveQIndex - 1]);
   }
 
+  function handleChange(e) {
+    setConfirmPhrase(e.target.value);
+  }
+
+  function resetResults() {
+    setResetting(true);
+    deleteQSetSubmissionHistory(courseID, asgmtID, userID);
+    setTimeout(() => setResetting(false), 500);
+    setTimeout(() => handleClose(), 700);
+    setTimeout(() => setConfirmPhrase(""), 900);
+  }
+
   useEffect(
     () => {
       if (!asgmt || !open) {
@@ -77,10 +97,10 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
 
       const docRef = asgmt.source?.docRef;
       const docRefArr = docRef.split("/");
-      const userID = docRefArr[1];
-      const qSetID = docRefArr[3];
+      const docRefuserID = docRefArr[1];
+      const docRefqSetID = docRefArr[3];
 
-      getQSet(userID, qSetID, setQSet, setLoading);
+      getQSet(docRefuserID, docRefqSetID, setQSet, setLoading);
     },
     //eslint-disable-next-line
     [open, asgmtID, userID]
@@ -121,7 +141,7 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
     [currentObjective?.name]
   );
 
-  if (!open || !asgmt || loading || !qSet) {
+  if (!asgmt || loading || !qSet) {
     return null;
   }
 
@@ -162,12 +182,38 @@ export function AsgmtAnalytics({ asgmt, course, open, handleClose }) {
         </Typography>
       )}
 
-      <Divider />
+      <Divider sx={{ marginTop: "5px", marginBottom: "15px" }} />
 
-      <br />
       <Typography color="primary" sx={{ px: "20px" }}>
         results for <strong>{userDisplayName}</strong>
       </Typography>
+      <Box
+        className="flex flex-col"
+        sx={{ position: "absolute", top: "105px", right: "20px" }}
+      >
+        <Box className="flex flex-row">
+          <TextField
+            onChange={handleChange}
+            placeholder={userLastName}
+            size="small"
+            sx={{ width: "150px" }}
+            value={confirmPhrase}
+          />
+          <Button
+            color="primary"
+            disabled={resetting || confirmPhrase !== userLastName}
+            onClick={resetResults}
+          >
+            {resetting ? <CircularProgress size={25} /> : "RESET"}
+          </Button>
+        </Box>
+        <Typography color="text.secondary" variant="caption">
+          type <strong>{userLastName}</strong> to enable reset
+        </Typography>
+        {/* <pre>{JSON.stringify(asgmt)}</pre> */}
+      </Box>
+
+      <br />
       <br />
 
       {qSet?.mode === "adaptive" && (
@@ -331,7 +377,7 @@ function ProgressTable({
   );
 
   return (
-    <table style={{ position: "relative", right: "3%" }}>
+    <table style={{ position: "relative", left: "3vw" }}>
       <tbody>
         <tr>
           <td style={{ width: "50px" }}>

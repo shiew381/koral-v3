@@ -937,6 +937,26 @@ export function getUserQSets(user, setQSets, setSelItem) {
   });
 }
 
+export function deleteQSetSubmissionHistory(courseID, asgmtID, userID) {
+  const ref1 = doc(
+    db,
+    "courses",
+    courseID,
+    "assignments",
+    asgmtID,
+    "submissions",
+    userID
+  );
+
+  const ref2 = doc(db, "courses", courseID, "grades", userID);
+
+  deleteDoc(ref1).catch((err) => console.log(err));
+
+  updateDoc(ref2, {
+    [asgmtID]: deleteField(),
+  }).catch((err) => console.log(err));
+}
+
 export function saveAdaptivePointsAwarded(docRefParams, points) {
   const { courseID, asgmtID, userID } = docRefParams;
 
