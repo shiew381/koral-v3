@@ -43,20 +43,20 @@ export function addAnnouncement(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export function updateSearchSuggestions(
-  suggestions,
-  libID,
-  setSubmitting,
-  handleClose
-) {
+export function addManualAsgmt(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "assignments");
+  const tidiedValues = {
+    hasDateDue: false,
+    hasDateOpen: false,
+    dateCreated: serverTimestamp(),
+    type: "manual entry",
+    ...values,
+  };
   setSubmitting(true);
-  console.log(suggestions);
-  console.log(libID);
-  const docRef = doc(db, "libraries", libID);
-  updateDoc(docRef, { searchSuggestions: suggestions })
-    .then(() => setTimeout(() => handleClose(), 500))
-    .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 300));
+  addDoc(ref, tidiedValues)
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((err) => console.log(err))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addTags(
@@ -377,9 +377,13 @@ export function fetchAnnouncements(courseID, setAnnouncements, setLoading) {
   return unsubscribe;
 }
 
-export function fetchAssignments(courseID, setAssignments, setLoading) {
+export function fetchAssignments(courseID, setAssignments, setLoading, option) {
   const ref = collection(db, "courses", courseID, "assignments");
-  const q = query(ref);
+  const q =
+    option === "gradebook"
+      ? query(ref)
+      : query(ref, where("type", "!=", "manual entry"));
+
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -975,6 +979,27 @@ export function saveAdaptivePointsAwarded(docRefParams, points) {
   });
 }
 
+export function saveManualGrade(
+  docRefParams,
+  values,
+  handleClose,
+  setSubmitting
+) {
+  const { asgmtID, userID, courseID } = docRefParams;
+
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  setSubmitting(true);
+  updateDoc(ref, {
+    [asgmtID]: {
+      totalPointsAwarded: Number(values.totalPointsAwarded),
+      totalPointsPossible: Number(values.totalPointsPossible),
+      type: values.type,
+    },
+  })
+    .then(() => setTimeout(() => handleClose(), 600))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
+}
+
 export function saveFreeResponse(
   docRefParams,
   question,
@@ -1187,6 +1212,21 @@ export function updateAssignment(
     .then(() => setTimeout(() => handleClose(), 800))
     .catch((error) => console.log(error))
     .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
+export function updateSearchSuggestions(
+  suggestions,
+  libID,
+  setSubmitting,
+  handleClose
+) {
+  setSubmitting(true);
+
+  const docRef = doc(db, "libraries", libID);
+  updateDoc(docRef, { searchSuggestions: suggestions })
+    .then(() => setTimeout(() => handleClose(), 500))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
 }
 
 export function updateTags(tags, libraryID, questionID) {

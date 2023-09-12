@@ -34,6 +34,7 @@ import {
   Tab,
   Typography,
   Link,
+  Tooltip,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -56,6 +57,8 @@ import { AssignmentForm } from "../components/forms/AssignmentForm";
 import { ResourceForm } from "../components/forms/ResourceForm";
 import { AnnouncementForm } from "../components/forms/AnnouncementForm";
 import { AsgmtAnalytics } from "../components/student-analytics/AsgmtAnalytics";
+import { AddManualGradeColumn } from "../components/forms/AddManualGradeColumn";
+import { EditManualGrade } from "../components/forms/EditManualGrade";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -645,6 +648,8 @@ function Grades({ course, user }) {
   const [assignments, setAssignments] = useState([]);
   const [asgmtInfo, setAsgmtInfo] = useState(null);
   const [asgmtInfoOpen, setAsgmtInfoOpen] = useState(false);
+  const [manualGradeOpen, setManualGradeOpen] = useState(false);
+  const [enterGradeOpen, setEnterGradeOpen] = useState(false);
 
   const cellStyle = {
     padding: "10px",
@@ -721,6 +726,22 @@ function Grades({ course, user }) {
     setAsgmtInfoOpen(false);
   }
 
+  function openManualGrade() {
+    setManualGradeOpen(true);
+  }
+
+  function closeManualGrade() {
+    setManualGradeOpen(false);
+  }
+
+  function openEnterGrade() {
+    setEnterGradeOpen(true);
+  }
+
+  function closeEnterGrade() {
+    setEnterGradeOpen(false);
+  }
+
   useEffect(
     () => {
       fetchGrades(course.id, setGrades);
@@ -730,7 +751,7 @@ function Grades({ course, user }) {
   );
 
   useEffect(
-    () => fetchAssignments(course.id, setAssignments, setLoading),
+    () => fetchAssignments(course.id, setAssignments, setLoading, "gradebook"),
     //eslint-disable-next-line
     []
   );
@@ -757,6 +778,17 @@ function Grades({ course, user }) {
     <Panel>
       <Box sx={{ pt: "20px" }}>
         <BtnContainer right>
+          <Tooltip title="add manually graded assignment">
+            <Button onClick={openManualGrade} startIcon={<AddIcon />}>
+              COLUMN
+            </Button>
+          </Tooltip>
+          <Typography
+            display="inline"
+            sx={{ mx: 2, fontSize: "20px", color: "#d6e8ed" }}
+          >
+            |
+          </Typography>
           <Button onClick={downloadGradebook} startIcon={<DownloadIcon />}>
             Download CSV
           </Button>
@@ -811,32 +843,13 @@ function Grades({ course, user }) {
                   </td>
                   {assignments?.map((asgmt) => (
                     <td key={asgmt.id} style={cellStyle2}>
-                      {userGrades[asgmt.id] ? (
-                        <Link
-                          href="#"
-                          underline="none"
-                          onClick={() => {
-                            openAsgmtInfo();
-                            setAsgmtInfo({
-                              ...asgmt,
-                              userID: userGrades.id,
-                              userLastName: userGrades.lastName,
-                              userDisplayName:
-                                userGrades.firstName +
-                                " " +
-                                userGrades.lastName,
-                              totalPointsAwarded:
-                                userGrades[asgmt.id].totalPointsAwarded,
-                            });
-                          }}
-                        >
-                          {formatGrade(asgmt, userGrades)}
-                        </Link>
-                      ) : (
-                        <span style={{ color: "gray" }}>
-                          {formatGrade(asgmt, userGrades)}
-                        </span>
-                      )}
+                      <GradebookCellInfo
+                        asgmt={asgmt}
+                        openAsgmtInfo={openAsgmtInfo}
+                        openEnterGrade={openEnterGrade}
+                        setAsgmtInfo={setAsgmtInfo}
+                        userGrades={userGrades}
+                      />
                     </td>
                   ))}
                 </tr>
@@ -846,6 +859,17 @@ function Grades({ course, user }) {
         </div>
         <br />
       </Box>
+      <AddManualGradeColumn
+        course={course}
+        handleClose={closeManualGrade}
+        open={manualGradeOpen}
+      />
+      <EditManualGrade
+        asgmt={asgmtInfo}
+        course={course}
+        open={enterGradeOpen}
+        handleClose={closeEnterGrade}
+      />
       <AsgmtAnalytics
         asgmt={asgmtInfo}
         course={course}
@@ -855,6 +879,68 @@ function Grades({ course, user }) {
       />
     </Panel>
   );
+}
+
+function GradebookCellInfo({
+  asgmt,
+  openAsgmtInfo,
+  openEnterGrade,
+  setAsgmtInfo,
+  userGrades,
+}) {
+  const submissionExists = userGrades[asgmt.id] || false;
+
+  if (asgmt.type === "manual entry") {
+    const totalPointsAwarded = userGrades[asgmt.id]?.totalPointsAwarded || 0;
+    const totalPointsPossible = asgmt.totalPointsPossible;
+
+    return (
+      <Link
+        href="#"
+        underline="none"
+        onClick={() => {
+          openEnterGrade();
+          console.log("clicked");
+          setAsgmtInfo({
+            ...asgmt,
+            userID: userGrades.id,
+            userLastName: userGrades.lastName,
+            userDisplayName: userGrades.firstName + " " + userGrades.lastName,
+            totalPointsAwarded: totalPointsAwarded,
+          });
+        }}
+      >
+        {totalPointsAwarded} of {totalPointsPossible}
+      </Link>
+    );
+  }
+
+  if (submissionExists) {
+    return (
+      <Link
+        href="#"
+        underline="none"
+        onClick={() => {
+          openAsgmtInfo();
+          setAsgmtInfo({
+            ...asgmt,
+            userID: userGrades.id,
+            userLastName: userGrades.lastName,
+            userDisplayName: userGrades.firstName + " " + userGrades.lastName,
+            totalPointsAwarded: userGrades[asgmt.id].totalPointsAwarded,
+          });
+        }}
+      >
+        {formatGrade(asgmt, userGrades)}
+      </Link>
+    );
+  }
+
+  if (!submissionExists) {
+    return (
+      <span style={{ color: "gray" }}>{formatGrade(asgmt, userGrades)}</span>
+    );
+  }
 }
 
 function Roster({ course }) {
@@ -889,8 +975,8 @@ function Roster({ course }) {
     return (
       <Panel>
         <Box className="course-list-actions-container">
-          <Typography sx={{ pl: 2 }}>
-            Number of students: {students.length}
+          <Typography sx={{ pl: 2 }} color="text.secondary">
+            {students.length} students enrolled
           </Typography>
         </Box>
 
