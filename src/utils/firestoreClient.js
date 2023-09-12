@@ -357,6 +357,16 @@ export function deleteUserSubmissionHistory(docRefParams) {
   deleteDoc(ref);
 }
 
+export function deleteUserGrade(docRefParams) {
+  const { asgmtID, userID, courseID } = docRefParams;
+
+  const ref = doc(db, "courses", courseID, "grades", userID);
+
+  updateDoc(ref, {
+    [asgmtID]: deleteField(),
+  });
+}
+
 export function deleteUserContent(user, colName, docID) {
   const ref = doc(db, "users", user.uid, colName, docID);
   deleteDoc(ref);
