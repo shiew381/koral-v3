@@ -971,10 +971,10 @@ export function deleteQSetSubmissionHistory(courseID, asgmtID, userID) {
   }).catch((err) => console.log(err));
 }
 
-export function saveAdaptivePointsAwarded(docRefParams, points) {
+export function updateAdaptivePoints(docRefParams, points) {
   const { courseID, asgmtID, userID } = docRefParams;
 
-  const ref = doc(
+  const ref1 = doc(
     db,
     "courses",
     courseID,
@@ -984,8 +984,18 @@ export function saveAdaptivePointsAwarded(docRefParams, points) {
     userID
   );
 
-  updateDoc(ref, {
+  const ref2 = doc(db, "courses", courseID, "grades", userID);
+
+  updateDoc(ref1, {
     totalPointsAwarded: points,
+  }).then(() => {
+    updateDoc(ref2, {
+      [asgmtID]: {
+        totalPointsAwarded: points,
+        totalPointsPossible: points,
+        type: "question set",
+      },
+    });
   });
 }
 
@@ -1263,18 +1273,18 @@ export function updateUserQSet(
     );
 }
 
-export function updateAdaptiveFullPoints(docRefParams, adaptiveParams) {
-  const { courseID, userID, asgmtID } = docRefParams;
-  if (!courseID) return;
-  if (!userID) return;
-  const ref = doc(db, "courses", courseID, "grades", userID);
-  const totalPointsPossible = adaptiveParams?.totalPointsPossible;
+// export function updateAdaptiveFullPoints(docRefParams, adaptiveParams) {
+//   const { courseID, userID, asgmtID } = docRefParams;
+//   if (!courseID) return;
+//   if (!userID) return;
+//   const ref = doc(db, "courses", courseID, "grades", userID);
+//   const totalPointsPossible = adaptiveParams?.totalPointsPossible;
 
-  updateDoc(ref, {
-    [asgmtID]: {
-      totalPointsAwarded: totalPointsPossible,
-      totalPointsPossible: totalPointsPossible,
-      type: "question set",
-    },
-  });
-}
+//   updateDoc(ref, {
+//     [asgmtID]: {
+//       totalPointsAwarded: totalPointsPossible,
+//       totalPointsPossible: totalPointsPossible,
+//       type: "question set",
+//     },
+//   });
+// }

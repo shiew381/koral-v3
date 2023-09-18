@@ -7,8 +7,7 @@ import {
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
-  saveAdaptivePointsAwarded,
-  updateAdaptiveFullPoints,
+  updateAdaptivePoints,
 } from "../utils/firestoreClient";
 import {
   calculateProgress,
@@ -331,15 +330,15 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
     [objIndex]
   );
 
-  useEffect(() => {
-    if (progress.percentage < 99) {
-      // console.log("progress marker trigerred, but not complete yet");
-    }
-    if (progress.percentage > 99) {
-      updateAdaptiveFullPoints(docRefParams, params);
-      // console.log("progress marker trigerred");
-    }
-  }, [progress?.percentage]);
+  // useEffect(() => {
+  //   // if (progress.percentage < 99) {
+  //   //   console.log("progress marker trigerred, but not complete yet");
+  //   // }
+  //   if (progress.percentage > 99) {
+  //     updateAdaptiveFullPoints(docRefParams, params);
+  //     // console.log("progress marker trigerred");
+  //   }
+  // }, [progress?.percentage]);
 
   if (loading) {
     return (
@@ -460,7 +459,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
   }
 
   if (progress.percentage >= 99 && objIndex === objectives.length - 1) {
-    saveAdaptivePointsAwarded(docRefParams, params.totalPointsPossible);
+    updateAdaptivePoints(docRefParams, params.totalPointsPossible);
 
     return (
       <>
