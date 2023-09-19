@@ -197,6 +197,7 @@ function QuestionSetsPanel({ libID, library }) {
       searchTerm,
       countPerPage,
       firstDoc,
+      isEditor,
       setQuestions,
       setFirstDoc,
       setLastDoc,
@@ -226,6 +227,7 @@ function QuestionSetsPanel({ libID, library }) {
       searchTerm,
       countPerPage,
       lastDoc,
+      isEditor,
       setQuestions,
       setFirstDoc,
       setLastDoc,
@@ -267,6 +269,7 @@ function QuestionSetsPanel({ libID, library }) {
       libID,
       activeTerm,
       countPerPage,
+      isEditor,
       setQuestions,
       setLastDoc,
       setTotalCount,
@@ -350,7 +353,7 @@ function QuestionSetsPanel({ libID, library }) {
                 fetching={fetching}
                 onFocus={handleSearchFocus}
                 onBlur={handleSearchBlur}
-                onClick={handleSearch}
+                onClick={() => handleSearch(searchTerm)}
                 onChange={handleChange}
                 onKeyUp={handleKeyUp}
                 placeholder="search by topic"

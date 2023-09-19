@@ -477,6 +477,7 @@ export function fetchLibraryQuestions(
   libraryID,
   searchTerm,
   countPerPage,
+  isEditor,
   setQuestions,
   setLastDoc,
   setTotalCount,
@@ -485,13 +486,39 @@ export function fetchLibraryQuestions(
 ) {
   const ref = collection(db, "libraries", libraryID, "questions");
 
-  if (searchTerm) {
-    const q = query(
-      ref,
-      where("tags_searchable", "array-contains", searchTerm),
-      orderBy("dateCreated", "desc")
-    );
+  const q = searchTerm
+    ? query(
+        ref,
+        where("tags_searchable", "array-contains", searchTerm),
+        orderBy("dateCreated", "desc")
+      )
+    : query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
 
+  setFetching(true);
+
+  if (!isEditor) {
+    getDocs(q).then((snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(0, countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      if (searchTerm) {
+        setTotalCount(snapshot.docs.length);
+      }
+
+      setPage(1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return;
+  }
+
+  if (isEditor) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedDocs = snapshot.docs.slice(0, countPerPage);
       const fetchedItems = fetchedDocs.map((doc) => ({
@@ -499,31 +526,14 @@ export function fetchLibraryQuestions(
         ...doc.data(),
       }));
 
-      setFetching(true);
+      if (searchTerm) {
+        setTotalCount(snapshot.docs.length);
+      }
+
       setPage(1);
       setTimeout(() => {
-        setTotalCount(snapshot.docs.length);
         setQuestions(fetchedItems);
         setLastDoc(fetchedDocs?.at(-1));
-        setFetching(false);
-      }, 300);
-    });
-    return unsubscribe;
-  }
-
-  if (!searchTerm) {
-    const q = query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedItems = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setFetching(true);
-      setPage(1);
-      setTimeout(() => {
-        setQuestions(fetchedItems);
-        setLastDoc(snapshot.docs?.at(-1));
         setFetching(false);
       }, 300);
     });
@@ -536,6 +546,7 @@ export function fetchLibraryQnsAfter(
   searchTerm,
   countPerPage,
   lastDoc,
+  isEditor,
   setQuestions,
   setFirstDoc,
   setLastDoc,
@@ -560,21 +571,42 @@ export function fetchLibraryQnsAfter(
       );
 
   setFetching(true);
-  getDocs(q).then((snapshot) => {
-    const fetchedItems = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
 
-    setPage((prev) => prev + 1);
-    setTimeout(() => {
-      setQuestions(fetchedItems);
-      setFirstDoc(snapshot.docs?.at(0));
-      setLastDoc(snapshot.docs?.at(-1));
-      setFetching(false);
-    }, 300);
-  });
-  return;
+  if (!isEditor) {
+    getDocs(q).then((snapshot) => {
+      const fetchedItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPage((prev) => prev + 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(snapshot.docs?.at(0));
+        setLastDoc(snapshot.docs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return;
+  }
+
+  if (isEditor) {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPage((prev) => prev + 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(snapshot.docs?.at(0));
+        setLastDoc(snapshot.docs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return unsubscribe;
+  }
 }
 
 export function fetchLibraryQnsBefore(
@@ -582,6 +614,7 @@ export function fetchLibraryQnsBefore(
   searchTerm,
   countPerPage,
   firstDoc,
+  isEditor,
   setQuestions,
   setFirstDoc,
   setLastDoc,
@@ -599,22 +632,44 @@ export function fetchLibraryQnsBefore(
     : query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
 
   setFetching(true);
-  getDocs(q).then((snapshot) => {
-    const fetchedDocs = snapshot.docs.slice(-countPerPage);
-    const fetchedItems = fetchedDocs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
 
-    setPage((prev) => prev - 1);
+  if (!isEditor) {
+    getDocs(q).then((snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(-countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-    setTimeout(() => {
-      setQuestions(fetchedItems);
-      setFirstDoc(fetchedDocs?.at(0));
-      setLastDoc(fetchedDocs?.at(-1));
-      setFetching(false);
-    }, 300);
-  });
+      setPage((prev) => prev - 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(fetchedDocs?.at(0));
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return;
+  }
+
+  if (isEditor) {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(-countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPage((prev) => prev - 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(fetchedDocs?.at(0));
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return unsubscribe;
+  }
 }
 
 export function countLibraryQuestions(libraryID) {
