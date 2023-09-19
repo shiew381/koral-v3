@@ -330,15 +330,13 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
     [objIndex]
   );
 
-  // useEffect(() => {
-  //   // if (progress.percentage < 99) {
-  //   //   console.log("progress marker trigerred, but not complete yet");
-  //   // }
-  //   if (progress.percentage > 99) {
-  //     updateAdaptiveFullPoints(docRefParams, params);
-  //     // console.log("progress marker trigerred");
-  //   }
-  // }, [progress?.percentage]);
+  useEffect(() => {
+    if (progress.percentage > 99) {
+      setTimeout(() => {
+        updateAdaptivePoints(docRefParams, params.totalPointsPossible);
+      }, 500);
+    }
+  }, [progress?.percentage]);
 
   if (loading) {
     return (

@@ -988,15 +988,19 @@ export function updateAdaptivePoints(docRefParams, points) {
 
   updateDoc(ref1, {
     totalPointsAwarded: points,
-  }).then(() => {
-    updateDoc(ref2, {
-      [asgmtID]: {
-        totalPointsAwarded: points,
-        totalPointsPossible: points,
-        type: "question set",
-      },
-    });
   });
+
+  setTimeout(
+    () =>
+      updateDoc(ref2, {
+        [asgmtID]: {
+          totalPointsAwarded: points,
+          totalPointsPossible: points,
+          type: "question set",
+        },
+      }),
+    1000
+  );
 }
 
 export function saveManualGrade(
