@@ -178,6 +178,7 @@ export function AttemptsForm({
   setSelQuestion,
   user,
 }) {
+  const refParams = { userID: user.uid, qSetID: qSet.id };
   const initVal = {
     attempts: selQuestion?.attemptsPossible || 5,
   };
@@ -213,7 +214,7 @@ export function AttemptsForm({
         values,
         selQuestion,
         qSet,
-        user,
+        refParams,
         setSubmitting,
         setSelQuestion,
         handleClose
@@ -268,6 +269,7 @@ export function PointsForm({
   setSelQuestion,
   user,
 }) {
+  const refParams = { userID: user.uid, qSetID: qSet.id };
   const initVal = {
     points: selQuestion?.pointsPossible || 1,
   };
@@ -303,7 +305,7 @@ export function PointsForm({
         values,
         selQuestion,
         qSet,
-        user,
+        refParams,
         setSubmitting,
         setSelQuestion,
         handleClose
