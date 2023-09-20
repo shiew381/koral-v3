@@ -3,18 +3,17 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
   deleteUserSubmissionHistory,
+  deleteUserGrade,
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
-  saveAdaptivePointsAwarded,
-  updateAdaptiveFullPoints,
+  updateAdaptivePoints,
 } from "../utils/firestoreClient";
 import {
   calculateProgress,
   getSubmissions,
   pickQuestion,
 } from "../utils/questionSetUtils";
-// import { pickRandomInt } from "../utils/commonUtils";
 import { formatTimeAndDate } from "../utils/dateUtils";
 import {
   Box,
@@ -25,6 +24,7 @@ import {
   Typography,
 } from "@mui/material";
 import DoneIcon from "@mui/icons-material/Done";
+import SyncIcon from "@mui/icons-material/Sync";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import {
   QSetContainer,
@@ -47,6 +47,7 @@ export default function CourseAsgmtPage() {
   const { courseID, asgmtID } = useParams();
   const currentDate = new Date();
   const currentDateMillis = currentDate.getTime();
+  const enableReset = asgmt?.enableStudentReset;
 
   useEffect(
     () => {
@@ -154,6 +155,7 @@ export default function CourseAsgmtPage() {
       <BackToStudentDashboard location="assignments" />
       <QuestionSetDisplay
         asgmtID={asgmtID}
+        enableReset={enableReset}
         courseID={courseID}
         qSet={qSet}
         selQuestion={selQuestion}
@@ -167,6 +169,7 @@ export default function CourseAsgmtPage() {
 function QuestionSetDisplay({
   asgmtID,
   courseID,
+  enableReset,
   qSet,
   selQuestion,
   setSelQuestion,
@@ -195,6 +198,11 @@ function QuestionSetDisplay({
     setSelQuestion(() => questions[qIndex + 1]);
   }
 
+  function resetSubmissionHistory() {
+    deleteUserSubmissionHistory(docRefParams);
+    deleteUserGrade(docRefParams);
+  }
+
   useEffect(
     () => {
       if (!user) return;
@@ -216,6 +224,13 @@ function QuestionSetDisplay({
   if (qSet?.mode === "adaptive") {
     return (
       <QSetContainer>
+        {submissionHistory && enableReset && (
+          <Box className="enable-reset-container">
+            <Button onClick={resetSubmissionHistory} startIcon={<SyncIcon />}>
+              RESET
+            </Button>
+          </Box>
+        )}
         <QuestionCardPanel>
           <AdaptiveDisplay
             docRefParams={docRefParams}
@@ -246,6 +261,13 @@ function QuestionSetDisplay({
         qIndex={qIndex}
         questions={questions}
       />
+      {enableReset && (
+        <Box className="enable-reset-container">
+          <Button onClick={resetSubmissionHistory} startIcon={<SyncIcon />}>
+            RESET
+          </Button>
+        </Box>
+      )}
       <QuestionCardPanel>
         <QuestionCard
           docRefParams={docRefParams}
@@ -309,12 +331,10 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
   );
 
   useEffect(() => {
-    if (progress.percentage < 99) {
-      console.log("progress marker trigerred, but not complete yet");
-    }
     if (progress.percentage > 99) {
-      updateAdaptiveFullPoints(docRefParams, params);
-      console.log("progress marker trigerred");
+      setTimeout(() => {
+        updateAdaptivePoints(docRefParams, params.totalPointsPossible);
+      }, 500);
     }
   }, [progress?.percentage]);
 
@@ -400,7 +420,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
           currentObjective={currentObjective}
           qSet={qSet}
           submissionHistory={submissionHistory}
-        />
+        />{" "}
         <Card
           className="adaptive-progress-card flex"
           sx={{ minHeight: "400px" }}
@@ -437,7 +457,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
   }
 
   if (progress.percentage >= 99 && objIndex === objectives.length - 1) {
-    saveAdaptivePointsAwarded(docRefParams, params.totalPointsPossible);
+    updateAdaptivePoints(docRefParams, params.totalPointsPossible);
 
     return (
       <>
@@ -476,6 +496,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
         qSet={qSet}
         submissionHistory={submissionHistory}
       />
+
       <AdaptiveQuestionCard
         docRefParams={docRefParams}
         handlePickQuestion={handlePickQuestion}

@@ -197,6 +197,7 @@ function QuestionSetsPanel({ libID, library }) {
       searchTerm,
       countPerPage,
       firstDoc,
+      isEditor,
       setQuestions,
       setFirstDoc,
       setLastDoc,
@@ -226,6 +227,7 @@ function QuestionSetsPanel({ libID, library }) {
       searchTerm,
       countPerPage,
       lastDoc,
+      isEditor,
       setQuestions,
       setFirstDoc,
       setLastDoc,
@@ -267,6 +269,7 @@ function QuestionSetsPanel({ libID, library }) {
       libID,
       activeTerm,
       countPerPage,
+      isEditor,
       setQuestions,
       setLastDoc,
       setTotalCount,
@@ -350,7 +353,7 @@ function QuestionSetsPanel({ libID, library }) {
                 fetching={fetching}
                 onFocus={handleSearchFocus}
                 onBlur={handleSearchBlur}
-                onClick={handleSearch}
+                onClick={() => handleSearch(searchTerm)}
                 onChange={handleChange}
                 onKeyUp={handleKeyUp}
                 placeholder="search by topic"
@@ -512,12 +515,14 @@ function QuestionSetsPanel({ libID, library }) {
             )}
             {selQuestion && (
               <Card className="question-card">
-                <div className="flex flex-row flex-space-between flex-center">
-                  <Typography color="text.secondary" sx={{ pl: "10px" }}>
-                    Question ID: {selQuestion.id}
-                  </Typography>
-                  <Button onClick={handleOpenEdit}>Edit</Button>
-                </div>
+                {isEditor && (
+                  <div className="flex flex-row flex-space-between flex-center">
+                    <Typography color="text.secondary" sx={{ pl: "10px" }}>
+                      Question ID: {selQuestion.id}
+                    </Typography>
+                    <Button onClick={handleOpenEdit}>Edit</Button>
+                  </div>
+                )}
 
                 {type === "multiple choice" && (
                   <MultipleChoice mode="preview" question={selQuestion} />

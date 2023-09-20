@@ -42,41 +42,49 @@ export function AssignmentForm({
 }) {
   const initVal = edit
     ? {
-        selItem: selAsgmt,
         hasDateOpen: selAsgmt?.hasDateOpen,
         hasDateDue: selAsgmt?.hasDateDue,
         dateOpen: selAsgmt?.dateOpen,
         dateDue: selAsgmt?.dateDue,
+        enableStudentReset: selAsgmt?.enableStudentReset || false,
       }
     : {
-        selItem: null,
         hasDateOpen: false,
         hasDateDue: false,
         dateOpen: new Date(),
         dateDue: getInitDueDate(),
+        enableStudentReset: false,
       };
 
   const add = !edit;
   const [type, setType] = useState("question set");
-  const [selItem, setSelItem] = useState(initVal.selItem);
+  const [selItem, setSelItem] = useState(null);
   const [dateDue, setDateDue] = useState(initVal.dateDue);
   const [dateOpen, setDateOpen] = useState(initVal.dateOpen);
   const [hasDateOpen, setHasDateOpen] = useState(initVal.hasDateOpen);
   const [hasDateDue, setHasDateDue] = useState(initVal.hasDateDue);
+  const [enableStudentReset, setEnableStudentReset] = useState(
+    initVal.enableStudentReset
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const values = {
     type: type,
-    title: getTitle(type, selItem),
-    totalPointsPossible: selItem?.totalPointsPossible || null,
-    source: {
-      type: "user content",
-      docRef: `users/${user?.uid}/question-sets/${selItem?.id}`,
-    },
+    title: edit ? selAsgmt.title : getTitle(type, selItem),
+    totalPointsPossible: edit
+      ? selAsgmt.totalPointsPossible
+      : selItem?.totalPointsPossible,
+    source: edit
+      ? selAsgmt.source
+      : {
+          type: "user content",
+          docRef: `users/${user?.uid}/question-sets/${selItem?.id}`,
+        },
     hasDateDue: hasDateDue,
     hasDateOpen: hasDateOpen,
     dateDue: dateDue,
     dateOpen: dateOpen,
+    enableStudentReset: enableStudentReset,
   };
 
   function handleKeyUp(e) {
@@ -109,11 +117,16 @@ export function AssignmentForm({
 
   function resetForm() {
     setType("question set");
-    setSelItem(initVal.selItem);
+    setSelItem(null);
     setHasDateOpen(initVal.hasDateOpen);
     setHasDateDue(initVal.hasDateDue);
     setDateOpen(initVal.dateOpen);
     setDateDue(initVal.dateDue);
+    setEnableStudentReset(initVal.enableStudentReset);
+  }
+
+  function toggleEnableReset(e) {
+    setEnableStudentReset(e.target.checked);
   }
 
   function toggleHasDateOpen(e) {
@@ -133,7 +146,7 @@ export function AssignmentForm({
       handleKeyUp={handleKeyUp}
       customStyle={{ maxWidth: "900px" }}
     >
-      <LightboxHeader title="Add Assignment" />
+      <LightboxHeader title={add ? "Add Assignment" : "Edit Assignment"} />
       <FormBody>
         <FormControl>
           <InputLabel>type</InputLabel>
@@ -148,7 +161,6 @@ export function AssignmentForm({
             {/* <MenuItem value="student upload">Student Upload</MenuItem> */}
           </Select>
         </FormControl>
-
         {type === "question set" && (
           <QSetSelect
             edit={edit}
@@ -159,6 +171,19 @@ export function AssignmentForm({
           />
         )}
         <br />
+        <br />
+        <Box sx={{ px: "3px" }}>
+          <Typography color="primary">options</Typography>
+          <FormControlLabel
+            control={
+              <Checkbox
+                onChange={toggleEnableReset}
+                checked={enableStudentReset}
+              />
+            }
+            label="enable student reset"
+          />
+        </Box>
         <br />
         <DateSettings
           dateDue={dateDue}
@@ -209,9 +234,13 @@ function QSetSelect({ edit, selAsgmt, selItem, setSelItem, user }) {
   );
 
   if (edit) {
+    const source = selAsgmt?.source;
+    const sourceArr = source?.docRef?.split("/");
+    const selItemID = sourceArr.pop();
+
     return (
-      <Select disabled sx={{ minWidth: "180px" }} value={selAsgmt?.id || ""}>
-        <MenuItem value={selAsgmt.id}>{selAsgmt.title}</MenuItem>
+      <Select disabled sx={{ minWidth: "180px" }} value={selItemID || ""}>
+        <MenuItem value={selItemID}>{selAsgmt.title}</MenuItem>
       </Select>
     );
   }

@@ -3,6 +3,34 @@
   position: relative;
 }
 
+.adaptive-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 10px;
+  max-width: 650px;
+  min-width: 400px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  width: 92%;
+}
+
+.adaptive-progress-card {
+  display: flex;
+  align-items: left;
+  flex-direction: column;
+  margin: 10px;
+  max-width: 650px;
+  min-width: 400px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 20px;
+  padding-bottom: 25px;
+  width: 92%;
+}
+
 .adaptive-progress-label {
   top: 0;
   left: 0;
@@ -45,6 +73,12 @@
   margin-bottom: 15px;
 }
 
+.enable-reset-container {
+  position: absolute;
+  top: 68px;
+  right: 40px;
+}
+
 .multiple-choice-radio,
 .multiple-choice-checkbox {
   align-self: flex-start;
@@ -56,34 +90,6 @@
   justify-content: center;
   padding-bottom: 20px;
   padding-top: 20px;
-}
-
-.adaptive-progress-card {
-  display: flex;
-  align-items: left;
-  flex-direction: column;
-  margin: 10px;
-  max-width: 650px;
-  min-width: 400px;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding-top: 20px;
-  padding-bottom: 25px;
-  width: 92%;
-}
-
-.adaptive-card {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  margin: 10px;
-  max-width: 650px;
-  min-width: 400px;
-  padding-left: 20px;
-  padding-right: 20px;
-  padding-top: 12px;
-  padding-bottom: 12px;
-  width: 92%;
 }
 
 .question-card {

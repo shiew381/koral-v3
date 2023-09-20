@@ -43,20 +43,20 @@ export function addAnnouncement(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
-export function updateSearchSuggestions(
-  suggestions,
-  libID,
-  setSubmitting,
-  handleClose
-) {
+export function addManualAsgmt(course, values, handleClose, setSubmitting) {
+  const ref = collection(db, "courses", course.id, "assignments");
+  const tidiedValues = {
+    hasDateDue: false,
+    hasDateOpen: false,
+    dateCreated: serverTimestamp(),
+    type: "manual entry",
+    ...values,
+  };
   setSubmitting(true);
-  console.log(suggestions);
-  console.log(libID);
-  const docRef = doc(db, "libraries", libID);
-  updateDoc(docRef, { searchSuggestions: suggestions })
-    .then(() => setTimeout(() => handleClose(), 500))
-    .catch((error) => console.log(error))
-    .finally(() => setTimeout(() => setSubmitting(false), 300));
+  addDoc(ref, tidiedValues)
+    .then(() => setTimeout(() => handleClose(), 600))
+    .catch((err) => console.log(err))
+    .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
 export function addTags(
@@ -357,6 +357,16 @@ export function deleteUserSubmissionHistory(docRefParams) {
   deleteDoc(ref);
 }
 
+export function deleteUserGrade(docRefParams) {
+  const { asgmtID, userID, courseID } = docRefParams;
+
+  const ref = doc(db, "courses", courseID, "grades", userID);
+
+  updateDoc(ref, {
+    [asgmtID]: deleteField(),
+  });
+}
+
 export function deleteUserContent(user, colName, docID) {
   const ref = doc(db, "users", user.uid, colName, docID);
   deleteDoc(ref);
@@ -377,9 +387,13 @@ export function fetchAnnouncements(courseID, setAnnouncements, setLoading) {
   return unsubscribe;
 }
 
-export function fetchAssignments(courseID, setAssignments, setLoading) {
+export function fetchAssignments(courseID, setAssignments, setLoading, option) {
   const ref = collection(db, "courses", courseID, "assignments");
-  const q = query(ref);
+  const q =
+    option === "gradebook"
+      ? query(ref)
+      : query(ref, where("type", "!=", "manual entry"));
+
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -463,6 +477,7 @@ export function fetchLibraryQuestions(
   libraryID,
   searchTerm,
   countPerPage,
+  isEditor,
   setQuestions,
   setLastDoc,
   setTotalCount,
@@ -471,13 +486,39 @@ export function fetchLibraryQuestions(
 ) {
   const ref = collection(db, "libraries", libraryID, "questions");
 
-  if (searchTerm) {
-    const q = query(
-      ref,
-      where("tags_searchable", "array-contains", searchTerm),
-      orderBy("dateCreated", "desc")
-    );
+  const q = searchTerm
+    ? query(
+        ref,
+        where("tags_searchable", "array-contains", searchTerm),
+        orderBy("dateCreated", "desc")
+      )
+    : query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
 
+  setFetching(true);
+
+  if (!isEditor) {
+    getDocs(q).then((snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(0, countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      if (searchTerm) {
+        setTotalCount(snapshot.docs.length);
+      }
+
+      setPage(1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return;
+  }
+
+  if (isEditor) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedDocs = snapshot.docs.slice(0, countPerPage);
       const fetchedItems = fetchedDocs.map((doc) => ({
@@ -485,31 +526,14 @@ export function fetchLibraryQuestions(
         ...doc.data(),
       }));
 
-      setFetching(true);
+      if (searchTerm) {
+        setTotalCount(snapshot.docs.length);
+      }
+
       setPage(1);
       setTimeout(() => {
-        setTotalCount(snapshot.docs.length);
         setQuestions(fetchedItems);
         setLastDoc(fetchedDocs?.at(-1));
-        setFetching(false);
-      }, 300);
-    });
-    return unsubscribe;
-  }
-
-  if (!searchTerm) {
-    const q = query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedItems = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setFetching(true);
-      setPage(1);
-      setTimeout(() => {
-        setQuestions(fetchedItems);
-        setLastDoc(snapshot.docs?.at(-1));
         setFetching(false);
       }, 300);
     });
@@ -522,6 +546,7 @@ export function fetchLibraryQnsAfter(
   searchTerm,
   countPerPage,
   lastDoc,
+  isEditor,
   setQuestions,
   setFirstDoc,
   setLastDoc,
@@ -546,21 +571,42 @@ export function fetchLibraryQnsAfter(
       );
 
   setFetching(true);
-  getDocs(q).then((snapshot) => {
-    const fetchedItems = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
 
-    setPage((prev) => prev + 1);
-    setTimeout(() => {
-      setQuestions(fetchedItems);
-      setFirstDoc(snapshot.docs?.at(0));
-      setLastDoc(snapshot.docs?.at(-1));
-      setFetching(false);
-    }, 300);
-  });
-  return;
+  if (!isEditor) {
+    getDocs(q).then((snapshot) => {
+      const fetchedItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPage((prev) => prev + 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(snapshot.docs?.at(0));
+        setLastDoc(snapshot.docs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return;
+  }
+
+  if (isEditor) {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedItems = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPage((prev) => prev + 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(snapshot.docs?.at(0));
+        setLastDoc(snapshot.docs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return unsubscribe;
+  }
 }
 
 export function fetchLibraryQnsBefore(
@@ -568,6 +614,7 @@ export function fetchLibraryQnsBefore(
   searchTerm,
   countPerPage,
   firstDoc,
+  isEditor,
   setQuestions,
   setFirstDoc,
   setLastDoc,
@@ -585,22 +632,44 @@ export function fetchLibraryQnsBefore(
     : query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
 
   setFetching(true);
-  getDocs(q).then((snapshot) => {
-    const fetchedDocs = snapshot.docs.slice(-countPerPage);
-    const fetchedItems = fetchedDocs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
 
-    setPage((prev) => prev - 1);
+  if (!isEditor) {
+    getDocs(q).then((snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(-countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
 
-    setTimeout(() => {
-      setQuestions(fetchedItems);
-      setFirstDoc(fetchedDocs?.at(0));
-      setLastDoc(fetchedDocs?.at(-1));
-      setFetching(false);
-    }, 300);
-  });
+      setPage((prev) => prev - 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(fetchedDocs?.at(0));
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return;
+  }
+
+  if (isEditor) {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedDocs = snapshot.docs.slice(-countPerPage);
+      const fetchedItems = fetchedDocs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setPage((prev) => prev - 1);
+      setTimeout(() => {
+        setQuestions(fetchedItems);
+        setFirstDoc(fetchedDocs?.at(0));
+        setLastDoc(fetchedDocs?.at(-1));
+        setFetching(false);
+      }, 300);
+    });
+    return unsubscribe;
+  }
 }
 
 export function countLibraryQuestions(libraryID) {
@@ -957,10 +1026,10 @@ export function deleteQSetSubmissionHistory(courseID, asgmtID, userID) {
   }).catch((err) => console.log(err));
 }
 
-export function saveAdaptivePointsAwarded(docRefParams, points) {
+export function updateAdaptivePoints(docRefParams, points) {
   const { courseID, asgmtID, userID } = docRefParams;
 
-  const ref = doc(
+  const ref1 = doc(
     db,
     "courses",
     courseID,
@@ -970,9 +1039,44 @@ export function saveAdaptivePointsAwarded(docRefParams, points) {
     userID
   );
 
-  updateDoc(ref, {
+  const ref2 = doc(db, "courses", courseID, "grades", userID);
+
+  updateDoc(ref1, {
     totalPointsAwarded: points,
   });
+
+  setTimeout(
+    () =>
+      updateDoc(ref2, {
+        [asgmtID]: {
+          totalPointsAwarded: points,
+          totalPointsPossible: points,
+          type: "question set",
+        },
+      }),
+    1000
+  );
+}
+
+export function saveManualGrade(
+  docRefParams,
+  values,
+  handleClose,
+  setSubmitting
+) {
+  const { asgmtID, userID, courseID } = docRefParams;
+
+  const ref = doc(db, "courses", courseID, "grades", userID);
+  setSubmitting(true);
+  updateDoc(ref, {
+    [asgmtID]: {
+      totalPointsAwarded: Number(values.totalPointsAwarded),
+      totalPointsPossible: Number(values.totalPointsPossible),
+      type: values.type,
+    },
+  })
+    .then(() => setTimeout(() => handleClose(), 600))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
 }
 
 export function saveFreeResponse(
@@ -1189,6 +1293,21 @@ export function updateAssignment(
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
+export function updateSearchSuggestions(
+  suggestions,
+  libID,
+  setSubmitting,
+  handleClose
+) {
+  setSubmitting(true);
+
+  const docRef = doc(db, "libraries", libID);
+  updateDoc(docRef, { searchSuggestions: suggestions })
+    .then(() => setTimeout(() => handleClose(), 500))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 300));
+}
+
 export function updateTags(tags, libraryID, questionID) {
   const docRef = doc(db, "libraries", libraryID, "questions", questionID);
   const tagsSearchable = searchifyTags(tags);
@@ -1213,18 +1332,18 @@ export function updateUserQSet(
     );
 }
 
-export function updateAdaptiveFullPoints(docRefParams, adaptiveParams) {
-  const { courseID, userID, asgmtID } = docRefParams;
-  if (!courseID) return;
-  if (!userID) return;
-  const ref = doc(db, "courses", courseID, "grades", userID);
-  const totalPointsPossible = adaptiveParams?.totalPointsPossible;
+// export function updateAdaptiveFullPoints(docRefParams, adaptiveParams) {
+//   const { courseID, userID, asgmtID } = docRefParams;
+//   if (!courseID) return;
+//   if (!userID) return;
+//   const ref = doc(db, "courses", courseID, "grades", userID);
+//   const totalPointsPossible = adaptiveParams?.totalPointsPossible;
 
-  updateDoc(ref, {
-    [asgmtID]: {
-      totalPointsAwarded: totalPointsPossible,
-      totalPointsPossible: totalPointsPossible,
-      type: "question set",
-    },
-  });
-}
+//   updateDoc(ref, {
+//     [asgmtID]: {
+//       totalPointsAwarded: totalPointsPossible,
+//       totalPointsPossible: totalPointsPossible,
+//       type: "question set",
+//     },
+//   });
+// }

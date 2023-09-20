@@ -388,7 +388,7 @@ function Grades({ course, user }) {
   );
 
   useEffect(
-    () => fetchAssignments(course.id, setAssignments, setLoading),
+    () => fetchAssignments(course.id, setAssignments, setLoading, "gradebook"),
     //eslint-disable-next-line
     []
   );

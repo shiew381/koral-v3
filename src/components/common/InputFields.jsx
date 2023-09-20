@@ -294,6 +294,22 @@ export function PointsField({ onChange, value }) {
   );
 }
 
+export function SimplePointsField({ onChange, value }) {
+  return (
+    <TextField
+      InputProps={{
+        inputProps: { min: 1, max: 100, step: 1 },
+      }}
+      onChange={onChange}
+      size="small"
+      sx={{ maxWidth: "80px" }}
+      type="number"
+      value={value}
+      variant="outlined"
+    />
+  );
+}
+
 export function SearchField({
   fullWidth,
   fetching,
