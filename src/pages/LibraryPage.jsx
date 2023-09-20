@@ -670,13 +670,6 @@ function LicensePanel({ library }) {
   );
 }
 
-function formatPrompt(str) {
-  const newStr = str
-    // .replaceAll(/<\/{0,1}div>/g, "")
-    .replaceAll(/<br\/{0,1}>/g, "");
-  return newStr;
-}
-
 function LicenseMessage({ licenseType }) {
   if (licenseType === "Creative Commons BY SA") {
     return (
@@ -704,4 +697,14 @@ function LicenseMessage({ licenseType }) {
       </>
     );
   }
+}
+
+function formatPrompt(str) {
+  const newStr = str
+    .replaceAll(/<br\/{0,1}>/g, "")
+    .replaceAll(
+      /<div\sclass="equation-container.+<\/span><\/div>/g,
+      `<br/><div style="color:silver;text-align:center;">(equation)</div><br/>`
+    );
+  return newStr;
 }
