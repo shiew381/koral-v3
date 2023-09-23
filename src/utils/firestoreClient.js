@@ -461,6 +461,19 @@ export function fetchLibraries(setLibraries) {
   return unsubscribe;
 }
 
+export function fetchLibrariesAsEditor(user, setLibraries) {
+  const colRef = collection(db, "libraries");
+  const q = query(colRef, where("editorIDs", "array-contains", user.uid));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setLibraries(fetchedItems);
+  });
+  return unsubscribe;
+}
+
 export function fetchLibrary(libraryID, setLibrary, setLoading) {
   const ref = doc(db, "libraries", libraryID);
   const unsubscribe = onSnapshot(ref, (doc) => {

@@ -19,6 +19,7 @@ import {
   Chip,
   Divider,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemButton,
@@ -32,6 +33,7 @@ import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import RedoIcon from "@mui/icons-material/Redo";
+import CopyrightIcon from "@mui/icons-material/Copyright";
 import { LoadingIndicator, Page } from "../components/common/Pages";
 import MultipleChoice from "../components/question-sets/QnMultipleChoice";
 import ShortAnswer from "../components/question-sets/QnShortAnswer";
@@ -44,6 +46,7 @@ import { SearchField } from "../components/common/InputFields";
 import { BtnContainer } from "../components/common/Buttons";
 import "../css/Library.css";
 import { SearchSuggestionForm } from "../components/forms/SearchSuggestionForm";
+import { formatAuthorNames } from "../utils/commonUtils";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -106,14 +109,17 @@ export default function LibraryPage() {
           value={tabIndex}
         >
           <Tab label="QUESTIONS" />
+          <Tab label="LICENSE" />
         </Tabs>
       </div>
       <div className="tabs-horiz-container">
         <Tabs value={tabIndex} onChange={selectTab} variant="scrollable">
           <Tab label="QUESTIONS" />
+          <Tab label="LICENSE" />
         </Tabs>
       </div>
-      <QuestionSetsPanel library={library} libID={libID} />
+      {tabIndex === 0 && <QuestionSetsPanel library={library} libID={libID} />}
+      {tabIndex === 1 && <LicensePanel library={library} />}
     </div>
   );
 }
@@ -612,9 +618,93 @@ function QuestionSetsPanel({ libID, library }) {
   );
 }
 
+function LicensePanel({ library }) {
+  const license = library?.license || null;
+  const title = license?.title || "(no title)";
+  const licenseType = license?.type || "All Rights Reserved";
+  const authors = formatAuthorNames(license?.authors);
+  const dateApplied = license?.dateApplied?.toDate() || new Date();
+  const yearApplied = dateApplied.getFullYear();
+  const isCreativeCommons = licenseType.includes("Creative Commons");
+  const allRightsReserved = licenseType === "All Rights Reserved";
+
+  return (
+    <Panel>
+      <div style={{ height: "15vh" }}></div>
+      <Typography>
+        <strong>
+          <CopyrightIcon
+            sx={{ position: "relative", top: "7px", right: "5px" }}
+          />
+          {yearApplied} {title} by {authors}
+        </strong>
+      </Typography>
+      {allRightsReserved ? (
+        <Typography>
+          <strong>{licenseType}</strong>
+        </Typography>
+      ) : (
+        <Typography>
+          <strong>is licensed under {licenseType}</strong>
+        </Typography>
+      )}
+      <div style={{ height: "8vh" }}></div>
+      <Typography>What {licenseType} license means:</Typography>
+      <br />
+      <LicenseMessage licenseType={licenseType} />
+      <br />
+      {isCreativeCommons && (
+        <Typography>
+          Visit the
+          <Link
+            href="https://creativecommons.org/licenses/"
+            target="_blank"
+            sx={{ mx: "6px" }}
+          >
+            Creative Commons website
+          </Link>
+          to learn more
+        </Typography>
+      )}
+    </Panel>
+  );
+}
+
+function LicenseMessage({ licenseType }) {
+  if (licenseType === "Creative Commons BY SA") {
+    return (
+      <>
+        <Typography>
+          You must provide attribution to the original author(s)
+        </Typography>
+        <Typography>
+          when reusing of modifying any content from this library
+        </Typography>
+        <Typography>and relicense under the like terms</Typography>
+      </>
+    );
+  }
+
+  if (licenseType === "All Rights Reserved") {
+    return (
+      <>
+        <Typography>
+          You must contact the author&#40;s&#41; to request permission
+        </Typography>
+        <Typography>
+          when reusing of modifying any content from this library
+        </Typography>
+      </>
+    );
+  }
+}
+
 function formatPrompt(str) {
   const newStr = str
-    // .replaceAll(/<\/{0,1}div>/g, "")
-    .replaceAll(/<br\/{0,1}>/g, "");
+    .replaceAll(/<br\/{0,1}>/g, "")
+    .replaceAll(
+      /<div\sclass="equation-container.+<\/span><\/div>/g,
+      `<br/><div style="color:silver;text-align:center;">(equation)</div><br/>`
+    );
   return newStr;
 }

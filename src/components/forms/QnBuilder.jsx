@@ -112,7 +112,7 @@ export function QnBuilder({
       }
     },
     //eslint-disable-next-line
-    [selQuestion?.id]
+    [selQuestion?.id, open]
   );
 
   return (

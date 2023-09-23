@@ -12,6 +12,24 @@ export function formatInstructorNames(instructors) {
   return instructorNames.join(", ");
 }
 
+export function formatAuthorNames(authors) {
+  if (!Array.isArray(authors)) return "(no authors)";
+
+  if (authors.length === 1) {
+    return authors[0];
+  }
+
+  if (authors.length === 2) {
+    return `${authors[0]} and ${authors[1]}`;
+  }
+
+  if (authors.length >= 3) {
+    const lastAuthor = authors.at(-1);
+    const otherAuthors = authors.slice(0, -1).join(", ");
+    return `${otherAuthors} and ${lastAuthor}`;
+  }
+}
+
 export function generateRandomCode(length) {
   let randomCode = "";
   // removed 'I' and 'l' from characters list, since these look identical with the website font and may cause confusion
