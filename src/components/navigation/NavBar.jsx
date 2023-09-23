@@ -59,7 +59,14 @@ function UserAccountMenu({ anchor, handleClose }) {
       sx={{ mt: 5 }}
     >
       <MenuItem onClick={handleClose}>
-        <ListItemText>My account</ListItemText>
+        <ListItemText
+          onClick={() => {
+            handleClose();
+            navigate("account");
+          }}
+        >
+          My account
+        </ListItemText>
       </MenuItem>
       <MenuItem
         onClick={() => {

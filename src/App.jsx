@@ -20,6 +20,7 @@ import CourseAsgmtPage from "./pages/CourseAsgmtPage.jsx";
 import CourseResourcePage from "./pages/CourseResourcePage.jsx";
 import LibrariesPage from "./pages/LibrariesPage.jsx";
 import LibraryPage from "./pages/LibraryPage.jsx";
+import MyAccountPage from "./pages/MyAccountPage.jsx";
 import "./css/App.css";
 
 export default function App() {
@@ -78,6 +79,7 @@ export default function App() {
                   path="community/libraries/:title/:libID"
                   element={<LibraryPage />}
                 />
+                <Route path="account" element={<MyAccountPage />} />
               </Routes>
             </div>
           </LocalizationProvider>
