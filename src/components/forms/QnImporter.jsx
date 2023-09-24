@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Lightbox, LightboxHeader } from "../common/Lightbox.jsx";
 import { BtnContainer, SubmitBtn } from "../common/Buttons.jsx";
 import {
+  Alert,
   Box,
+  Button,
   FormControl,
   FormControlLabel,
   FormLabel,
@@ -12,19 +15,23 @@ import {
   RadioGroup,
   Select,
 } from "@mui/material";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { TitleField } from "../common/InputFields.jsx";
 import {
   addUserQSet,
   copyLibrayQnToUser,
+  getNewestQSet,
   getUserQSets,
 } from "../../utils/firestoreClient.js";
 
 export function QnImporter({ checkedQns, handleClose, open, user }) {
+  const navigate = useNavigate();
   const [target, setTarget] = useState("new");
   const [title, setTitle] = useState("");
   const [qSets, setQSets] = useState([]);
   const [selQSetID, setSelQSetID] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   function isDisabled() {
     if (submitting) {
@@ -50,13 +57,17 @@ export function QnImporter({ checkedQns, handleClose, open, user }) {
     setTarget(e.target.value);
   }
 
+  function handleSuccess() {
+    setSuccess(true);
+  }
+
   function handleSubmit() {
     if (target === "new") {
       const values = {
         title: title,
         questions: checkedQns,
       };
-      addUserQSet(user, values, setSubmitting, handleClose);
+      addUserQSet(user, values, setSubmitting, handleSuccess);
     }
 
     if (target === "existing") {
@@ -69,17 +80,38 @@ export function QnImporter({ checkedQns, handleClose, open, user }) {
         updatedQuestions,
         refParams,
         setSubmitting,
-        handleClose
+        handleSuccess
       );
+    }
+  }
+
+  async function redirectToQSet() {
+    if (target === "existing") {
+      const targetQSet = qSets.find((qSet) => qSet.id === selQSetID);
+      const targetTitle = encodeURI(targetQSet?.title.replace(/\s/g, "-"));
+      const targetID = targetQSet?.id;
+      const path = `/content/question-sets/${targetTitle}/${targetID}`;
+      navigate(path);
+    }
+
+    if (target === "new") {
+      getNewestQSet(user.uid).then((qSet) => {
+        const targetTitle = encodeURI(qSet?.title.replace(/\s/g, "-"));
+        const targetID = qSet?.id;
+        const path = `/content/question-sets/${targetTitle}/${targetID}`;
+        navigate(path);
+      });
     }
   }
 
   function resetForm() {
     setTarget("new");
+    setTitle("");
+    setSuccess(false);
   }
 
-  function dummy() {
-    console.log("skip");
+  function logMessage() {
+    console.log("fetched question sets");
   }
 
   function handleSelect(e) {
@@ -88,7 +120,7 @@ export function QnImporter({ checkedQns, handleClose, open, user }) {
 
   useEffect(
     () => {
-      getUserQSets(user, setQSets, dummy);
+      getUserQSets(user, setQSets, logMessage);
     },
     //eslint-disable-next-line
     [target]
@@ -99,30 +131,31 @@ export function QnImporter({ checkedQns, handleClose, open, user }) {
   return (
     <Lightbox open={open} onClose={handleClose}>
       <LightboxHeader title="Copy Questions" />
+
       <FormControl sx={{ px: 2 }}>
         <FormLabel>copy to...</FormLabel>
         <RadioGroup value={target} onChange={handleType}>
           <FormControlLabel
-            control={<Radio />}
+            control={<Radio disabled={success} />}
             label="new question set"
             value="new"
           />
           <FormControlLabel
-            control={<Radio />}
+            control={<Radio disabled={success} />}
             label="existing question set"
             value="existing"
           />
         </RadioGroup>
       </FormControl>
       <br />
-      <br />
-      {target === "new" && (
+      {!success && <br />}
+      {target === "new" && !success && (
         <Box sx={{ pl: 3 }}>
           <TitleField onChange={handleTitle} value={title} />
         </Box>
       )}
 
-      {target === "existing" && (
+      {target === "existing" && !success && (
         <Box sx={{ pl: 3 }}>
           <FormControl>
             <InputLabel>Question Set</InputLabel>
@@ -142,14 +175,26 @@ export function QnImporter({ checkedQns, handleClose, open, user }) {
         </Box>
       )}
       <br />
-      <BtnContainer right>
-        <SubmitBtn
-          label="SAVE"
-          disabled={isDisabled()}
-          onClick={handleSubmit}
-          submitting={submitting}
-        />
-      </BtnContainer>
+
+      {success ? (
+        <Alert>Import successful!</Alert>
+      ) : (
+        <BtnContainer right>
+          <SubmitBtn
+            label="SAVE"
+            disabled={isDisabled()}
+            onClick={handleSubmit}
+            submitting={submitting}
+          />
+        </BtnContainer>
+      )}
+      {success && (
+        <BtnContainer center>
+          <Button endIcon={<NavigateNextIcon />} onClick={redirectToQSet}>
+            View Question Set
+          </Button>
+        </BtnContainer>
+      )}
     </Lightbox>
   );
 }
