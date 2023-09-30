@@ -7,7 +7,6 @@ import {
   fetchQSetSubmissionHistory,
   getAssignment,
   getQSet,
-  updateAdaptivePoints,
 } from "../utils/firestoreClient";
 import {
   calculateProgress,
@@ -302,12 +301,17 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
   const [loading, setLoading] = useState(true);
   const [objIndex, setObjIndex] = useState(-1);
   const [selQuestion, setSelQuestion] = useState(null);
-  const params = qSet.adaptiveParams;
-  const objectives = params.objectives;
+  const adaptiveParams = qSet.adaptiveParams;
+  const objectives = adaptiveParams.objectives;
   const currentObjective = objectives[objIndex];
   const questions = qSet.questions;
-  const rule = params.completionRule;
+  const rule = adaptiveParams.completionRule;
   const progress = calculateProgress(rule, currentObjective, submissionHistory);
+  const isFinalObjective = objIndex === objectives.length - 1;
+
+  const oneToCompletion =
+    isFinalObjective &&
+    currentObjective?.completionThreshold - 1 === progress.count;
 
   function handlePickQuestion() {
     if (progress.percentage === 100) {
@@ -330,13 +334,13 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
     [objIndex]
   );
 
-  useEffect(() => {
-    if (progress.percentage > 99) {
-      setTimeout(() => {
-        updateAdaptivePoints(docRefParams, params.totalPointsPossible);
-      }, 500);
-    }
-  }, [progress?.percentage]);
+  // useEffect(() => {
+  //   if (progress.percentage > 99) {
+  //     setTimeout(() => {
+  //       updateAdaptivePoints(docRefParams, totalPointsPossible);
+  //     }, 500);
+  //   }
+  // }, [progress?.percentage]);
 
   if (loading) {
     return (
@@ -420,7 +424,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
           currentObjective={currentObjective}
           qSet={qSet}
           submissionHistory={submissionHistory}
-        />{" "}
+        />
         <Card
           className="adaptive-progress-card flex"
           sx={{ minHeight: "400px" }}
@@ -457,7 +461,7 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
   }
 
   if (progress.percentage >= 99 && objIndex === objectives.length - 1) {
-    updateAdaptivePoints(docRefParams, params.totalPointsPossible);
+    // updateAdaptivePoints(docRefParams, totalPointsPossible);
 
     return (
       <>
@@ -498,8 +502,10 @@ function AdaptiveDisplay({ docRefParams, qSet, submissionHistory }) {
       />
 
       <AdaptiveQuestionCard
+        adaptiveParams={adaptiveParams}
         docRefParams={docRefParams}
         handlePickQuestion={handlePickQuestion}
+        oneToCompletion={oneToCompletion}
         selQuestion={selQuestion}
         submissionHistory={submissionHistory}
       />
@@ -604,8 +610,10 @@ function getTotalPointsAwarded(submissionHistory, qSet) {
 }
 
 function AdaptiveQuestionCard({
+  adaptiveParams,
   docRefParams,
   handlePickQuestion,
+  oneToCompletion,
   selQuestion,
   submissionHistory,
 }) {
@@ -631,10 +639,12 @@ function AdaptiveQuestionCard({
       {type === "multiple choice" && (
         <MultipleChoice
           adaptive
+          adaptiveParams={adaptiveParams}
           docRefParams={docRefParams}
           goForward={handlePickQuestion}
           mode="course"
           nextDisabled={false}
+          oneToCompletion={oneToCompletion}
           question={selQuestion}
           submissions={submissions}
           totalPointsAwarded={0}
@@ -643,10 +653,12 @@ function AdaptiveQuestionCard({
       {type === "short answer" && (
         <ShortAnswer
           adaptive
+          adaptiveParams={adaptiveParams}
           docRefParams={docRefParams}
           goForward={handlePickQuestion}
           mode="course"
           nextDisabled={false}
+          oneToCompletion={oneToCompletion}
           question={selQuestion}
           submissions={submissions}
           totalPointsAwarded={0}
