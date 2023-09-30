@@ -35,7 +35,7 @@ function LibraryCard({ library }) {
   return (
     <Card className="relative" sx={{ width: 300, height: 300, m: 2 }}>
       <CardActionArea onClick={handleClick}>
-        <Box sx={{ p: "30px" }}>
+        <Box>
           <CardMedia
             component="img"
             //   height="190"
