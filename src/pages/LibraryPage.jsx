@@ -347,6 +347,18 @@ function QuestionSetsPanel({ libID, library }) {
     [questions]
   );
 
+  if (library?.awaitingImport) {
+    return (
+      <Panel>
+        <Box className="library-awaiting-import">
+          <Typography color="primary">
+            Questions awaiting import from Koral v1
+          </Typography>
+        </Box>
+      </Panel>
+    );
+  }
+
   return (
     <>
       <Panel>

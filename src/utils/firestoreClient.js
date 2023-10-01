@@ -462,7 +462,7 @@ export function fetchInstructorCourses(user, setInstructorCourses) {
 
 export function fetchLibraries(setLibraries) {
   const colRef = collection(db, "libraries");
-  const q = query(colRef);
+  const q = query(colRef, orderBy("sortIndex", "asc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
