@@ -271,10 +271,8 @@ export function copyLibrayQnToUser(
   questions,
   refParams,
   setSubmitting,
-  handleClose
+  handleSuccess
 ) {
-  console.log(questions);
-  console.log(refParams);
   const { userID, qSetID } = refParams;
   const ref = doc(db, "users", userID, "question-sets", qSetID);
 
@@ -283,9 +281,23 @@ export function copyLibrayQnToUser(
     questions: questions,
   })
     .then(() => {
-      setTimeout(() => handleClose(), 600);
+      setTimeout(() => handleSuccess(), 600);
     })
     .finally(() => setTimeout(() => setSubmitting(false), 400));
+}
+
+export function countLibraryQuestions(libraryID) {
+  const ref = collection(db, "libraries", libraryID, "questions");
+  const ref2 = doc(db, "libraries", libraryID);
+  const q = query(ref);
+
+  getDocs(q).then((snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+    }));
+    console.log(fetchedItems);
+    updateDoc(ref2, { questionCount: fetchedItems.length });
+  });
 }
 
 export function deleteCourseAnncmt(course, anncmt) {
@@ -450,7 +462,7 @@ export function fetchInstructorCourses(user, setInstructorCourses) {
 
 export function fetchLibraries(setLibraries) {
   const colRef = collection(db, "libraries");
-  const q = query(colRef);
+  const q = query(colRef, orderBy("sortIndex", "asc"));
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -685,34 +697,6 @@ export function fetchLibraryQnsBefore(
   }
 }
 
-export function countLibraryQuestions(libraryID) {
-  const ref = collection(db, "libraries", libraryID, "questions");
-  const ref2 = doc(db, "libraries", libraryID);
-  const q = query(ref);
-
-  getDocs(q).then((snapshot) => {
-    const fetchedItems = snapshot.docs.map((doc) => ({
-      id: doc.id,
-    }));
-    console.log(fetchedItems);
-    updateDoc(ref2, { questionCount: fetchedItems.length });
-  });
-}
-
-export function fetchStudentCourses(user, setStudentCourses, setLoading) {
-  const colRef = collection(db, "courses");
-  const q = query(colRef, where("studentIDs", "array-contains", user.uid));
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const fetchedItems = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setStudentCourses(fetchedItems);
-    setLoading(false);
-  });
-  return unsubscribe;
-}
-
 export function fetchQSetSubmissionHistory(
   courseID,
   asgmtID,
@@ -739,6 +723,20 @@ export function fetchQSetSubmissionHistory(
         });
       }, 200);
     }
+  });
+  return unsubscribe;
+}
+
+export function fetchStudentCourses(user, setStudentCourses, setLoading) {
+  const colRef = collection(db, "courses");
+  const q = query(colRef, where("studentIDs", "array-contains", user.uid));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const fetchedItems = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setStudentCourses(fetchedItems);
+    setLoading(false);
   });
   return unsubscribe;
 }
@@ -827,10 +825,8 @@ export function fetchUserLinks(user, setLinks, setLoading) {
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
-    setTimeout(() => {
-      setLinks(fetchedItems);
-      setLoading(false);
-    }, 1000);
+    setLinks(sortByTitle(fetchedItems));
+    setLoading(false);
   });
   return unsubscribe;
 }
@@ -848,7 +844,8 @@ export function fetchUserInfo(user, setUserInfo) {
 
 export function fetchUserQSets(user, setQSets, setLoading) {
   const ref = collection(db, "users", user.uid, "question-sets");
-  const q = query(ref, orderBy("title", "asc"));
+  const q = query(ref);
+
   const unsubscribe = onSnapshot(q, (snapshot) => {
     const fetchedItems = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -860,7 +857,7 @@ export function fetchUserQSets(user, setQSets, setLoading) {
       dateCreated: doc.data().dateCreated?.toDate(),
       searchHandle: doc.data().title.toLowerCase(),
     }));
-    setQSets(fetchedItems);
+    setQSets(sortByTitle(fetchedItems));
     setLoading(false);
   });
   return unsubscribe;
@@ -886,6 +883,14 @@ export function getAssignment(courseID, asgmtID, setAsgmt) {
   getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
 }
 
+export function getImage(userID, imageID, setImage, setLoading) {
+  const ref = doc(db, "users", userID, "images", imageID);
+  getDoc(ref).then((doc) => {
+    setImage({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
 export function getQSetSubmissionHistory(
   courseID,
   asgmtID,
@@ -907,17 +912,20 @@ export function getQSetSubmissionHistory(
   });
 }
 
+export async function getNewestQSet(userID) {
+  const ref = collection(db, "users", userID, "question-sets");
+  const q = query(ref, orderBy("dateCreated", "desc"), limit(1));
+  const snapshot = await getDocs(q);
+  const fetchedItems = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  return fetchedItems[0];
+}
+
 export function getResource(courseID, resourceID, setResource) {
   const ref = doc(db, "courses", courseID, "resources", resourceID);
   getDoc(ref).then((doc) => setResource({ id: doc.id, ...doc.data() }));
-}
-
-export function getImage(userID, imageID, setImage, setLoading) {
-  const ref = doc(db, "users", userID, "images", imageID);
-  getDoc(ref).then((doc) => {
-    setImage({ id: doc.id, ...doc.data() });
-    setLoading(false);
-  });
 }
 
 export function getDocument(userID, documentID, setDocument, setLoading) {

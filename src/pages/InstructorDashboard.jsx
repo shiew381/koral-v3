@@ -900,7 +900,6 @@ function GradebookCellInfo({
         underline="none"
         onClick={() => {
           openEnterGrade();
-          console.log("clicked");
           setAsgmtInfo({
             ...asgmt,
             userID: userGrades.id,

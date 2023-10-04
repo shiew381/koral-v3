@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useStorage } from "../../hooks/useStorage.js";
 import { storage } from "../../config/firebaseConfig.js";
 import { ref, deleteObject } from "firebase/storage";
@@ -60,20 +61,28 @@ export function Editor({
   const [currentCoord, setCurrentCoord] = useState(null);
   const dX = currentCoord?.x - initCoord?.x;
   const dY = currentCoord?.y - initCoord?.y;
+  const location = useLocation();
 
   function deleteImage() {
     const imgElem = editorRef.current.querySelector(`#${activeGroup.id}-img`);
     const url = imgElem.getAttribute("src");
 
     const storageRef = ref(storage, url);
+    const isLibraryImg = url.includes("libraries");
+    const editingLibrary = location?.pathname?.includes("libraries");
 
-    deleteObject(storageRef)
-      .then(() => console.log("object deleted from storage"))
-      .then(() => imgElem.parentElement.remove())
-      .then(() => setTimeout(() => onImageDeleteSuccess(), 200))
-      .catch((error) => console.log(error));
-    setActiveGroup(null);
-    setActiveTarget(null);
+    if (isLibraryImg && !editingLibrary) {
+      imgElem.parentElement.remove();
+      setTimeout(() => onImageDeleteSuccess(), 200);
+    } else {
+      deleteObject(storageRef)
+        .then(() => console.log("object deleted from storage"))
+        .then(() => imgElem.parentElement.remove())
+        .then(() => setTimeout(() => onImageDeleteSuccess(), 200))
+        .catch((error) => console.log(error));
+      setActiveGroup(null);
+      setActiveTarget(null);
+    }
   }
 
   function displayImageResizeHandles(target) {
@@ -387,7 +396,7 @@ export function Editor({
           return;
         }
 
-        if (prevElem?.classList?.contains("img-container")) {
+        if (prevElem?.classList?.contains("editor-img-container")) {
           const groupID = prevElem.id.slice(0, 4);
           e.preventDefault();
           selectImageGroup(groupID);
@@ -408,7 +417,7 @@ export function Editor({
         }
 
         //TODO - image gets deleted when caret is at end of previous div
-        if (nextElem?.classList?.contains("img-container")) {
+        if (nextElem?.classList?.contains("editor-img-container")) {
           const groupID = nextElem.id.slice(0, 4);
           e.preventDefault();
           selectImageGroup(groupID);

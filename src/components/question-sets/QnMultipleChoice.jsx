@@ -6,6 +6,7 @@ import {
   saveQuestionResponse,
 } from "../../utils/firestoreClient";
 import { gradeResponse } from "../../utils/grading";
+import { getPointsAwarded } from "../../utils/gradeUtils";
 import {
   Alert,
   Box,
@@ -28,10 +29,12 @@ import {
 
 export default function MultipleChoice({
   adaptive,
+  adaptiveParams,
   docRefParams,
   goForward,
   mode,
   nextDisabled,
+  oneToCompletion,
   question,
   submissions,
   totalPointsAwarded,
@@ -83,9 +86,14 @@ export default function MultipleChoice({
 
   function handleSubmit() {
     const grade = gradeResponse(question, currentResponse);
-    const updatedPointsAwarded = adaptive
-      ? 0
-      : totalPointsAwarded + grade.pointsAwarded;
+
+    const updatedPointsAwarded = getPointsAwarded(
+      grade,
+      totalPointsAwarded,
+      adaptive,
+      adaptiveParams,
+      oneToCompletion
+    );
 
     if (mode === "course") {
       saveQResponseFromCourse(
