@@ -791,6 +791,7 @@ function sanitizeUnit(str) {
     .trim()
     .replace(/\s+/g, " ")
     .replace(/\\/g, "/")
+    .replace(/−/g, "-")
     .replace(/-(?=\D)/g, "*")
     .replace(/\s*\/\s*/g, "/")
     .replace(/\s*\(\s*/g, "(")
