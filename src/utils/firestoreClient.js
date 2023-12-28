@@ -498,8 +498,64 @@ export function fetchLibrary(libraryID, setLibrary, setLoading) {
   return unsubscribe;
 }
 
+function buildQuery(ref, library, searchTerm, countPerPage) {
+  if (!searchTerm) {
+    const q = query(ref, orderBy(library.orderBy, "desc"), limit(countPerPage));
+    return q;
+  }
+
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      orderBy(library.orderBy, "desc")
+    );
+    return q;
+  }
+}
+
+function buildQueryAfter(ref, library, searchTerm, countPerPage, lastDoc) {
+  if (!searchTerm) {
+    const q = query(
+      ref,
+      orderBy(library.orderBy, "desc"),
+      startAfter(lastDoc),
+      limit(countPerPage)
+    );
+    return q;
+  }
+
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      orderBy(library.orderBy, "desc"),
+      startAfter(lastDoc),
+      limit(countPerPage)
+    );
+    return q;
+  }
+}
+
+function buildQueryBefore(ref, library, searchTerm, firstDoc) {
+  if (!searchTerm) {
+    const q = query(ref, orderBy(library.orderBy, "desc"), endBefore(firstDoc));
+    return q;
+  }
+
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      orderBy(library.orderBy, "desc"),
+      endBefore(firstDoc)
+    );
+    return q;
+  }
+}
+
 export function fetchLibraryQuestions(
-  libraryID,
+  library,
   searchTerm,
   countPerPage,
   isEditor,
@@ -509,17 +565,13 @@ export function fetchLibraryQuestions(
   setPage,
   setFetching
 ) {
-  const ref = collection(db, "libraries", libraryID, "questions");
+  const ref = collection(db, "libraries", library?.id, "questions");
 
-  const q = searchTerm
-    ? query(
-        ref,
-        where("tags_searchable", "array-contains", searchTerm),
-        orderBy("dateCreated", "desc")
-      )
-    : query(ref, orderBy("dateCreated", "desc"), limit(countPerPage));
+  const q = buildQuery(ref, library, searchTerm, countPerPage);
 
   setFetching(true);
+
+  console.log("...fetching library questions");
 
   if (!isEditor) {
     getDocs(q).then((snapshot) => {
@@ -567,7 +619,7 @@ export function fetchLibraryQuestions(
 }
 
 export function fetchLibraryQnsAfter(
-  libID,
+  library,
   searchTerm,
   countPerPage,
   lastDoc,
@@ -578,22 +630,8 @@ export function fetchLibraryQnsAfter(
   setPage,
   setFetching
 ) {
-  const ref = collection(db, "libraries", libID, "questions");
-
-  const q = searchTerm
-    ? query(
-        ref,
-        where("tags_searchable", "array-contains", searchTerm),
-        orderBy("dateCreated", "desc"),
-        startAfter(lastDoc),
-        limit(countPerPage)
-      )
-    : query(
-        ref,
-        orderBy("dateCreated", "desc"),
-        startAfter(lastDoc),
-        limit(countPerPage)
-      );
+  const ref = collection(db, "libraries", library?.id, "questions");
+  const q = buildQueryAfter(ref, library, searchTerm, countPerPage, lastDoc);
 
   setFetching(true);
 
@@ -635,7 +673,7 @@ export function fetchLibraryQnsAfter(
 }
 
 export function fetchLibraryQnsBefore(
-  libID,
+  library,
   searchTerm,
   countPerPage,
   firstDoc,
@@ -646,15 +684,8 @@ export function fetchLibraryQnsBefore(
   setPage,
   setFetching
 ) {
-  const ref = collection(db, "libraries", libID, "questions");
-  const q = searchTerm
-    ? query(
-        ref,
-        where("tags_searchable", "array-contains", searchTerm),
-        orderBy("dateCreated", "desc"),
-        endBefore(firstDoc)
-      )
-    : query(ref, orderBy("dateCreated", "desc"), endBefore(firstDoc));
+  const ref = collection(db, "libraries", library?.id, "questions");
+  const q = buildQueryBefore(ref, library, searchTerm, firstDoc);
 
   setFetching(true);
 

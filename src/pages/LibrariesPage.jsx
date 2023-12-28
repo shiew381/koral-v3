@@ -28,7 +28,10 @@ function LibraryCard({ library }) {
   const navigate = useNavigate();
 
   function handleClick() {
-    const libraryTitle = encodeURI(library.title.replace(/\s/g, "-"));
+    const libraryTitle = encodeURI(
+      library.title.replace(/\s/g, "-").replace(/:/, "")
+    );
+
     navigate(`/community/libraries/${libraryTitle}/${library.id}`);
   }
 

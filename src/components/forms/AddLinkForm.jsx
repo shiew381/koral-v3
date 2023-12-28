@@ -29,8 +29,6 @@ export function AddLinkForm({ user, open, handleClose }) {
   }
 
   function handleSubmit() {
-    console.log("hello");
-
     addUserLink(user, values, setSubmitting, handleClose);
   }
 

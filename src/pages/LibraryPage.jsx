@@ -199,7 +199,7 @@ function QuestionSetsPanel({ libID, library }) {
 
   function handleBack() {
     fetchLibraryQnsBefore(
-      libID,
+      library,
       searchTerm,
       countPerPage,
       firstDoc,
@@ -229,7 +229,7 @@ function QuestionSetsPanel({ libID, library }) {
 
   function handleNext() {
     fetchLibraryQnsAfter(
-      libID,
+      library,
       searchTerm,
       countPerPage,
       lastDoc,
@@ -270,9 +270,10 @@ function QuestionSetsPanel({ libID, library }) {
 
   function handleSearch(term) {
     const activeTerm = term || searchTerm;
+    console.log(library);
 
     fetchLibraryQuestions(
-      libID,
+      library,
       activeTerm,
       countPerPage,
       isEditor,
@@ -495,7 +496,6 @@ function QuestionSetsPanel({ libID, library }) {
                     <ListItemButton
                       className="search-suggestion"
                       onClick={() => {
-                        console.log("pizza");
                         handleOpenSearchSuggestion();
                       }}
                       sx={suggestionStyle}
@@ -712,6 +712,9 @@ function LicenseMessage({ licenseType }) {
 }
 
 function formatPrompt(str) {
+  if (typeof str !== "string") {
+    return "not a string";
+  }
   const newStr = str
     .replaceAll(/<br\/{0,1}>/g, "")
     .replaceAll(
