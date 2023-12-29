@@ -47,6 +47,7 @@ import { BtnContainer } from "../components/common/Buttons";
 import "../css/Library.css";
 import { SearchSuggestionForm } from "../components/forms/SearchSuggestionForm";
 import { formatAuthorNames } from "../utils/commonUtils";
+import Multipart from "../components/question-sets/QnMultipart";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -270,7 +271,6 @@ function QuestionSetsPanel({ libID, library }) {
 
   function handleSearch(term) {
     const activeTerm = term || searchTerm;
-    console.log(library);
 
     fetchLibraryQuestions(
       library,
@@ -405,7 +405,9 @@ function QuestionSetsPanel({ libID, library }) {
                       }}
                     >
                       <ListItemText>
-                        {parse(formatPrompt(question.prompt))}
+                        {question.type === "multipart"
+                          ? "multipart"
+                          : parse(formatPrompt(question.prompt))}
                       </ListItemText>
                     </ListItemButton>
                   </ListItem>
@@ -541,7 +543,9 @@ function QuestionSetsPanel({ libID, library }) {
                     <Button onClick={handleOpenEdit}>Edit</Button>
                   </div>
                 )}
-
+                {type === "multipart" && (
+                  <Multipart mode="preview" question={selQuestion} />
+                )}
                 {type === "multiple choice" && (
                   <MultipleChoice mode="preview" question={selQuestion} />
                 )}
@@ -637,12 +641,11 @@ function LicensePanel({ library }) {
   const authors = formatAuthorNames(license?.authors);
   const dateApplied = license?.dateApplied?.toDate() || new Date();
   const yearApplied = dateApplied.getFullYear();
-  const isCreativeCommons = licenseType.includes("Creative Commons");
   const allRightsReserved = licenseType === "All Rights Reserved";
 
   return (
     <Panel>
-      <div style={{ height: "15vh" }}></div>
+      <div style={{ height: "20vh" }}></div>
       <Typography>
         <strong>
           <CopyrightIcon
@@ -660,10 +663,24 @@ function LicensePanel({ library }) {
           <strong>is licensed under {licenseType}</strong>
         </Typography>
       )}
-      <div style={{ height: "8vh" }}></div>
-      <Typography>What {licenseType} license means:</Typography>
       <br />
-      <LicenseMessage licenseType={licenseType} />
+      <br />
+      <LicenseMessage license={license} />
+      <br />
+    </Panel>
+  );
+}
+
+function LicenseMessage({ license }) {
+  const licenseType = license?.type || "All Rights Reserved";
+  const isCreativeCommons = licenseType.includes("Creative Commons");
+
+  return (
+    <div style={{ maxWidth: "420px" }}>
+      <Typography align="center">
+        What the {licenseType} license means:
+      </Typography>
+      <Typography align="center">{license.description}</Typography>
       <br />
       {isCreativeCommons && (
         <Typography>
@@ -678,37 +695,8 @@ function LicensePanel({ library }) {
           to learn more
         </Typography>
       )}
-    </Panel>
+    </div>
   );
-}
-
-function LicenseMessage({ licenseType }) {
-  if (licenseType === "Creative Commons BY SA") {
-    return (
-      <>
-        <Typography>
-          You must provide attribution to the original author(s)
-        </Typography>
-        <Typography>
-          when reusing of modifying any content from this library
-        </Typography>
-        <Typography>and relicense under the like terms</Typography>
-      </>
-    );
-  }
-
-  if (licenseType === "All Rights Reserved") {
-    return (
-      <>
-        <Typography>
-          You must contact the author&#40;s&#41; to request permission
-        </Typography>
-        <Typography>
-          when reusing of modifying any content from this library
-        </Typography>
-      </>
-    );
-  }
 }
 
 function formatPrompt(str) {

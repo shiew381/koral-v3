@@ -36,6 +36,7 @@ export function FreeResponse({
       : {
           ...selQuestion,
           prompt: cleanEditorHTML(promptRef.current),
+          exampleResponse: cleanEditorHTML(exampleResponseRef.current),
         };
     autoSaveQuestion(values);
   }
@@ -48,7 +49,11 @@ export function FreeResponse({
           exampleResponse: cleanEditorHTML(exampleResponseRef.current),
           pointsPossible: 1,
         }
-      : { ...selQuestion, prompt: cleanEditorHTML(promptRef.current) };
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          exampleResponse: cleanEditorHTML(exampleResponseRef.current),
+        };
 
     saveQuestion(values);
   }
