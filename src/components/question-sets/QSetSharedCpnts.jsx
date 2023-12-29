@@ -9,10 +9,10 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import parse from "html-react-parser";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { fullParse } from "../../utils/customParsers";
 
 export function AttemptCounter({ question, submissions }) {
   if (!question) return;
@@ -34,7 +34,7 @@ export function PromptPreview({ question }) {
   if (!question?.prompt) {
     return <div style={{ color: "gray" }}>{"(error rendering prompt)"}</div>;
   }
-  return <div className="prompt">{parse(question.prompt)}</div>;
+  return <div className="prompt">{fullParse(question.prompt)}</div>;
 }
 
 export function ClearSubmissions({ handleClick }) {

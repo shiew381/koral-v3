@@ -27,6 +27,7 @@ import {
   PromptPreview,
 } from "./QSetSharedCpnts";
 import parse from "html-react-parser";
+import { fullParse } from "../../utils/customParsers";
 
 export default function ShortAnswer({
   adaptive,
@@ -215,7 +216,7 @@ function ShortAnswerText({
         </Typography>
         <div className="correct-answer-field-area">
           <div className="correct-answer-field-container">
-            {parse(question.correctAnswer?.text || "")}
+            {fullParse(question.correctAnswer?.text || "")}
           </div>
         </div>
       </div>

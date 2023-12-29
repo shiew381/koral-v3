@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import parse from "html-react-parser";
 import { copyArray } from "../../utils/commonUtils";
 import { Lightbox, LightboxHeader } from "../common/Lightbox";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
@@ -26,6 +25,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { updateAdaptiveParams } from "../../utils/firestoreClient";
+import { fullParse } from "../../utils/customParsers";
 
 function getAssignments(qSet, adaptiveParams) {
   const arr = [];
@@ -345,7 +345,7 @@ function GroupQuestions({
                 <Typography>{qIndex + 1}</Typography>
               </td>
               <td style={cellStyle}>
-                <Typography>{parse(question?.prompt)}</Typography>
+                <Typography>{fullParse(question?.prompt)}</Typography>
               </td>
               <td style={cellStyle}>
                 <FormControl fullWidth>

@@ -10,7 +10,6 @@ import {
   fetchLibraryQuestions,
   updateTags,
 } from "../utils/firestoreClient";
-import parse from "html-react-parser";
 import {
   Box,
   Button,
@@ -48,6 +47,7 @@ import "../css/Library.css";
 import { SearchSuggestionForm } from "../components/forms/SearchSuggestionForm";
 import { formatAuthorNames } from "../utils/commonUtils";
 import Multipart from "../components/question-sets/QnMultipart";
+import { fullParse } from "../utils/customParsers";
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -407,7 +407,7 @@ function QuestionSetsPanel({ libID, library }) {
                       <ListItemText>
                         {question.type === "multipart"
                           ? "multipart"
-                          : parse(formatPrompt(question.prompt))}
+                          : fullParse(formatPrompt(question.prompt))}
                       </ListItemText>
                     </ListItemButton>
                   </ListItem>

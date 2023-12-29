@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import parse from "html-react-parser";
 import {
   deleteQuestionSubmissions,
   saveQResponseFromCourse,
@@ -26,6 +25,7 @@ import {
   CorrectIndicator,
   ClearSubmissions,
 } from "./QSetSharedCpnts";
+import { fullParse } from "../../utils/customParsers";
 
 export default function MultipleChoice({
   adaptive,
@@ -166,7 +166,7 @@ export default function MultipleChoice({
                   disabled
                 />
               )}
-              <Box className="answer-choice-text">{parse(el.text)}</Box>
+              <Box className="answer-choice-text">{fullParse(el.text)}</Box>
             </Box>
           ))}
         </div>
@@ -205,7 +205,7 @@ export default function MultipleChoice({
                   disabled
                 />
               )}
-              <Box className="answer-choice-text">{parse(el.text)}</Box>
+              <Box className="answer-choice-text">{fullParse(el.text)}</Box>
             </Box>
           ))}
         </div>
@@ -249,7 +249,7 @@ export default function MultipleChoice({
                   disabled={attemptsExhausted || answeredCorrectly}
                 />
               )}
-              <Box className="answer-choice-text">{parse(el.text)}</Box>
+              <Box className="answer-choice-text">{fullParse(el.text)}</Box>
             </Box>
           ))}
         </div>

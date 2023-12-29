@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import parse from "html-react-parser";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import {
   saveFreeResponse,
@@ -16,6 +15,7 @@ import {
 } from "@mui/material";
 import { Editor } from "../common/Editor";
 import { formatDate, formatTime } from "../../utils/dateUtils.js";
+import { fullParse } from "../../utils/customParsers.jsx";
 
 export default function FreeResponse({
   docRefParams,
@@ -97,7 +97,7 @@ export default function FreeResponse({
             example response
           </Typography>
           <Box className="example-free-response">
-            {parse(question.exampleResponse)}
+            {fullParse(question.exampleResponse)}
           </Box>
         </Box>
       </CardContent>
