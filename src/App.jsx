@@ -22,6 +22,7 @@ import LibrariesPage from "./pages/LibrariesPage.jsx";
 import LibraryPage from "./pages/LibraryPage.jsx";
 import MyAccountPage from "./pages/MyAccountPage.jsx";
 import "./css/App.css";
+// import MaintenencePage from "./pages/MaintenencePage.jsx";
 
 export default function App() {
   const [open, setOpen] = useState(false);
@@ -80,6 +81,7 @@ export default function App() {
                   element={<LibraryPage />}
                 />
                 <Route path="account" element={<MyAccountPage />} />
+                {/* <Route path="maintenance" element={<MaintenencePage />} /> */}
               </Routes>
             </div>
           </LocalizationProvider>

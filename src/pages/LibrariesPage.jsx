@@ -14,7 +14,7 @@ export default function LibrariesPage() {
   return (
     <Page>
       <PageHeader title="Libraries" />
-      <Box className="flex flex-wrap">
+      <Box className="flex flex-wrap flex-center">
         {libraries.map((library) => (
           <LibraryCard key={library.id} library={library} />
         ))}

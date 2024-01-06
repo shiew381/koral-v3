@@ -111,26 +111,21 @@ export default function QuestionSetsPage() {
         </div>
       )}
       {qSets.length > 0 && (
-        <Box sx={{ px: 3 }}>
-          <Box
-            className="flex flex-align-center flex-space-between flex-wrap"
-            sx={{ pb: 2 }}
-            width="450px"
-          >
-            <SearchField
-              onChange={handleSearchTerm}
-              placeholder="search by title"
-              value={searchTerm}
-            />
-            <AddQSetBtn onClick={handleOpen} />
-          </Box>
-          {filtered.length === 0 && (
-            <Box sx={{ p: 2 }}>
-              No question sets with name containing &quot;{searchTerm}&quot;
+        <Box className="flex flex-col flex-align-center pad-x-responsive">
+          <Box sx={{ width: "100%" }}>
+            <Box className="flex flex-align-center" sx={{ mb: "20px" }}>
+              <SearchField
+                onChange={handleSearchTerm}
+                placeholder="search by title"
+                value={searchTerm}
+              />
+              <AddQSetBtn onClick={handleOpen} />
             </Box>
-          )}
-          <Box className="flex flex-row flex-wrap">
-            {filtered.length > 0 &&
+            {filtered.length === 0 ? (
+              <Box sx={{ p: 2 }}>
+                No question sets with name containing &quot;{searchTerm}&quot;
+              </Box>
+            ) : (
               filtered.map((qSet) => (
                 <QSetCard
                   deleteQSet={deleteQSet}
@@ -141,11 +136,11 @@ export default function QuestionSetsPage() {
                   qSet={qSet}
                   user={user}
                 />
-              ))}
+              ))
+            )}
           </Box>
         </Box>
       )}
-
       <AddQSetForm open={open} handleClose={handleClose} user={user} />
       <EditQSetTitleForm
         open={openTitle}
@@ -165,9 +160,11 @@ export default function QuestionSetsPage() {
 
 function AddQSetBtn({ onClick }) {
   return (
-    <Button onClick={onClick} startIcon={<AddIcon />}>
-      Add QUESTION SET
-    </Button>
+    <Box className="margin-x-responsive">
+      <Button onClick={onClick} startIcon={<AddIcon />}>
+        Add QUESTION SET
+      </Button>
+    </Box>
   );
 }
 
@@ -200,7 +197,6 @@ function QSetCard({
   }
 
   function toggleAdaptive(e) {
-    console.log(e);
     setAdaptiveModeOn(!adaptiveModeOn);
     const updatedValues = {
       mode: e.target.checked ? "adaptive" : "normal",
@@ -225,7 +221,7 @@ function QSetCard({
   if (!qSet) return null;
 
   return (
-    <Card sx={{ minWidth: "400px", mb: 2, mr: 2 }} className="relative">
+    <Card sx={{ minWidth: "380px", mb: 2 }} className="relative">
       <CardContent>
         <Box style={{ position: "absolute", top: "10px", right: "8px" }}>
           <MoreOptionsBtn

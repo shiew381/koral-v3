@@ -21,6 +21,10 @@ import {
   ListItemText,
   ListItemButton,
   Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -125,7 +129,7 @@ export default function DocumentsPage() {
     return (
       <Page>
         <PageHeader title="Documents" />
-        <div className="flex flex-center" style={{ height: "50vh" }}>
+        <div className="flex flex-center " style={{ height: "50vh" }}>
           <Box className="build-first-item">
             <Typography
               align="center"
@@ -155,10 +159,10 @@ export default function DocumentsPage() {
     return (
       <Page>
         <PageHeader title="Documents" />
-        <Box className="flex flex-row" sx={{ px: 2 }}>
-          <Box className="flex-col" sx={{ width: "300px", mx: "15px" }}>
+        <Box className="flex flex-row hide-if-mobile" sx={{ px: 2 }}>
+          <Box className="flex-col " sx={{ width: "300px", mx: "15px" }}>
             <Box
-              className="flex flex-align-center flex-space-between "
+              className="flex flex-align-center flex-space-between"
               sx={{ py: 1 }}
             >
               <SearchField
@@ -186,7 +190,32 @@ export default function DocumentsPage() {
               uploadProgress={uploadProgress}
             />
           </Box>
-          <Box className="flex-col flex-align-center flex-grow relative">
+          <Box className="flex flex-justify-center flex-grow relative">
+            <Box sx={{ width: "100%" }}>
+              <DocEmbed doc={selDocument} />
+              <DocDetails doc={selDocument} />
+            </Box>
+          </Box>
+        </Box>
+        <Box className="show-if-mobile" sx={{ px: "3px" }}>
+          <FormControl fullWidth>
+            <InputLabel>Document</InputLabel>
+            <Select
+              value={selDocument}
+              label="Document"
+              onChange={(e) => setSelDocument(e.target.value)}
+              sx={{ maxWidth: "400px" }}
+            >
+              {documents.map((doc) => (
+                <MenuItem value={doc} key={doc.id}>
+                  <Typography color="textSecondary">{doc.name}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br />
+          <br />
+          <Box className="flex-col flex-center flex-grow relative">
             <DocEmbed doc={selDocument} />
             <DocDetails doc={selDocument} />
           </Box>
@@ -213,7 +242,7 @@ function DocList({
 
   if (documents?.length == 0) {
     return (
-      <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
+      <List disablePadding sx={{ height: "63vh", overflow: "auto" }}>
         <ListItem component="div" disablePadding sx={{ bgcolor: "none", p: 2 }}>
           <ListItemText>
             No documents with name containing &quot;{searchTerm}&quot;
@@ -224,12 +253,19 @@ function DocList({
   }
 
   return (
-    <List disablePadding sx={{ height: "65vh", overflow: "auto" }}>
+    <List disablePadding sx={{ height: "63vh", overflow: "auto" }}>
       {documents.map((doc) => (
         <ListItem
           component="div"
           disablePadding
           key={doc.id}
+          secondaryAction={
+            <MoreOptionsBtn
+              item={doc}
+              setAnchorEl={setAnchorEl}
+              setSelItem={setSelItem}
+            />
+          }
           sx={{
             bgcolor: selDocument?.id === doc.id ? "whitesmoke" : "none",
           }}
@@ -237,11 +273,6 @@ function DocList({
           <ListItemButton onClick={() => setSelDocument(doc)}>
             {doc?.name}
           </ListItemButton>
-          <MoreOptionsBtn
-            item={doc}
-            setAnchorEl={setAnchorEl}
-            setSelItem={setSelItem}
-          />
         </ListItem>
       ))}
       <MoreOptionsMenu
@@ -312,16 +343,16 @@ function DocEmbed({ doc }) {
     );
 
   return (
-    <Box width="98%" sx={{ px: 0 }}>
+    <div style={{ height: "70vh", boxSizing: "content-box" }}>
       <iframe
         src={url}
-        width="100%"
-        height="540px"
-        style={{ minWidth: "200px", border: "none", padding: "none" }}
+        width="98%"
+        height="98%"
+        style={{ border: "none" }}
         type="application/pdf"
         title="embdeded pdf"
       />
-    </Box>
+    </div>
   );
 }
 

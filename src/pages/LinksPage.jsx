@@ -7,12 +7,16 @@ import {
   Box,
   Button,
   Divider,
+  FormControl,
   IconButton,
+  InputLabel,
   Link,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
+  MenuItem,
+  Select,
   Typography,
 } from "@mui/material";
 import { SearchField } from "../components/common/InputFields";
@@ -74,10 +78,10 @@ export default function LinksPage() {
     );
   }
 
-  return (
-    <Page>
-      <PageHeader title="Links" />
-      {links.length === 0 && (
+  if (links.length === 0) {
+    return (
+      <Page>
+        <PageHeader title="Links" />
         <div className="flex flex-center" style={{ height: "50vh" }}>
           <BuildFirstItem
             handleOpen={handleOpen}
@@ -85,9 +89,16 @@ export default function LinksPage() {
             message="Welcome to your links! Embed content from other websites here."
           />
         </div>
-      )}
-      {links.length > 0 && (
-        <Box className="flex flex-row" sx={{ px: 2 }}>
+        <AddLinkForm open={open} handleClose={handleClose} user={user} />
+      </Page>
+    );
+  }
+
+  if (links.length > 0) {
+    return (
+      <Page>
+        <PageHeader title="Links" />
+        <Box className="flex flex-row hide-if-tablet" sx={{ px: 2 }}>
           <Box className="flex-col" sx={{ width: "300px", mx: "15px" }}>
             <Box
               className="flex flex-align-center flex-space-between"
@@ -102,7 +113,6 @@ export default function LinksPage() {
                 <SwapVertIcon style={{ color: "gray" }} />
               </IconButton>
             </Box>
-
             <Divider />
             <LinkList
               links={filtered}
@@ -114,15 +124,40 @@ export default function LinksPage() {
             <Divider />
             <AddLinkBtn onClick={handleOpen} />
           </Box>
-          <Box className="flexflex-col flex-align-center flex-grow relative">
+          <Box className="flex flex-justify-center flex-grow relative">
+            <Box sx={{ width: "100%" }}>
+              <LinkEmbed link={selLink} />
+              <LinkDetails link={selLink} />
+            </Box>
+          </Box>
+        </Box>
+        <Box className="show-if-tablet" sx={{ px: "3px" }}>
+          <FormControl fullWidth>
+            <InputLabel>Link</InputLabel>
+            <Select
+              value={selLink}
+              label="Link"
+              onChange={(e) => setSelLink(e.target.value)}
+              sx={{ maxWidth: "400px" }}
+            >
+              {links.map((link) => (
+                <MenuItem value={link} key={link.id}>
+                  <Typography color="textSecondary">{link.title}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br />
+          <br />
+          <Box className="flex-col flex-center flex-grow relative">
             <LinkEmbed link={selLink} />
             <LinkDetails link={selLink} />
           </Box>
         </Box>
-      )}
-      <AddLinkForm open={open} handleClose={handleClose} user={user} />
-    </Page>
-  );
+        <AddLinkForm open={open} handleClose={handleClose} user={user} />
+      </Page>
+    );
+  }
 }
 
 function LinkList({ links, searchTerm, selLink, setSelLink, user }) {
@@ -153,6 +188,13 @@ function LinkList({ links, searchTerm, selLink, setSelLink, user }) {
           component="div"
           disablePadding
           key={link.id}
+          secondaryAction={
+            <MoreOptionsBtn
+              item={link}
+              setAnchorEl={setAnchorEl}
+              setSelItem={setSelItem}
+            />
+          }
           sx={{
             bgcolor: selLink?.id === link.id ? "whitesmoke" : "none",
           }}
@@ -160,11 +202,6 @@ function LinkList({ links, searchTerm, selLink, setSelLink, user }) {
           <ListItemButton onClick={() => setSelLink(link)}>
             {link?.title}
           </ListItemButton>
-          <MoreOptionsBtn
-            item={link}
-            setAnchorEl={setAnchorEl}
-            setSelItem={setSelItem}
-          />
         </ListItem>
       ))}
       <MoreOptionsMenu
@@ -217,7 +254,7 @@ function LinkEmbed({ link }) {
     );
 
   return (
-    <Box width="98%" sx={{ px: 0 }}>
+    <Box width="100%">
       <iframe
         src={url}
         width="100%"
@@ -233,7 +270,7 @@ function LinkDetails({ link }) {
   if (!link) return null;
 
   return (
-    <Box width="95%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
+    <Box width="97%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1 }}>
       <Typography variant="h6">{link.title}</Typography>
       <Typography display="inline">{link.description}</Typography>
       <VertDivider />
