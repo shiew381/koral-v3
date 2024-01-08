@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { formatInstructorNames } from "../../utils/commonUtils";
 import { formatDate } from "../../utils/dateUtils";
 import ImageIcon from "@mui/icons-material/Image";
@@ -38,7 +38,7 @@ export function CourseImage({ url }) {
   );
 }
 
-export function CourseSummary({ course, instructor }) {
+export function CourseSummary({ course, handleOpen, instructor }) {
   const showCourseCode = instructor && course.availableTo === "invited";
 
   if (!course) return null;
@@ -88,6 +88,12 @@ export function CourseSummary({ course, instructor }) {
             <Typography>{formatDate(course.dateCreated)}</Typography>
           </Cell>
         </Row>
+        <Row>
+          <Cell right>actions:</Cell>
+          <td style={{ paddingLeft: "10px", position: "relative", top: "3px" }}>
+            <Button onClick={handleOpen}>CLONE COURSE</Button>
+          </td>
+        </Row>
       </tbody>
     </table>
   );
@@ -115,7 +121,7 @@ function Row({ children }) {
 
 function Cell({ children, right, padLeft }) {
   if (right) {
-    return <td style={{ textAlign: "right" }}>{children}</td>;
+    return <td style={{ textAlign: "right", padding: "4px" }}>{children}</td>;
   }
 
   if (padLeft) {

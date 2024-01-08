@@ -161,6 +161,16 @@ export function addResource(course, values, handleClose, setSubmitting) {
     .finally(() => setTimeout(() => setSubmitting(false), 400));
 }
 
+function addResourceToClonedCourse(courseID, values) {
+  const ref = doc(db, "courses", courseID, "resources", values.id);
+  setDoc(ref, { ...values, dateCloned: serverTimestamp() });
+}
+
+function addAssignmentToClonedCourse(courseID, values) {
+  const ref = doc(db, "courses", courseID, "assignments", values.id);
+  setDoc(ref, { ...values, dateCloned: serverTimestamp() });
+}
+
 export function addStudentToCourse(
   course,
   studentInfo,
@@ -265,6 +275,99 @@ export function autoAddUserQn(
   });
 
   return tidiedValues.id;
+}
+
+function buildQuery(ref, library, searchTerm, countPerPage) {
+  if (!searchTerm) {
+    const q = query(ref, orderBy(library.orderBy, "desc"), limit(countPerPage));
+    return q;
+  }
+
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      orderBy(library.orderBy, "desc")
+    );
+    return q;
+  }
+}
+
+function buildQueryAfter(ref, library, searchTerm, countPerPage, lastDoc) {
+  if (!searchTerm) {
+    const q = query(
+      ref,
+      orderBy(library.orderBy, "desc"),
+      startAfter(lastDoc),
+      limit(countPerPage)
+    );
+    return q;
+  }
+
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      orderBy(library.orderBy, "desc"),
+      startAfter(lastDoc),
+      limit(countPerPage)
+    );
+    return q;
+  }
+}
+
+function buildQueryBefore(ref, library, searchTerm, firstDoc) {
+  if (!searchTerm) {
+    const q = query(ref, orderBy(library.orderBy, "desc"), endBefore(firstDoc));
+    return q;
+  }
+
+  if (searchTerm) {
+    const q = query(
+      ref,
+      where("tags_searchable", "array-contains", searchTerm),
+      orderBy(library.orderBy, "desc"),
+      endBefore(firstDoc)
+    );
+    return q;
+  }
+}
+
+export function cloneCourse(
+  values,
+  resources,
+  assignments,
+  setSubmitting,
+  setSuccess
+) {
+  const ref = collection(db, "courses");
+
+  setSubmitting(true);
+  addDoc(ref, {
+    ...values,
+    dateCreated: serverTimestamp(),
+    dateCloned: serverTimestamp(),
+  })
+    .then((newCourse) => {
+      setTimeout(() => {
+        resources.forEach((resource) =>
+          addResourceToClonedCourse(newCourse.id, resource)
+        );
+      }, 100);
+      setTimeout(() => {
+        assignments.forEach((assignment) =>
+          addAssignmentToClonedCourse(newCourse.id, assignment)
+        );
+      }, 500);
+      setTimeout(() => {
+        setSuccess(true);
+      }, 2200);
+    })
+    .finally(() =>
+      setTimeout(() => {
+        setSubmitting(false);
+      }, 2000)
+    );
 }
 
 export function copyLibrayQnToUser(
@@ -496,62 +599,6 @@ export function fetchLibrary(libraryID, setLibrary, setLoading) {
     setLoading(false);
   });
   return unsubscribe;
-}
-
-function buildQuery(ref, library, searchTerm, countPerPage) {
-  if (!searchTerm) {
-    const q = query(ref, orderBy(library.orderBy, "desc"), limit(countPerPage));
-    return q;
-  }
-
-  if (searchTerm) {
-    const q = query(
-      ref,
-      where("tags_searchable", "array-contains", searchTerm),
-      orderBy(library.orderBy, "desc")
-    );
-    return q;
-  }
-}
-
-function buildQueryAfter(ref, library, searchTerm, countPerPage, lastDoc) {
-  if (!searchTerm) {
-    const q = query(
-      ref,
-      orderBy(library.orderBy, "desc"),
-      startAfter(lastDoc),
-      limit(countPerPage)
-    );
-    return q;
-  }
-
-  if (searchTerm) {
-    const q = query(
-      ref,
-      where("tags_searchable", "array-contains", searchTerm),
-      orderBy(library.orderBy, "desc"),
-      startAfter(lastDoc),
-      limit(countPerPage)
-    );
-    return q;
-  }
-}
-
-function buildQueryBefore(ref, library, searchTerm, firstDoc) {
-  if (!searchTerm) {
-    const q = query(ref, orderBy(library.orderBy, "desc"), endBefore(firstDoc));
-    return q;
-  }
-
-  if (searchTerm) {
-    const q = query(
-      ref,
-      where("tags_searchable", "array-contains", searchTerm),
-      orderBy(library.orderBy, "desc"),
-      endBefore(firstDoc)
-    );
-    return q;
-  }
 }
 
 export function fetchLibraryQuestions(
@@ -912,6 +959,50 @@ export function fetchUserQSet(user, qSetID, setQSet, setFetching) {
 export function getAssignment(courseID, asgmtID, setAsgmt) {
   const ref = doc(db, "courses", courseID, "assignments", asgmtID);
   getDoc(ref).then((doc) => setAsgmt({ id: doc.id, ...doc.data() }));
+}
+
+export function getAssignmentsForCloning(course, setAssignments) {
+  const ref = collection(db, "courses", course?.id, "assignments");
+  const q = query(ref);
+
+  const fetchedItems = [];
+  getDocs(q).then((snapshot) => {
+    snapshot.docs.forEach((doc) =>
+      fetchedItems.push({
+        id: doc.id,
+        cloned: true,
+        dateCloned: new Date(),
+        clonedFrom: {
+          id: course?.id,
+          title: course?.title,
+        },
+        ...doc.data(),
+      })
+    );
+    setAssignments(fetchedItems);
+  });
+}
+
+export function getResourcesForCloning(course, setResources) {
+  const ref = collection(db, "courses", course?.id, "resources");
+  const q = query(ref);
+
+  const fetchedItems = [];
+  getDocs(q).then((snapshot) => {
+    snapshot.docs.forEach((doc) =>
+      fetchedItems.push({
+        id: doc.id,
+        cloned: true,
+        dateCloned: new Date(),
+        clonedFrom: {
+          id: course?.id,
+          title: course?.title,
+        },
+        ...doc.data(),
+      })
+    );
+    setResources(fetchedItems);
+  });
 }
 
 export function getImage(userID, imageID, setImage, setLoading) {

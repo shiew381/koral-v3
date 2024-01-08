@@ -59,6 +59,7 @@ import { AnnouncementForm } from "../components/forms/AnnouncementForm";
 import { AsgmtAnalytics } from "../components/student-analytics/AsgmtAnalytics";
 import { AddManualGradeColumn } from "../components/forms/AddManualGradeColumn";
 import { EditManualGrade } from "../components/forms/EditManualGrade";
+import CloneCourseForm from "../components/forms/CloneCourseForm.jsx";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -209,12 +210,21 @@ export default function InstructorDashboard() {
 }
 
 function CourseInfo({ course }) {
+  const [cloneOpen, setCloneOpen] = useState(false);
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const filePath = `courses/${course.id}/course_image/${file?.name}`;
   const courseImage = course.courseImage || null;
+
+  function handleCloneOpen() {
+    setCloneOpen(true);
+  }
+
+  function handleCloneClose() {
+    setCloneOpen(false);
+  }
 
   function handleDeleteCourseImage() {
     const storageRef = ref(storage, courseImage.url);
@@ -303,7 +313,14 @@ function CourseInfo({ course }) {
           <Divider />
         </Box>
       </Box>
-      <CourseSummary course={course} instructor />
+      <CourseSummary course={course} handleOpen={handleCloneOpen} instructor />
+      <br />
+      <br />
+      <CloneCourseForm
+        course={course}
+        open={cloneOpen}
+        handleClose={handleCloneClose}
+      />
     </Panel>
   );
 }
