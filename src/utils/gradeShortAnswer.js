@@ -297,9 +297,86 @@ export function gradeShortAnswer(question, response) {
 
     return answeredCorrectly ? fullScore : zeroScore;
   }
+
+  if (subtype === "chemical formula") {
+    // let formulasMatch = false;
+    const maxRounds = 3;
+    console.log("GRADING CHEMICAL FORMULA");
+    logSpacer(1);
+
+    let correctFormula = correctAnswer.formula.slice();
+    // let submittedFormula = response.formula.slice();
+
+    // ====== BEGIN PROCESSING ======= //
+
+    for (let i = 0; i < maxRounds; i++) {
+      // logRoundStartMessage(correctUnit, i + 1);
+      correctFormula = canonicalizeChemFormula(correctFormula);
+      console.log("correct formula: " + correctFormula);
+
+      // logRoundEndMessage(correctUnit, i + 1);
+    }
+
+    console.log("CORRECT FORMULA" + correctFormula);
+  }
 }
 
-//TODO consolidate like units into single term m^2 m^3 => m^5
+function canonicalizeChemFormula(str) {
+  console.log("CANONICALIZING");
+  let canonicalForm = str.slice();
+  const maxDepthLimit = 3;
+  const maxDepth = calcMaxDepth(str);
+
+  console.log("max depth: " + maxDepth);
+
+  if (maxDepth > maxDepthLimit) {
+    console.log(
+      `Nesting depth of ${maxDepth} exceeds maximum depth limit of ${maxDepthLimit}. Exiting canonicalization function...`
+    );
+    return null;
+  }
+
+  if (maxDepth === 0) {
+    console.log("max depth is zero..atempting to condense formula");
+    const arrayForm = chemFormulaToArray(canonicalForm);
+    // clear canonicalForm and rebuild by stringifying arrayForm
+    canonicalForm = "";
+    arrayForm.forEach((elem) => {
+      canonicalForm =
+        canonicalForm + elem.symbol + "<sub>" + elem.count + "</sub>";
+    });
+
+    return canonicalForm;
+  }
+
+  const argStartIndex = findArgStartIndex(canonicalForm, maxDepth);
+  const argEndIndex = findArgEndIndex(canonicalForm, maxDepth);
+
+  //fragment before the opening parentheses or bracket
+  let startFragment =
+    argStartIndex > 1 ? canonicalForm.slice(0, argStartIndex - 1) : "";
+
+  //fragment before the closing parentheses or bracket
+  let endFragment =
+    canonicalForm.length - argEndIndex > 1
+      ? canonicalForm.slice(argEndIndex + 1, canonicalForm.length)
+      : "";
+
+  let arg = canonicalForm.slice(argStartIndex, argEndIndex);
+
+  const multiplier = getMultiplier(endFragment, arg);
+  console.log("multiplier found: " + multiplier);
+  const newStr = distributeMultiplier(arg, multiplier);
+  console.log("END FRAGMENT");
+  console.log(endFragment);
+  const newEndIndex = endFragment.search(/([A-Z][a-z]*)/);
+  console.log("NEW END INDEX");
+  console.log(newEndIndex);
+  endFragment = endFragment.slice(newEndIndex);
+
+  canonicalForm = startFragment + newStr + endFragment;
+  return canonicalForm;
+}
 
 function calcMaxDepth(str) {
   const numOpenParentheses = str.replace(/[^(]/g, "").length;
@@ -326,6 +403,7 @@ function calcMaxDepth(str) {
   return maxDepth;
 }
 
+//TODO consolidate like units into single term m^2 m^3 => m^5
 function canonicalizeUnit(str) {
   let canonicalForm = str.slice();
   const maxDepthLimit = 3;
@@ -462,6 +540,68 @@ function checkUnitComplexity(str) {
   return false;
 }
 
+function chemFormulaToArray(str) {
+  // takes a string like C3H8O and conerts into an array
+  // [{symbol: C, count: 3},{symbol: H, count: 8}, {symbol: O, count: 1}]
+  // string must NOT have parentheses or brackets
+  let strCopy = str.slice();
+  const numOpenParentheses = strCopy.replace(/[^(]/g, "").length;
+  const numClosedParentheses = strCopy.replace(/[^)]/g, "").length;
+  const numOpenBrackets = strCopy.replace(/[^[]/g, "").length;
+  const numClosedBrackets = strCopy.replace(/[^\]]/g, "").length;
+  const totalParenAndBrackets =
+    numOpenParentheses +
+    numClosedParentheses +
+    numOpenBrackets +
+    numClosedBrackets;
+
+  if (totalParenAndBrackets > 0) {
+    return "error";
+  }
+
+  const formulaArray = [];
+  console.log("array-ifying formula fragment");
+  console.log("formula fragment:" + strCopy);
+  const maxRounds = 6;
+  for (let i = 0; i < maxRounds; i++) {
+    const elemIndex = strCopy.search(/([A-Z][a-z]*)/);
+    const elemArr = strCopy.match(/([A-Z][a-z]*)/);
+    const elemSymbol = elemArr.length > 0 ? elemArr[0] : null;
+    const endIndex = elemSymbol ? elemIndex + elemSymbol.length : null;
+    const endFragment = strCopy.slice(endIndex);
+    const count = getMultiplier(endFragment, elemSymbol);
+
+    const duplicateSymbol = formulaArray.find(
+      (elem) => elem.symbol === elemSymbol
+    );
+
+    if (duplicateSymbol) {
+      const duplicateSymbolIndex = formulaArray.findIndex(
+        (elem) => elem.symbol === elemSymbol
+      );
+
+      console.log("duplicate element encountered");
+
+      formulaArray[duplicateSymbolIndex] = {
+        symbol: elemSymbol,
+        count: Number(duplicateSymbol.count) + Number(count),
+      };
+    } else {
+      formulaArray.push({ symbol: elemSymbol, count: Number(count) });
+    }
+
+    strCopy = strCopy.replace(elemSymbol, "");
+    const nextElemIndex = strCopy.search(/([A-Z][a-z]*)/);
+    if (nextElemIndex === -1) {
+      console.log("complete after " + i + " round(s)");
+      return formulaArray;
+    }
+    strCopy = nextElemIndex > 0 ? strCopy : strCopy.slice(nextElemIndex);
+  }
+
+  return formulaArray;
+}
+
 function distributeExponent(str, outerExp) {
   const arr1 = str.trim().split("*");
 
@@ -475,6 +615,24 @@ function distributeExponent(str, outerExp) {
   const distributedForm = arr3.join("*");
 
   return distributedForm;
+}
+
+function distributeMultiplier(str, multiplier) {
+  const arr = chemFormulaToArray(str);
+  let newStr = "";
+  console.log(arr);
+  console.log("distributing multiplier");
+  const multipliedArr = arr.map((elem) => ({
+    symbol: elem.symbol,
+    count: elem.count * multiplier,
+  }));
+
+  console.log(multipliedArr);
+  multipliedArr.forEach((elem) => {
+    newStr = newStr + elem.symbol + "<sub>" + elem.count + "</sub>";
+  });
+
+  return newStr;
 }
 
 function factorialize(num) {
@@ -615,6 +773,30 @@ function getOuterExponent(str) {
   }
 
   return false;
+}
+
+function getMultiplier(str, multiplicand) {
+  // searches for a subscript (multipler) at the beginning of a string
+  // if found, returns the multipler, if not found, returns 1.
+  console.log("finding count for " + multiplicand);
+  let strCopy = str.slice();
+  strCopy.trim();
+  strCopy = strCopy.replace("<sub>", "").replace("</sub>", "");
+
+  //find where the number is in the string
+  const multiplierIndex = strCopy.search(/[1-9]+/g);
+  const multiplierArr = strCopy.match(/[1-9]+/g);
+
+  if (multiplierIndex === -1) {
+    return 1;
+  }
+
+  if (Number(multiplierIndex) < 1 && multiplierArr.length > 0) {
+    //return found multiplier, but only if is near the beginning of the string
+    return multiplierArr[0];
+  } else {
+    return 1;
+  }
 }
 
 function getBase(str) {

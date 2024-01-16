@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { cleanEditorHTML } from "../../utils/questionSetUtils";
+import {
+  cleanChemField,
+  cleanEditorHTML,
+  toChemFormulaStr,
+} from "../../utils/questionSetUtils";
 import {
   Box,
   Checkbox,
@@ -16,6 +20,8 @@ import { NumberField } from "../common/NumberField";
 import { PercentToleranceField } from "../common/InputFields";
 import { Editor } from "../common/Editor";
 import { UnitField } from "../common/UnitField";
+import { ChemFormulaField } from "../common/ChemFormulaField";
+import { generateRandomCode } from "../../utils/commonUtils";
 
 export function ShortAnswer({
   autoSaveQuestion,
@@ -112,6 +118,7 @@ export function ShortAnswer({
           <MenuItem value={"text"}>Text</MenuItem>
           <MenuItem value={"number"}>Number</MenuItem>
           <MenuItem value={"measurement"}>Measurement</MenuItem>
+          <MenuItem value={"chemical formula"}>Chemical Formula</MenuItem>
         </Select>
       </FormControl>
       <br />
@@ -152,7 +159,6 @@ export function ShortAnswer({
             submitting={submitting}
           />
         )}
-
         {subtype === "measurement" && (
           <Measurement
             edit={edit}
@@ -160,6 +166,14 @@ export function ShortAnswer({
             scoring={scoring}
             selQuestion={selQuestion}
             setScoring={setScoring}
+            submitting={submitting}
+          />
+        )}
+        {subtype === "chemical formula" && (
+          <ChemicalFormula
+            edit={edit}
+            handleSubmit={handleSave}
+            selQuestion={selQuestion}
             submitting={submitting}
           />
         )}
@@ -453,6 +467,60 @@ function Measurement({
             handleSubmit(e, {
               number: cleanEditorHTML(numberRef.current),
               unit: cleanEditorHTML(unitRef.current),
+            })
+          }
+          submitting={submitting}
+        />
+      </BtnContainer>
+    </>
+  );
+}
+
+function ChemicalFormula({ edit, handleSubmit, selQuestion, submitting }) {
+  const add = !edit;
+  const questionID = edit ? selQuestion?.id : generateRandomCode(6);
+  const fieldRef = useRef();
+
+  useEffect(
+    () => {
+      if (add) {
+        fieldRef.current.innerHTML = "";
+      }
+
+      if (edit) {
+        fieldRef.current.innerHTML = selQuestion.correctAnswer.formula;
+      }
+    },
+    //eslint-disable-next-line
+    []
+  );
+
+  return (
+    <>
+      <Typography color="text.secondary" sx={{ px: "5%", mb: "20px" }}>
+        Response must match:
+      </Typography>
+      <div className="response-area-b">
+        <div className="response-field-area">
+          <div className="response-field-container">
+            <ChemFormulaField
+              fieldRef={fieldRef}
+              id={`${questionID}-number`}
+              label="chemical formula"
+              toolbarOptions={["superscript/subscript"]}
+              setCurrentResponse={() => console.log("skip")}
+            />
+          </div>
+        </div>
+      </div>
+
+      <BtnContainer right>
+        <SubmitBtn
+          disabled={submitting}
+          label="SAVE"
+          onClick={(e) =>
+            handleSubmit(e, {
+              formula: toChemFormulaStr(cleanChemField(fieldRef.current)),
             })
           }
           submitting={submitting}

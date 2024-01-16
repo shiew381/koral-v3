@@ -188,6 +188,13 @@
   padding-bottom: 30px;
 }
 
+.response-area-b {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0;
+  padding-bottom: 30px;
+}
+
 .correct-answer-field-container {
   background-color: rgba(200, 200, 200, 0.06);
   outline: solid 1px rgba(0, 0, 0, 0.2);
@@ -200,6 +207,19 @@
   padding: 15px;
   min-width: 100px;
   max-width: 300px;
+}
+
+.correct-answer-field-container-b {
+  background-color: rgba(200, 200, 200, 0.06);
+  border-radius: 8px;
+  border-top-right-radius: 8px;
+  margin: 10px;
+  min-width: 100px;
+  max-width: 300px;
+  outline: solid 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  padding: 15px;
+  text-align: center;
 }
 
 .response-field-container {

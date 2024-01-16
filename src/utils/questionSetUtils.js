@@ -9,6 +9,20 @@ export function cleanEditorHTML(elem) {
   return elem.innerHTML;
 }
 
+export function cleanChemField(elem) {
+  const clone = elem.cloneNode(true);
+  console.log(elem);
+  const tempElems = clone.querySelectorAll(".temp-input-elem");
+  tempElems.forEach((el) => el.remove());
+  clone.normalize();
+  return clone;
+}
+
+export function toChemFormulaStr(elem) {
+  console.log(elem);
+  return elem.innerHTML;
+}
+
 export function getSubmissions(submissionHistory, question) {
   if (!question?.id) return [];
   if (!submissionHistory) return [];

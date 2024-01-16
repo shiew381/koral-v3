@@ -983,25 +983,20 @@ export function getAssignmentsForCloning(course, setAssignments) {
   });
 }
 
-export function getResourcesForCloning(course, setResources) {
-  const ref = collection(db, "courses", course?.id, "resources");
-  const q = query(ref);
+export function getDocument(userID, documentID, setDocument, setLoading) {
+  const ref = doc(db, "users", userID, "documents", documentID);
+  getDoc(ref).then((doc) => {
+    setDocument({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
 
-  const fetchedItems = [];
-  getDocs(q).then((snapshot) => {
-    snapshot.docs.forEach((doc) =>
-      fetchedItems.push({
-        id: doc.id,
-        cloned: true,
-        dateCloned: new Date(),
-        clonedFrom: {
-          id: course?.id,
-          title: course?.title,
-        },
-        ...doc.data(),
-      })
-    );
-    setResources(fetchedItems);
+export function getChemElemList(setElemList, setLoading) {
+  const ref = doc(db, "lists", "chemical_elements");
+  getDoc(ref).then((doc) => {
+    console.log(doc);
+    setElemList([...doc.data().elements]);
+    setLoading(false);
   });
 }
 
@@ -1009,6 +1004,33 @@ export function getImage(userID, imageID, setImage, setLoading) {
   const ref = doc(db, "users", userID, "images", imageID);
   getDoc(ref).then((doc) => {
     setImage({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
+export function getLink(userID, linkID, setLink, setLoading) {
+  const ref = doc(db, "users", userID, "links", linkID);
+  getDoc(ref).then((doc) => {
+    setLink({ id: doc.id, ...doc.data() });
+    setLoading(false);
+  });
+}
+
+export async function getNewestQSet(userID) {
+  const ref = collection(db, "users", userID, "question-sets");
+  const q = query(ref, orderBy("dateCreated", "desc"), limit(1));
+  const snapshot = await getDocs(q);
+  const fetchedItems = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+  return fetchedItems[0];
+}
+
+export function getQSet(userID, qSetID, setQSet, setLoading) {
+  const ref = doc(db, "users", userID, "question-sets", qSetID);
+  getDoc(ref).then((doc) => {
+    setQSet({ id: doc.id, ...doc.data() });
     setLoading(false);
   });
 }
@@ -1034,43 +1056,30 @@ export function getQSetSubmissionHistory(
   });
 }
 
-export async function getNewestQSet(userID) {
-  const ref = collection(db, "users", userID, "question-sets");
-  const q = query(ref, orderBy("dateCreated", "desc"), limit(1));
-  const snapshot = await getDocs(q);
-  const fetchedItems = snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  }));
-  return fetchedItems[0];
-}
-
 export function getResource(courseID, resourceID, setResource) {
   const ref = doc(db, "courses", courseID, "resources", resourceID);
   getDoc(ref).then((doc) => setResource({ id: doc.id, ...doc.data() }));
 }
 
-export function getDocument(userID, documentID, setDocument, setLoading) {
-  const ref = doc(db, "users", userID, "documents", documentID);
-  getDoc(ref).then((doc) => {
-    setDocument({ id: doc.id, ...doc.data() });
-    setLoading(false);
-  });
-}
+export function getResourcesForCloning(course, setResources) {
+  const ref = collection(db, "courses", course?.id, "resources");
+  const q = query(ref);
 
-export function getLink(userID, linkID, setLink, setLoading) {
-  const ref = doc(db, "users", userID, "links", linkID);
-  getDoc(ref).then((doc) => {
-    setLink({ id: doc.id, ...doc.data() });
-    setLoading(false);
-  });
-}
-
-export function getQSet(userID, qSetID, setQSet, setLoading) {
-  const ref = doc(db, "users", userID, "question-sets", qSetID);
-  getDoc(ref).then((doc) => {
-    setQSet({ id: doc.id, ...doc.data() });
-    setLoading(false);
+  const fetchedItems = [];
+  getDocs(q).then((snapshot) => {
+    snapshot.docs.forEach((doc) =>
+      fetchedItems.push({
+        id: doc.id,
+        cloned: true,
+        dateCloned: new Date(),
+        clonedFrom: {
+          id: course?.id,
+          title: course?.title,
+        },
+        ...doc.data(),
+      })
+    );
+    setResources(fetchedItems);
   });
 }
 
