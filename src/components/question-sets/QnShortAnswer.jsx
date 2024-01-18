@@ -8,6 +8,7 @@ import {
 import { gradeResponse } from "../../utils/grading";
 import { getPointsAwarded } from "../../utils/gradeUtils";
 import {
+  Alert,
   Box,
   Button,
   CardContent,
@@ -31,7 +32,16 @@ import {
 import parse from "html-react-parser";
 import { fullParse } from "../../utils/customParsers";
 import { ChemFormulaField } from "../common/ChemFormulaField";
-import { cleanChemField, toChemFormulaStr } from "../../utils/questionSetUtils";
+import {
+  checkIfNumBrktMatch,
+  checkIfNumParenMatch,
+  cleanChemField,
+  convertElemtoStr,
+  findChemSymbols,
+  findMalformedChemSymbols,
+  findUnknownChemSymbols,
+  toChemFormulaStr,
+} from "../../utils/questionSetUtils";
 
 export default function ShortAnswer({
   adaptive,
@@ -354,8 +364,6 @@ function ShortAnswerNumber({
       ...question,
       correctAnswer: { number: correctNumStr },
     };
-
-    console.log(tidiedQuestion);
 
     const grade = gradeResponse(tidiedQuestion, tidiedResponse);
 
@@ -694,20 +702,20 @@ function ShortAnswerMeasurement({
 }
 
 function ShortAnswerChemFormula({
-  // adaptive,
-  // adaptiveParams,
+  adaptive,
+  adaptiveParams,
   answeredCorrectly,
   attemptsExhausted,
   docRefParams,
   goForward,
   lastResponse,
   mode,
-  // oneToCompletion,
+  oneToCompletion,
   question,
-  // setSubmitting,
+  setSubmitting,
   submissions,
   submitting,
-  // totalPointsAwarded,
+  totalPointsAwarded,
 }) {
   const [currentResponse, setCurrentResponse] = useState(null);
   const fieldRef = useRef();
@@ -717,7 +725,8 @@ function ShortAnswerChemFormula({
   const showNextBtn = answeredCorrectly || attemptsExhausted;
   const [elemList, setElemList] = useState([]);
   const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState(false);
+  const [inputError, setInputError] = useState(false);
+  const [inputErrorMessage, setInputErrorMessage] = useState("");
 
   function detectChange() {
     if (currentResponse?.formula === "") return false;
@@ -726,55 +735,99 @@ function ShortAnswerChemFormula({
   }
 
   function handleClearSubmissions() {
+    setInputError(false);
+    setInputErrorMessage("");
     deleteQuestionSubmissions(question, docRefParams);
+    setCurrentResponse({
+      formula: "",
+    });
     fieldRef.current.innerHTML = "";
   }
 
+  function checkInputFormatting(tidiedResponse) {
+    let formula = tidiedResponse.formula
+      .replaceAll("<sub>", "")
+      .replaceAll("</sub>", "")
+      .replaceAll("<sup>", "")
+      .replaceAll("</sup>", "")
+      .replaceAll("&nbsp;", "");
+
+    const numParenMatch = checkIfNumParenMatch(formula);
+    const numBrakMatch = checkIfNumBrktMatch(formula);
+    const malFormedChemSymbols = findMalformedChemSymbols(formula);
+    const chemSymbols = findChemSymbols(formula);
+    const unknownChemSymbols = findUnknownChemSymbols(chemSymbols, elemList);
+
+    if (!numParenMatch) {
+      setInputErrorMessage("number of parentheses must match");
+      return false;
+    }
+
+    if (!numBrakMatch) {
+      setInputErrorMessage("number of brackets must match");
+      return false;
+    }
+
+    if (malFormedChemSymbols?.length > 0) {
+      const name = malFormedChemSymbols[0];
+      setInputErrorMessage(name + " is not a recognized element");
+      return false;
+    }
+
+    if (unknownChemSymbols?.length > 0) {
+      const name = unknownChemSymbols[0];
+      setInputErrorMessage(name + " is not a recognized element");
+      return false;
+    }
+
+    return true;
+  }
+
   function handleSubmit() {
+    const tidiedQuestion = { ...question };
     const tidiedResponse = {
       formula: toChemFormulaStr(cleanChemField(fieldRef.current)),
     };
-    const correctFormula = question.correctAnswer.formula.slice();
 
-    const tidiedQuestion = {
-      ...question,
-      correctAnswer: { formula: correctFormula },
-    };
+    const inputCorrectlyFormatted = checkInputFormatting(tidiedResponse);
 
-    // console.log(tidiedQuestion);
-    gradeResponse(tidiedQuestion, tidiedResponse);
-    // const grade = gradeResponse(tidiedQuestion, tidiedResponse);
+    if (!inputCorrectlyFormatted) {
+      setInputError(true);
+      return;
+    }
 
-    // const updatedPointsAwarded = getPointsAwarded(
-    //   grade,
-    //   totalPointsAwarded,
-    //   adaptive,
-    //   adaptiveParams,
-    //   oneToCompletion
-    // );
+    const grade = gradeResponse(tidiedQuestion, tidiedResponse);
 
-    // if (mode === "course") {
-    //   saveQResponseFromCourse(
-    //     submissions,
-    //     docRefParams,
-    //     question,
-    //     currentResponse,
-    //     grade,
-    //     updatedPointsAwarded,
-    //     setSubmitting
-    //   );
-    // }
+    const updatedPointsAwarded = getPointsAwarded(
+      grade,
+      totalPointsAwarded,
+      adaptive,
+      adaptiveParams,
+      oneToCompletion
+    );
 
-    // if (mode === "test") {
-    //   saveQuestionResponse(
-    //     submissions,
-    //     docRefParams,
-    //     question,
-    //     currentResponse,
-    //     grade,
-    //     setSubmitting
-    //   );
-    // }
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        updatedPointsAwarded,
+        setSubmitting
+      );
+    }
+
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
   }
 
   useEffect(
@@ -784,7 +837,7 @@ function ShortAnswerChemFormula({
         mode !== "gradebook" &&
         submissions?.length > 0
       ) {
-        fieldRef.current.innerHTML = lastResponse.number;
+        fieldRef.current.innerHTML = lastResponse.formula;
       }
     },
     //eslint-disable-next-line
@@ -836,8 +889,7 @@ function ShortAnswerChemFormula({
   if (mode === "test" || mode === "course") {
     return (
       <>
-        <pre>{JSON.stringify(currentResponse, null, 2)}</pre>
-        <pre>{JSON.stringify(elemList, null, 2)}</pre>
+        {inputError && <Alert severity="info">{inputErrorMessage}</Alert>}
         <div className="response-area">
           <div className="response-field-area">
             <div className="response-field-container">
@@ -847,6 +899,7 @@ function ShortAnswerChemFormula({
                 id={question?.id}
                 label="chemical formula"
                 setCurrentResponse={setCurrentResponse}
+                setInputError={setInputError}
                 toolbarOptions={["superscript/subscript"]}
               />
             </div>
@@ -880,64 +933,4 @@ function ShortAnswerChemFormula({
       </>
     );
   }
-}
-
-function convertElemtoStr(elem) {
-  let stringifiedForm = "";
-
-  const superscripts = elem.querySelectorAll("sup");
-  superscripts.forEach((superscript) => {
-    const stringEquivalent = "^" + superscript.innerText;
-    superscript.replaceWith(stringEquivalent);
-  });
-
-  //quick check - if no templates used return early
-  const eqFields = elem.querySelectorAll(".eq-field");
-  if (eqFields.length === 0) {
-    console.log("no templates used");
-    stringifiedForm = elem.innerText;
-    return stringifiedForm;
-  }
-
-  for (let i = 0; i < 5; i++) {
-    const sqrts = elem.querySelectorAll(".eq-sqrt");
-    sqrts.forEach((sqrt) => {
-      const arg = sqrt.querySelector(".eq-sqrt-arg");
-      const nestedFields = arg.querySelectorAll(".eq-field");
-      if (nestedFields.length > 0) {
-        console.log(
-          "found nested fields in square root, scanning other fields..."
-        );
-        return;
-      } else {
-        const stringEquivalent = " sqrt" + "(" + arg.innerText.trim() + ") ";
-        console.log("stringifying square root");
-        console.log(stringEquivalent);
-        sqrt.replaceWith(stringEquivalent);
-      }
-    });
-
-    const fractions = elem.querySelectorAll(".eq-fraction");
-    fractions.forEach((fraction) => {
-      const numerator = fraction.querySelector(".eq-numerator");
-      const nestedFieldsNum = numerator.querySelectorAll(".eq-field");
-
-      const denominator = fraction.querySelector(".eq-denominator");
-      const nestedFieldsDenom = denominator.querySelectorAll(".eq-field");
-
-      if (nestedFieldsDenom.length > 0 || nestedFieldsNum.length > 0) {
-        console.log("found nested fields in square root, skipping...");
-        return;
-      }
-
-      const stringEquivalent =
-        "(" + numerator.innerText + "/" + denominator.innerText + ")";
-      console.log("stringifying fraction");
-      console.log(stringEquivalent);
-      fraction.replaceWith(stringEquivalent.trim());
-    });
-    stringifiedForm = elem.innerText;
-  }
-
-  return stringifiedForm.trim();
 }

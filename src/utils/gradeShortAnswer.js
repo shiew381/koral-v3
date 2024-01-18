@@ -1,5 +1,11 @@
-import { compareBases } from "./commonUtils";
+import { alphabetize, compareBases } from "./commonUtils";
 import { units } from "../lists/units";
+import {
+  checkIfNumBrktMatch,
+  checkIfNumParenMatch,
+  countNumBrkt,
+  countNumParen,
+} from "./questionSetUtils";
 
 export function gradeShortAnswer(question, response) {
   const subtype = question.subtype;
@@ -11,23 +17,22 @@ export function gradeShortAnswer(question, response) {
     answeredCorrectly: true,
     pointsAwarded: pointsPossible,
   };
+
   const zeroScore = {
     answeredCorrectly: false,
     pointsAwarded: 0,
   };
 
   console.time("Execution Time");
+  console.log(`GRADING ${subtype.toUpperCase()}`);
 
   //============================= SUBTYPE: TEXT =============================//
 
   if (subtype === "text") {
-    console.log(question);
-    console.log(response);
     const acceptAltCap = question.scoring.acceptAltCap;
     const acceptAltSpacing = question.scoring.acceptAltSpacing;
 
     if (!acceptAltCap && !acceptAltSpacing) {
-      console.log(response);
       answeredCorrectly = response.text === correctAnswer.text;
     }
 
@@ -48,8 +53,6 @@ export function gradeShortAnswer(question, response) {
         correctAnswer.text.toLowerCase().replace(/\s+/g, " ").trim();
     }
 
-    console.log(answeredCorrectly);
-
     logExecutionTime();
     return answeredCorrectly ? fullScore : zeroScore;
   }
@@ -57,30 +60,27 @@ export function gradeShortAnswer(question, response) {
   //============================ SUBTYPE: NUMBER ============================//
 
   if (subtype === "number") {
-    let numbersMatch = false;
-    const percentTolerance = Number(question.scoring.percentTolerance);
+    const pctTolerance = Number(question.scoring.percentTolerance);
     const maxRounds = 5;
+    let numMatch = false;
 
     //======================== number ========================//
 
-    console.log("GRADING NUMBER");
-    logSpacer(1);
+    let correctNum = replaceTranscendentals(correctAnswer.number);
+    let submittedNum = replaceTranscendentals(response.number);
 
-    let correctNumber = replaceTranscendentals(correctAnswer.number);
-    let submittedNumber = replaceTranscendentals(response.number);
-
-    correctNumber = sanitizeNumber(correctNumber);
-    submittedNumber = sanitizeNumber(submittedNumber);
+    correctNum = sanitizeNumber(correctNum);
+    submittedNum = sanitizeNumber(submittedNum);
 
     //quick-check for exact number match
-    numbersMatch = correctNumber === submittedNumber;
+    numMatch = correctNum === submittedNum;
 
-    if (numbersMatch) {
+    if (numMatch) {
       console.log("exact number match");
       return fullScore;
     }
 
-    const passedNumberPreCheck = preCheckNumber(submittedNumber);
+    const passedNumberPreCheck = preCheckNumber(submittedNum);
 
     if (!passedNumberPreCheck) {
       console.log("Failed number pre-check. Exiting grading function...");
@@ -91,47 +91,39 @@ export function gradeShortAnswer(question, response) {
     // logStartMessage("SIMPLIFYING CORRECT NUMBER", correctNumber);
     for (let i = 0; i < maxRounds; i++) {
       // logRoundStartMessage(correctNumber, i + 1);
-      if (isNumber(correctNumber)) {
+      if (isNumber(correctNum)) {
         break;
       }
-
-      correctNumber = simplifyNumber(correctNumber);
+      correctNum = simplifyNumber(correctNum);
       // logRoundEndMessage(correctNumber, i + 1);
     }
     // logEndMessage(correctNumber);
 
-    logStartMessage("SIMPLIFYING SUBMITTED NUMBER", submittedNumber);
+    logStartMessage("SIMPLIFYING SUBMITTED NUMBER", submittedNum);
     for (let i = 0; i < maxRounds; i++) {
-      logRoundStartMessage(submittedNumber, i + 1);
-      if (isNumber(submittedNumber)) {
+      logRoundStartMessage(submittedNum, i + 1);
+      if (isNumber(submittedNum)) {
         break;
       }
-      submittedNumber = simplifyNumber(submittedNumber);
-      logRoundEndMessage(submittedNumber, i + 1);
+      submittedNum = simplifyNumber(submittedNum);
+      logRoundEndMessage(submittedNum, i + 1);
     }
-    logEndMessage(submittedNumber);
+    logEndMessage(submittedNum);
 
-    numbersMatch = checkNumbersMatch(
-      correctNumber,
-      submittedNumber,
-      percentTolerance
-    );
+    numMatch = checkNumbersMatch(correctNum, submittedNum, pctTolerance);
 
-    return numbersMatch ? fullScore : zeroScore;
+    return numMatch ? fullScore : zeroScore;
   }
 
   //========================= SUBTYPE: MEASUREMENT =========================//
 
   if (subtype === "measurement") {
-    let numbersMatch = false;
-    let unitsMatch = false;
-    const percentTolerance = Number(question.scoring.percentTolerance);
+    let numMatch = false;
+    let unitMatch = false;
+    const pctTolerance = Number(question.scoring.percentTolerance);
     const maxRounds = 5;
 
     //======================== number =========================//
-
-    console.log("GRADING NUMBER");
-    logSpacer(1);
 
     let correctNumber = replaceTranscendentals(correctAnswer.number);
     let submittedNumber = replaceTranscendentals(response.number);
@@ -139,10 +131,10 @@ export function gradeShortAnswer(question, response) {
     correctNumber = sanitizeNumber(correctNumber);
     submittedNumber = sanitizeNumber(submittedNumber);
 
-    //quick-check for exact number match
-    numbersMatch = correctNumber === submittedNumber;
+    // quick-check for exact number match
+    numMatch = correctNumber === submittedNumber;
 
-    if (numbersMatch) {
+    if (numMatch) {
       console.log("exact number match");
     }
 
@@ -176,27 +168,19 @@ export function gradeShortAnswer(question, response) {
       logRoundEndMessage(submittedNumber, i + 1);
     }
     logEndMessage(submittedNumber);
-
-    numbersMatch = checkNumbersMatch(
-      correctNumber,
-      submittedNumber,
-      percentTolerance
-    );
-
     logSpacer(2);
 
-    //======================== unit ===========================//
+    numMatch = checkNumbersMatch(correctNumber, submittedNumber, pctTolerance);
 
-    console.log("GRADING UNIT");
-    logSpacer(1);
+    //======================== unit ===========================//
 
     let correctUnit = sanitizeUnit(correctAnswer.unit);
     let submittedUnit = sanitizeUnit(response.unit);
 
     //quick-check for exact unit match
-    unitsMatch = correctUnit === submittedUnit;
+    unitMatch = correctUnit === submittedUnit;
 
-    if (numbersMatch && unitsMatch) {
+    if (numMatch && unitMatch) {
       console.log("exact unit match");
       console.log("numbers and unit both match, assigning full score");
       return fullScore;
@@ -225,28 +209,28 @@ export function gradeShortAnswer(question, response) {
 
       if (!correctUnitMatch || !submittedUnitMatch) {
         console.log("Could not find unit. Assigning zero score");
-        console.timeEnd("Execution Time");
+        logExecutionTime();
         return zeroScore;
       }
 
-      unitsMatch = correctUnitMatch === submittedUnitMatch;
+      unitMatch = correctUnitMatch === submittedUnitMatch;
 
-      if (numbersMatch && unitsMatch) {
+      if (numMatch && unitMatch) {
         console.log("number and unit are both correct, awarding full score");
         return fullScore;
       }
 
-      if (numbersMatch && !unitsMatch) {
+      if (numMatch && !unitMatch) {
         console.log("number is correct, but unit is wrong, zero points");
         return zeroScore;
       }
 
-      if (!numbersMatch && unitsMatch) {
+      if (!numMatch && unitMatch) {
         console.log("number is wrong, unit is correct, zero points");
         return zeroScore;
       }
 
-      if (!numbersMatch && !unitsMatch) {
+      if (!numMatch && !unitMatch) {
         console.log("number and units are both incorrect, zero points");
         return zeroScore;
       }
@@ -276,53 +260,123 @@ export function gradeShortAnswer(question, response) {
 
     logExecutionTime();
 
-    unitsMatch = correctUnit === submittedUnit;
-    answeredCorrectly = numbersMatch && unitsMatch;
+    unitMatch = correctUnit === submittedUnit;
+    answeredCorrectly = numMatch && unitMatch;
 
-    if (numbersMatch && unitsMatch) {
+    if (numMatch && unitMatch) {
       console.log("number and unit are both correct, awarding full score");
     }
 
-    if (!numbersMatch && unitsMatch) {
+    if (!numMatch && unitMatch) {
       console.log("number is wrong, unit is correct, zero points");
     }
 
-    if (!numbersMatch && !unitsMatch) {
+    if (!numMatch && !unitMatch) {
       console.log("number and units are both incorrect, zero points");
     }
 
-    if (numbersMatch && !unitsMatch) {
+    if (numMatch && !unitMatch) {
       console.log("number is correct, but unit is wrong, zero points");
     }
 
     return answeredCorrectly ? fullScore : zeroScore;
   }
 
+  //====================== SUBTYPE: CHEMICAL FORMULA =========================//
+
   if (subtype === "chemical formula") {
-    // let formulasMatch = false;
-    const maxRounds = 3;
-    console.log("GRADING CHEMICAL FORMULA");
-    logSpacer(1);
-
     let correctFormula = correctAnswer.formula.slice();
-    // let submittedFormula = response.formula.slice();
+    let submittedFormula = response.formula.slice();
+    let formulasMatch = false;
+    const maxRounds = 3;
 
-    // ====== BEGIN PROCESSING ======= //
+    const correctCharge = getChemFormulaCharge(correctFormula);
+    const submittedCharge = getChemFormulaCharge(submittedFormula);
 
-    for (let i = 0; i < maxRounds; i++) {
-      // logRoundStartMessage(correctUnit, i + 1);
-      correctFormula = canonicalizeChemFormula(correctFormula);
-      console.log("correct formula: " + correctFormula);
+    const chargesMatch =
+      correctCharge.sign === submittedCharge.sign &&
+      correctCharge.magnitude === submittedCharge.magnitude;
 
-      // logRoundEndMessage(correctUnit, i + 1);
+    correctFormula = trimChemFormulaCharge(correctFormula);
+    submittedFormula = trimChemFormulaCharge(submittedFormula);
+
+    if (!chargesMatch) {
+      console.log("charges do not match...assigning zero score");
+      return zeroScore;
     }
 
-    console.log("CORRECT FORMULA" + correctFormula);
+    // =========== CANONICALIZE CORRECT FORMULA =========== //
+
+    console.log("CANONICALIZING CORRECT ANSWER");
+    for (let i = 0; i < maxRounds; i++) {
+      const isCanonicalized = checkIfCanonicalizedChemFormula(correctFormula);
+
+      if (isCanonicalized) {
+        console.log("finished canonicalizing");
+      }
+
+      if (!isCanonicalized) {
+        logRoundStartMessage(correctFormula, i + 1);
+        correctFormula = canonicalizeChemFormula(correctFormula);
+        logRoundEndMessage(correctFormula, i + 1);
+      }
+    }
+    logEndMessage(correctFormula);
+
+    // ========== PROCESS SUBMITTED FORMULA ========== //
+
+    console.log("CANONICALIZING SUBMITTED ANSWER");
+
+    for (let i = 0; i < maxRounds; i++) {
+      const isCanonicalized = checkIfCanonicalizedChemFormula(submittedFormula);
+
+      if (isCanonicalized) {
+        console.log("finished canonicalizing");
+      }
+
+      if (!isCanonicalized) {
+        logRoundStartMessage(submittedFormula, i + 1);
+        submittedFormula = canonicalizeChemFormula(submittedFormula);
+        logRoundEndMessage(submittedFormula, i + 1);
+      }
+    }
+
+    logEndMessage(submittedFormula);
+    logExecutionTime();
+
+    formulasMatch = checkFormulasMatch(correctFormula, submittedFormula);
+
+    return formulasMatch ? fullScore : zeroScore;
   }
 }
 
+function calcMaxDepth(str) {
+  const numParen = countNumParen(str);
+  const numBrkt = countNumBrkt(str);
+  const totalParenAndBrkt = numParen + numBrkt;
+
+  if (totalParenAndBrkt === 0) {
+    return 0;
+  }
+
+  let currentDepth = 0;
+  let maxDepth = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charAt(i);
+    if (char === "(" || char === "[") {
+      currentDepth++;
+      if (currentDepth >= maxDepth) {
+        maxDepth = currentDepth;
+      }
+    } else if (char === ")" || char === "]") {
+      currentDepth--;
+    }
+  }
+  return maxDepth;
+}
+
 function canonicalizeChemFormula(str) {
-  console.log("CANONICALIZING");
   let canonicalForm = str.slice();
   const maxDepthLimit = 3;
   const maxDepth = calcMaxDepth(str);
@@ -337,7 +391,7 @@ function canonicalizeChemFormula(str) {
   }
 
   if (maxDepth === 0) {
-    console.log("max depth is zero..atempting to condense formula");
+    console.log("condensing formula");
     const arrayForm = chemFormulaToArray(canonicalForm);
     // clear canonicalForm and rebuild by stringifying arrayForm
     canonicalForm = "";
@@ -363,48 +417,22 @@ function canonicalizeChemFormula(str) {
       : "";
 
   let arg = canonicalForm.slice(argStartIndex, argEndIndex);
+  console.log("finding multiplier for: " + arg);
+  const multiplier = getMultiplier(endFragment);
+  console.log("multiplier: " + multiplier);
 
-  const multiplier = getMultiplier(endFragment, arg);
-  console.log("multiplier found: " + multiplier);
   const newStr = distributeMultiplier(arg, multiplier);
-  console.log("END FRAGMENT");
-  console.log(endFragment);
   const newEndIndex = endFragment.search(/([A-Z][a-z]*)/);
-  console.log("NEW END INDEX");
-  console.log(newEndIndex);
+
+  // Example: end fragment for (CH<sub>3</sub>)<sub>2</sub>CHOH is <sub>2</sub>CHOH, so trim off <sub>2</sub>.
   endFragment = endFragment.slice(newEndIndex);
 
   canonicalForm = startFragment + newStr + endFragment;
   return canonicalForm;
 }
 
-function calcMaxDepth(str) {
-  const numOpenParentheses = str.replace(/[^(]/g, "").length;
-  const numOpenBrackets = str.replace(/[^[]/g, "").length;
-
-  if (numOpenParentheses === 0 && numOpenBrackets === 0) {
-    return 0;
-  }
-
-  let currentDepth = 0;
-  let maxDepth = 0;
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charAt(i);
-    if (char === "(" || char === "[") {
-      currentDepth++;
-      if (currentDepth >= maxDepth) {
-        maxDepth = currentDepth;
-      }
-    } else if (char === ")" || char === "]") {
-      currentDepth--;
-    }
-  }
-  return maxDepth;
-}
-
-//TODO consolidate like units into single term m^2 m^3 => m^5
 function canonicalizeUnit(str) {
+  //TODO consolidate like units into single term m^2 m^3 => m^5
   let canonicalForm = str.slice();
   const maxDepthLimit = 3;
   const maxDepth = calcMaxDepth(str);
@@ -496,26 +524,80 @@ function canonicalizeUnit(str) {
   return sanitizeUnit(canonicalForm);
 }
 
+function checkIfCanonicalizedChemFormula(str) {
+  //If canonicalization is complete, returns true; if incomplete, returns false
+  const maxDepth = calcMaxDepth(str);
+  let strCopy = str.slice();
+
+  if (maxDepth > 0) {
+    return false;
+  }
+
+  if (maxDepth === 0) {
+    const formulaArr = [];
+    const maxRounds = 15;
+    const subscripts = strCopy.match(/<sub>/g) || [];
+
+    for (let i = 0; i < maxRounds; i++) {
+      const elemIndex = strCopy.search(/([A-Z][a-z]*)/);
+      const elemArr = strCopy.match(/([A-Z][a-z]*)/);
+      const elemSymbol = elemArr.length > 0 ? elemArr[0] : null;
+      const endIndex = elemSymbol ? elemIndex + elemSymbol.length : null;
+      const endFragment = strCopy.slice(endIndex);
+      const count = getMultiplier(endFragment, elemSymbol);
+
+      formulaArr.push({ symbol: elemSymbol, count: Number(count) });
+
+      strCopy = strCopy.replace(elemSymbol, "");
+
+      const nextElemIndex = strCopy.search(/([A-Z][a-z]*)/);
+      if (nextElemIndex === -1) {
+        const elements = formulaArr.map((el) => el.symbol);
+        const uniqueElements = [...new Set(elements)];
+        const sortedElements = alphabetize(uniqueElements);
+
+        const fullyCondensed = elements.length === uniqueElements.length;
+        const alphabetized = elements.join("") === sortedElements.join("");
+
+        const allSubscriptsApplied =
+          subscripts.length === uniqueElements.length;
+
+        const isCanonicalized =
+          fullyCondensed && alphabetized && allSubscriptsApplied;
+        return isCanonicalized;
+      }
+      strCopy = nextElemIndex > 0 ? strCopy.slice(nextElemIndex) : strCopy;
+    }
+
+    return false;
+  }
+}
+
+function checkFormulasMatch(str1, str2) {
+  if (str1 === str2) {
+    console.log("formulas match");
+    return true;
+  } else {
+    console.log("formulas do not match");
+    return false;
+  }
+}
+
 function checkNumbersMatch(str1, str2, pctTolerance) {
   const correctNum = Number(str1);
   const submittedNum = Number(str2);
   let pctError = Math.abs((100 * (submittedNum - correctNum)) / correctNum);
   console.log("percent error: " + pctError);
 
-  if (pctError < pctTolerance) {
-    console.log("numbers match");
-    return true;
-  }
-
-  if (pctError < 0.2) {
-    //accept submitted numbers very close to the correct number, even if percent error set to 0
+  if (pctError < pctTolerance || pctError < 0.2) {
+    //accept submitted numbers if within percent tolerance or very close to the correct number (even if percent tolerance set to 0)
     // for example, consider 1/3 and 0.333 to be equal, even though they are not.
     console.log("numbers match");
     return true;
+  } else {
+    console.log("numbers do not match");
+    return false;
   }
-
-  console.log("numbers do not match");
-  return false;
 }
 
 function checkUnitComplexity(str) {
@@ -541,28 +623,25 @@ function checkUnitComplexity(str) {
 }
 
 function chemFormulaToArray(str) {
-  // takes a string like C3H8O and conerts into an array
+  // takes a string like C3H8O and conerts into an array with the form
   // [{symbol: C, count: 3},{symbol: H, count: 8}, {symbol: O, count: 1}]
   // string must NOT have parentheses or brackets
   let strCopy = str.slice();
-  const numOpenParentheses = strCopy.replace(/[^(]/g, "").length;
-  const numClosedParentheses = strCopy.replace(/[^)]/g, "").length;
-  const numOpenBrackets = strCopy.replace(/[^[]/g, "").length;
-  const numClosedBrackets = strCopy.replace(/[^\]]/g, "").length;
-  const totalParenAndBrackets =
-    numOpenParentheses +
-    numClosedParentheses +
-    numOpenBrackets +
-    numClosedBrackets;
 
-  if (totalParenAndBrackets > 0) {
-    return "error";
+  const numParen = countNumParen(str);
+  const numBrkt = countNumBrkt(str);
+  const totalParenAndBrkt = numParen + numBrkt;
+  const errorMessage =
+    "an error occurred in chemFormulaToArray() gradeShortAnswer.js";
+
+  if (totalParenAndBrkt > 0) {
+    console.log(errorMessage);
+    return [];
   }
 
-  const formulaArray = [];
-  console.log("array-ifying formula fragment");
-  console.log("formula fragment:" + strCopy);
-  const maxRounds = 6;
+  const formulaArr = [];
+
+  const maxRounds = 10;
   for (let i = 0; i < maxRounds; i++) {
     const elemIndex = strCopy.search(/([A-Z][a-z]*)/);
     const elemArr = strCopy.match(/([A-Z][a-z]*)/);
@@ -571,35 +650,33 @@ function chemFormulaToArray(str) {
     const endFragment = strCopy.slice(endIndex);
     const count = getMultiplier(endFragment, elemSymbol);
 
-    const duplicateSymbol = formulaArray.find(
-      (elem) => elem.symbol === elemSymbol
-    );
+    const duplicateSymbol = formulaArr.find((el) => el.symbol === elemSymbol);
 
     if (duplicateSymbol) {
-      const duplicateSymbolIndex = formulaArray.findIndex(
-        (elem) => elem.symbol === elemSymbol
+      const duplicateIndex = formulaArr.findIndex(
+        (el) => el.symbol === elemSymbol
       );
 
-      console.log("duplicate element encountered");
-
-      formulaArray[duplicateSymbolIndex] = {
+      formulaArr[duplicateIndex] = {
         symbol: elemSymbol,
         count: Number(duplicateSymbol.count) + Number(count),
       };
     } else {
-      formulaArray.push({ symbol: elemSymbol, count: Number(count) });
+      formulaArr.push({ symbol: elemSymbol, count: Number(count) });
     }
 
     strCopy = strCopy.replace(elemSymbol, "");
+
     const nextElemIndex = strCopy.search(/([A-Z][a-z]*)/);
     if (nextElemIndex === -1) {
-      console.log("complete after " + i + " round(s)");
-      return formulaArray;
+      const sortedFormulaArr = sortByChemSymbol(formulaArr);
+      return sortedFormulaArr;
+    } else {
+      strCopy = nextElemIndex > 0 ? strCopy.slice(nextElemIndex) : strCopy;
     }
-    strCopy = nextElemIndex > 0 ? strCopy : strCopy.slice(nextElemIndex);
   }
 
-  return formulaArray;
+  return formulaArr;
 }
 
 function distributeExponent(str, outerExp) {
@@ -620,17 +697,16 @@ function distributeExponent(str, outerExp) {
 function distributeMultiplier(str, multiplier) {
   const arr = chemFormulaToArray(str);
   let newStr = "";
-  console.log(arr);
-  console.log("distributing multiplier");
+
   const multipliedArr = arr.map((elem) => ({
     symbol: elem.symbol,
     count: elem.count * multiplier,
   }));
 
-  console.log(multipliedArr);
   multipliedArr.forEach((elem) => {
     newStr = newStr + elem.symbol + "<sub>" + elem.count + "</sub>";
   });
+  console.log("distributing multiplier: " + newStr);
 
   return newStr;
 }
@@ -721,6 +797,49 @@ function findUnitSingularForm(str) {
   return foundUnit.singular;
 }
 
+function getChemFormulaCharge(str) {
+  const posMatches = str.match(
+    /(<sup>\+\d?<\/sup>)|(<sup>\d?\+<\/sup>)|(\^\+\d?)|(\^\d?\+)/g
+  );
+
+  const negMatches = str.match(
+    /(<sup>−\d?<\/sup>)|(<sup>\d?−<\/sup>)|(\^−\d?)|(\^\d?−)/g
+  );
+
+  const defaultValues = {
+    sign: "neutral",
+    magnitude: 0,
+  };
+
+  if (posMatches?.length > 0) {
+    const rawExpr = posMatches[0];
+    const digitArr = rawExpr.match(/\d/);
+    const hasDigit = digitArr?.length > 0 || false;
+    const magnitude = hasDigit ? Number(digitArr[0]) : 1;
+    const values = {
+      sign: "positive",
+      magnitude: magnitude,
+    };
+
+    return values;
+  }
+
+  if (negMatches?.length > 0) {
+    const rawExpr = negMatches[0];
+    const digitArr = rawExpr.match(/\d/);
+    const hasDigit = digitArr?.length > 0 || false;
+    const magnitude = hasDigit ? Number(digitArr[0]) : 1;
+    const values = {
+      sign: "negative",
+      magnitude: magnitude,
+    };
+
+    return values;
+  }
+
+  return defaultValues;
+}
+
 function getExponent(str) {
   let strCopy = str.slice();
 
@@ -775,10 +894,10 @@ function getOuterExponent(str) {
   return false;
 }
 
-function getMultiplier(str, multiplicand) {
+function getMultiplier(str) {
   // searches for a subscript (multipler) at the beginning of a string
   // if found, returns the multipler, if not found, returns 1.
-  console.log("finding count for " + multiplicand);
+
   let strCopy = str.slice();
   strCopy.trim();
   strCopy = strCopy.replace("<sub>", "").replace("</sub>", "");
@@ -793,7 +912,8 @@ function getMultiplier(str, multiplicand) {
 
   if (Number(multiplierIndex) < 1 && multiplierArr.length > 0) {
     //return found multiplier, but only if is near the beginning of the string
-    return multiplierArr[0];
+    const multiplier = multiplierArr[0];
+    return multiplier;
   } else {
     return 1;
   }
@@ -814,8 +934,9 @@ function isNumber(str) {
 
 function logEndMessage(str) {
   console.log("");
-  console.log("FINAL FORM");
+  console.log("CANONICALIZED FORM: ");
   console.log(str);
+  console.log("");
   console.log("");
 }
 
@@ -838,7 +959,7 @@ function logSpacer(num) {
 function logRoundEndMessage(str, round) {
   if (!str) {
     console.log(`Failed round ${round}. Exiting grading function...`);
-    console.timeEnd("Execution Time");
+    logExecutionTime();
   } else {
     console.log(str);
     console.log("");
@@ -860,12 +981,13 @@ function logStartMessage(message, value) {
 }
 
 function preCheckNumber(str) {
-  //checks if number is well-formatted.
+  // checks if number is well-formatted
+  // i.e. number has matching number of parentheses and brackets
+  // and no invalid characters or operators
   console.log("running pre-check...");
-  const numOpenParentheses = str.replace(/[^(]/g, "").length;
-  const numClosedParentheses = str.replace(/[^)]/g, "").length;
-  const numOpenBrackets = str.replace(/[^[]/g, "").length;
-  const numClosedBrackets = str.replace(/[^\]]/g, "").length;
+
+  const numParenMatch = checkIfNumParenMatch(str);
+  const numBrktMatch = checkIfNumBrktMatch(str);
   const invalidChars = str.match(/[`@#$%&_={}|:;"',<>?]/g);
   const invalidOperators = str
     .replace(/sqrt/g, "")
@@ -879,13 +1001,13 @@ function preCheckNumber(str) {
     .match(/[a-zA-Z]+/g, "");
 
   // check if number of open and close parentheses match
-  if (numOpenParentheses !== numClosedParentheses) {
+  if (!numParenMatch) {
     console.log("number of open and closed parentheses do not match.");
     return false;
   }
 
   // check if number of open and close brackets match
-  if (numOpenBrackets !== numClosedBrackets) {
+  if (!numBrktMatch) {
     console.log("number of open and closed brackets do not match. ");
     return false;
   }
@@ -982,6 +1104,17 @@ function sanitizeUnit(str) {
     .replace(/\s/g, "*");
 
   return tidiedStr;
+}
+
+function sortByChemSymbol(arr) {
+  function compare(a, b) {
+    if (a.symbol.toLowerCase() < b.symbol.toLowerCase()) return -1;
+    if (a.symbol.toLowerCase() > b.symbol.toLowerCase()) return 1;
+    return 0;
+  }
+
+  const sortedArr = arr.sort(compare);
+  return sortedArr;
 }
 
 function simplifyFractions(str) {
@@ -1286,6 +1419,28 @@ function toProductForm(str) {
     });
   }
   return strCopy;
+}
+
+function trimChemFormulaCharge(str) {
+  const posMatches = str.match(
+    /(<sup>\+\d?<\/sup>)|(<sup>\d?\+<\/sup>)|(\^\+\d?)|(\^\d?\+)/g
+  );
+
+  const negMatches = str.match(
+    /(<sup>−\d?<\/sup>)|(<sup>\d?−<\/sup>)|(\^−\d?)|(\^\d?−)/g
+  );
+
+  if (posMatches?.length > 0) {
+    const rawExpr = posMatches[0];
+    return str.replace(rawExpr, "");
+  }
+
+  if (negMatches?.length > 0) {
+    const rawExpr = negMatches[0];
+    return str.replace(rawExpr, "");
+  }
+
+  return str;
 }
 
 function trimOuterExponent(str) {

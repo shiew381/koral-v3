@@ -1,3 +1,30 @@
+export function alphabetize(arr) {
+  // alphabetizes an array of strings
+
+  function compare(a, b) {
+    if (a.toLowerCase() < b.toLowerCase()) return -1;
+    if (a.toLowerCase() > b.toLowerCase()) return 1;
+    return 0;
+  }
+  const arrCopy = [...arr];
+  const sortedArr = arrCopy.sort(compare);
+  return sortedArr;
+}
+
+export function compareBases(a, b) {
+  if (a.base.toLowerCase() < b.base.toLowerCase()) return -1;
+  if (a.base.toLowerCase() > b.base.toLowerCase()) return 1;
+  return 0;
+}
+
+export function compareDates(a, b) {
+  const dateA = a.dateSubmitted;
+  const dateB = b.dateSubmitted;
+  if (dateA.seconds < dateB.seconds) return -1;
+  if (dateA.seconds > dateB.seconds) return 1;
+  return 0;
+}
+
 export function copyArray(arr) {
   return JSON.parse(JSON.stringify(arr));
 }
@@ -43,17 +70,21 @@ export function generateRandomCode(length) {
   return randomCode;
 }
 
-export function compareBases(a, b) {
-  if (a.base.toLowerCase() < b.base.toLowerCase()) return -1;
-  if (a.base.toLowerCase() > b.base.toLowerCase()) return 1;
-  return 0;
-}
-
 export function pickRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   // The maximum is exclusive and the minimum is inclusive
   return Math.floor(Math.random() * (max - min) + min);
+}
+
+export function searchifyStr(str) {
+  if (typeof str !== "string") return "";
+
+  const arr = str.split(" ");
+  const lowercaseArr = arr.map((tag) => tag.toLowerCase());
+  const normalizedArr = [...new Set(lowercaseArr)]; // removes duplicate elements from array
+
+  return normalizedArr.filter((el) => el); // removes undefined elements from array
 }
 
 export function searchifyTags(rawTags) {
@@ -94,14 +125,15 @@ export function searchifyTags(rawTags) {
   return wholeAndAtomizedTags;
 }
 
-export function searchifyStr(str) {
-  if (typeof str !== "string") return "";
+export function sortByTitle(arr) {
+  function compare(a, b) {
+    if (a.title.toLowerCase() < b.title.toLowerCase()) return -1;
+    if (a.title.toLowerCase() > b.title.toLowerCase()) return 1;
+    return 0;
+  }
 
-  const arr = str.split(" ");
-  const lowercaseArr = arr.map((tag) => tag.toLowerCase());
-  const normalizedArr = [...new Set(lowercaseArr)]; // removes duplicate elements from array
-
-  return normalizedArr.filter((el) => el); // removes undefined elements from array
+  const sortedArr = arr.sort(compare);
+  return sortedArr;
 }
 
 export function truncateString(str, maxLength) {
@@ -113,27 +145,4 @@ export function truncateString(str, maxLength) {
   } else {
     return str.slice(0, maxLength - 3) + "...";
   }
-}
-
-export function alphabetize(arr) {
-  // alphabetizes an array of strings
-  function compare(a, b) {
-    if (a.toLowerCase() < b.toLowerCase()) return -1;
-    if (a.toLowerCase() > b.toLowerCase()) return 1;
-    return 0;
-  }
-
-  const sortedArr = arr.sort(compare);
-  return sortedArr;
-}
-
-export function sortByTitle(arr) {
-  function compare(a, b) {
-    if (a.title.toLowerCase() < b.title.toLowerCase()) return -1;
-    if (a.title.toLowerCase() > b.title.toLowerCase()) return 1;
-    return 0;
-  }
-
-  const sortedArr = arr.sort(compare);
-  return sortedArr;
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { handleArrowLeft } from "../../utils/editorUtils.js";
+import { handleArrowLeft, insertChar } from "../../utils/editorUtils.js";
 import { BtnGroupScript, EditorLabel } from "./EditorCpnts";
 
 import { Box } from "@mui/material";
@@ -11,6 +11,7 @@ export function ChemFormulaField({
   id,
   label,
   setCurrentResponse,
+  setInputError,
   toolbarOptions,
 }) {
   const [editorActive, setEditorActive] = useState(false);
@@ -259,8 +260,11 @@ export function ChemFormulaField({
     const parent = anchorNode?.parentElement;
     const anchorOffset = selection.anchorOffset;
 
-    // skip if e.key is Tab, CapsLock, or other non-character key
-    if (e.key.length === 1 && parent.nodeName === "SPAN") {
+    if (parent.nodeName === "SPAN") {
+      // skip if Tab, CapsLock, or Shift
+      if (e.key === "Tab" || e.key === "Backspace" || e.key === "Shift") {
+        return;
+      }
       const newTextNode = document.createTextNode(e.key);
       const range = new Range();
       const sel = document.getSelection();
@@ -298,7 +302,7 @@ export function ChemFormulaField({
       }
       case "Space": {
         const preCaretText = anchorNode.data?.slice(0, anchorOffset);
-        const superscripts = preCaretText.match(/\^(\w|-|\+)+/);
+        const superscripts = preCaretText.match(/\^(\w|−|\+)+/);
         const subscripts = preCaretText.match(/_(\w|-)+/);
         const longUnderline = preCaretText.match(/_{2,10}/);
 
@@ -355,6 +359,10 @@ export function ChemFormulaField({
         return;
       }
       case "Minus": {
+        if (!e.shiftKey) {
+          e.preventDefault();
+          insertChar("−");
+        }
         return;
       }
       default: {
@@ -368,6 +376,7 @@ export function ChemFormulaField({
       ...currentResponse,
       formula: fieldRef.current?.innerHTML,
     });
+    setInputError(false);
   }
 
   function removeEmptyTags(tagName) {
@@ -413,7 +422,7 @@ export function ChemFormulaField({
       >
         <EditorLabel label={label} handleClick={() => setActiveGroup(null)} />
         <div
-          className="editor-content-area editor-content"
+          className="chem-formula-field editor-content-area editor-content"
           contentEditable
           ref={fieldRef}
           id={id}

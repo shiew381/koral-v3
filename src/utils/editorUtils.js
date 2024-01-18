@@ -348,7 +348,12 @@ export function selectionInEditor() {
   // check if current selection is within editor field, preventing DOM mutations outside of editor field
   const selection = document.getSelection();
   const anchorNode = selection.anchorNode;
-  const validClasses = ["equation", "eq-field", "number-field"];
+  const validClasses = [
+    "equation",
+    "eq-field",
+    "number-field",
+    "chem-formula-field",
+  ];
 
   for (let i = 0; i < validClasses.length; i++) {
     const className = validClasses[i];

@@ -1,55 +1,4 @@
-import { pickRandomInt } from "./commonUtils";
-
-export function cleanEditorHTML(elem) {
-  if (!elem) return;
-  const resizeHandles = elem.querySelectorAll("div.img-resize-handle");
-  resizeHandles.forEach((handle) => handle.remove());
-  const editableElems = elem.querySelectorAll(["[contenteditable=true]"]);
-  editableElems.forEach((elem) => elem.removeAttribute("contenteditable"));
-  return elem.innerHTML;
-}
-
-export function cleanChemField(elem) {
-  const clone = elem.cloneNode(true);
-  console.log(elem);
-  const tempElems = clone.querySelectorAll(".temp-input-elem");
-  tempElems.forEach((el) => el.remove());
-  clone.normalize();
-  return clone;
-}
-
-export function toChemFormulaStr(elem) {
-  console.log(elem);
-  return elem.innerHTML;
-}
-
-export function getSubmissions(submissionHistory, question) {
-  if (!question?.id) return [];
-  if (!submissionHistory) return [];
-
-  return submissionHistory[question.id] || [];
-}
-
-export function pickQuestion(objective, questions, submissionHistory) {
-  const objectiveIDs = objective?.questionIDs || [];
-
-  const touchedIDs = submissionHistory
-    ? objectiveIDs.filter((id) => Object.hasOwn(submissionHistory, id))
-    : [];
-
-  const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
-
-  const qIndex = pickRandomInt(0, untouchedIDs.length);
-
-  const pickedID = untouchedIDs[qIndex];
-  const foundQuestion = questions.find((question) => question.id === pickedID);
-
-  if (untouchedIDs.length == 0) {
-    return "exhausted";
-  }
-
-  return foundQuestion;
-}
+import { compareDates, pickRandomInt } from "./commonUtils";
 
 export function calculateProgress(rule, objective, submissionHistory) {
   const zeroScore = { percentage: 0, count: 0 };
@@ -92,11 +41,61 @@ export function calculateProgress(rule, objective, submissionHistory) {
   return zeroScore;
 }
 
+export function countNumParen(str) {
+  //count number of open and closed parentheses in a string
+  const numOpenParen = str.replace(/[^(]/g, "").length;
+  const numClosedParen = str.replace(/[^)]/g, "").length;
+  const numParen = numOpenParen + numClosedParen;
+  return numParen;
+}
+
+export function countNumBrkt(str) {
+  //count number of open and closed brackets in a string
+  const numOpenBrkt = str.replace(/[^[]/g, "").length;
+  const numClosedBrkt = str.replace(/[^\]]/g, "").length;
+  const numBrkt = numOpenBrkt + numClosedBrkt;
+  return numBrkt;
+}
+
+export function cleanEditorHTML(elem) {
+  if (!elem) return;
+  const resizeHandles = elem.querySelectorAll("div.img-resize-handle");
+  resizeHandles.forEach((handle) => handle.remove());
+  const editableElems = elem.querySelectorAll(["[contenteditable=true]"]);
+  editableElems.forEach((elem) => elem.removeAttribute("contenteditable"));
+  return elem.innerHTML;
+}
+
+export function cleanChemField(elem) {
+  const clone = elem.cloneNode(true);
+  const tempElems = clone.querySelectorAll(".temp-input-elem");
+  tempElems.forEach((el) => el.remove());
+  clone.normalize();
+  return clone;
+}
+
+export function checkIfNumParenMatch(str) {
+  //checks if the number of open and closed parentheses in a string match
+  const strCopy = str.slice();
+  const numOpenParen = strCopy.replace(/[^(]/g, "").length;
+  const numClosedParen = strCopy.replace(/[^)]/g, "").length;
+  const match = numOpenParen === numClosedParen;
+  return match;
+}
+
+export function checkIfNumBrktMatch(str) {
+  //checks if the number of open and closed brackets in a string match
+  const strCopy = str.slice();
+  const numOpenBrkt = strCopy.replace(/[^[]/g, "").length;
+  const numClosedBrkt = strCopy.replace(/[^\]]/g, "").length;
+  const match = numOpenBrkt === numClosedBrkt;
+  return match;
+}
+
 export function chutesStreak(lastSubmissions) {
   const sorted = lastSubmissions.sort(compareDates);
 
   let count = 0;
-
   for (let i = 0; i < sorted.length; i++) {
     const lastSubmission = sorted[i];
     if (lastSubmission.answeredCorrectly) {
@@ -111,7 +110,6 @@ export function chutesStreak(lastSubmissions) {
 
 export function correctStreak(lastSubmissions) {
   const sorted = lastSubmissions.sort(compareDates);
-
   let count = 0;
 
   for (let i = 0; i < sorted.length; i++) {
@@ -126,10 +124,123 @@ export function correctStreak(lastSubmissions) {
   return count;
 }
 
-function compareDates(a, b) {
-  const dateA = a.dateSubmitted;
-  const dateB = b.dateSubmitted;
-  if (dateA.seconds < dateB.seconds) return -1;
-  if (dateA.seconds > dateB.seconds) return 1;
-  return 0;
+export function convertElemtoStr(elem) {
+  let stringifiedForm = "";
+
+  const superscripts = elem.querySelectorAll("sup");
+  superscripts.forEach((superscript) => {
+    const stringEquivalent = "^" + superscript.innerText;
+    superscript.replaceWith(stringEquivalent);
+  });
+
+  //quick check - if no templates used return early
+  const eqFields = elem.querySelectorAll(".eq-field");
+  if (eqFields.length === 0) {
+    console.log("no templates used");
+    stringifiedForm = elem.innerText;
+    return stringifiedForm;
+  }
+
+  for (let i = 0; i < 5; i++) {
+    const sqrts = elem.querySelectorAll(".eq-sqrt");
+    sqrts.forEach((sqrt) => {
+      const arg = sqrt.querySelector(".eq-sqrt-arg");
+      const nestedFields = arg.querySelectorAll(".eq-field");
+      if (nestedFields.length > 0) {
+        console.log(
+          "found nested fields in square root, scanning other fields..."
+        );
+        return;
+      } else {
+        const stringEquivalent = " sqrt" + "(" + arg.innerText.trim() + ") ";
+        console.log("stringifying square root");
+        console.log(stringEquivalent);
+        sqrt.replaceWith(stringEquivalent);
+      }
+    });
+
+    const fractions = elem.querySelectorAll(".eq-fraction");
+    fractions.forEach((fraction) => {
+      const numerator = fraction.querySelector(".eq-numerator");
+      const nestedFieldsNum = numerator.querySelectorAll(".eq-field");
+
+      const denominator = fraction.querySelector(".eq-denominator");
+      const nestedFieldsDenom = denominator.querySelectorAll(".eq-field");
+
+      if (nestedFieldsDenom.length > 0 || nestedFieldsNum.length > 0) {
+        console.log("found nested fields in square root, skipping...");
+        return;
+      }
+
+      const stringEquivalent =
+        "(" + numerator.innerText + "/" + denominator.innerText + ")";
+      console.log("stringifying fraction");
+      console.log(stringEquivalent);
+      fraction.replaceWith(stringEquivalent.trim());
+    });
+    stringifiedForm = elem.innerText;
+  }
+
+  return stringifiedForm.trim();
+}
+
+export function findChemSymbols(str) {
+  // finds all chemical element symbols in a string with one capital letter like "N" representing nitrogen
+  // or one capital letter followed by a lowercase letter like "Na" representing sodium
+  const chemSymbols = str.match(/([A-Z][a-z]*)/g);
+  return chemSymbols || [];
+}
+
+export function findMalformedChemSymbols(str) {
+  // finds all symbols in a string that do not conform to chemical symbol notation
+  // i.e. one capital letter, or one capital letter followed by a lowercase letter.
+  const nonChemSymbols = str.match(/[a-z]{2,}/g);
+  return nonChemSymbols || [];
+}
+
+export function findUnknownChemSymbols(chemSymbols, elemList) {
+  // checks each element of an array containing chemical symbols against chemical symbols from the periodic table.
+  const unknownChemSymbols = [];
+
+  chemSymbols.forEach((symbol) => {
+    const foundElement = elemList.find((item) => item.symbol === symbol);
+    if (!foundElement) {
+      unknownChemSymbols.push(symbol);
+    }
+  });
+  return unknownChemSymbols;
+}
+
+export function getSubmissions(submissionHistory, question) {
+  if (!question?.id) return [];
+  if (!submissionHistory) return [];
+
+  return submissionHistory[question.id] || [];
+}
+
+export function pickQuestion(objective, questions, submissionHistory) {
+  const objectiveIDs = objective?.questionIDs || [];
+
+  const touchedIDs = submissionHistory
+    ? objectiveIDs.filter((id) => Object.hasOwn(submissionHistory, id))
+    : [];
+
+  const untouchedIDs = objectiveIDs.filter((id) => !touchedIDs.includes(id));
+
+  const qIndex = pickRandomInt(0, untouchedIDs.length);
+
+  const pickedID = untouchedIDs[qIndex];
+  const foundQuestion = questions.find((question) => question.id === pickedID);
+
+  if (untouchedIDs.length == 0) {
+    return "exhausted";
+  }
+
+  return foundQuestion;
+}
+
+export function toChemFormulaStr(elem) {
+  let formula = elem.innerHTML.slice();
+  formula = formula.replaceAll("&nbsp;", "").replace(/\s+/g, "");
+  return formula;
 }
