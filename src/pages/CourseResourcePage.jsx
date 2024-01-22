@@ -138,8 +138,14 @@ function DocDetails({ doc }) {
         size: {fileSize.toFixed(2)} MB
       </Typography>
       <VertDivider />
-      <Link href={doc.url} target="blank" rel="noreferrer" underline="hover">
-        open in new tab{" "}
+      <Link
+        color="secondary"
+        href={doc.url}
+        target="blank"
+        rel="noreferrer"
+        underline="hover"
+      >
+        open in new tab
         <OpenInNewIcon
           fontSize="5px"
           sx={{ position: "relative", top: "3px" }}
@@ -195,7 +201,13 @@ function LinkDetails({ link }) {
     <Box width="88%" sx={{ bgcolor: "whitesmoke", px: 2, py: 1, my: 1 }}>
       <Typography variant="h6">{link.title}</Typography>
 
-      <Link href={link.url} target="blank" rel="noreferrer" underline="hover">
+      <Link
+        color="secondary"
+        href={link.url}
+        target="blank"
+        rel="noreferrer"
+        underline="hover"
+      >
         open in new tab
         <OpenInNewIcon
           fontSize="5px"

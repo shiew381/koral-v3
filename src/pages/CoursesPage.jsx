@@ -174,14 +174,14 @@ function NewCourseCard({ onClick }) {
     height: 300,
     m: 2,
     bgcolor: "transparent",
-    outline: "solid #026c8c",
+    outline: "solid #187A7A",
   };
   return (
     <Card sx={cardStyle}>
       <CardActionArea onClick={onClick}>
         <Box sx={{ height: "300px" }} className="flex flex-row flex-center">
           <AddIcon color="primary" />
-          <Typography variant="h5" color="primary" sx={{ ml: 1 }}>
+          <Typography color="primary" variant="h5" sx={{ ml: 1 }}>
             Add Course
           </Typography>
         </Box>

@@ -161,7 +161,7 @@ export default function QuestionSetsPage() {
 function AddQSetBtn({ onClick }) {
   return (
     <Box className="margin-x-responsive">
-      <Button onClick={onClick} startIcon={<AddIcon />}>
+      <Button color="secondary" onClick={onClick} startIcon={<AddIcon />}>
         Add QUESTION SET
       </Button>
     </Box>
@@ -274,12 +274,13 @@ function QSetCard({
               onChange={toggleAdaptive}
             />
             <Button
-              sx={{ ml: 4 }}
+              color="secondary"
               disabled={!adaptiveModeOn}
               onClick={() => {
                 setSelQSet(qSet);
                 openAdaptiveForm();
               }}
+              sx={{ ml: 4 }}
             >
               SET PARAMETERS
             </Button>
@@ -297,7 +298,11 @@ function QSetCard({
       </CardContent>
       <Box sx={{ px: 2, pb: 2 }}>
         <BtnContainer right>
-          <Button onClick={redirectToQSet} endIcon={<NavigateNextIcon />}>
+          <Button
+            color="secondary"
+            onClick={redirectToQSet}
+            endIcon={<NavigateNextIcon />}
+          >
             View
           </Button>
         </BtnContainer>

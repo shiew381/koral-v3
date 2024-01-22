@@ -455,6 +455,7 @@ function QuestionSetsPanel({ libID, library }) {
                 </Button>
               ) : (
                 <Button
+                  color="secondary"
                   disabled={checkedQns.length === 0}
                   onClick={showChecked}
                   fullWidth
@@ -465,13 +466,14 @@ function QuestionSetsPanel({ libID, library }) {
             </BtnContainer>
             {viewChecked && (
               <BtnContainer center>
-                <Button onClick={showAll} fullWidth>
+                <Button color="secondary" onClick={showAll} fullWidth>
                   VIEW ALL
                 </Button>
               </BtnContainer>
             )}
             {isEditor && (
               <Button
+                color="secondary"
                 fullWidth
                 onClick={handleOpenBuilder}
                 startIcon={<AddIcon />}

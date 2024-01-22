@@ -248,6 +248,7 @@ function UploadImage({ file, uploadProgress, handleSelectFile }) {
     return (
       <Box sx={{ width: "170px" }}>
         <Button
+          color="secondary"
           component="label"
           startIcon={<CloudUploadIcon />}
           sx={{ px: 2 }}

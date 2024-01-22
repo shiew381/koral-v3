@@ -122,7 +122,11 @@ export default function InstructorDashboard() {
   return (
     <div className="dashboard-container relative">
       <div style={{ position: "absolute" }}>
-        <Button startIcon={<ChevronLeftIcon />} onClick={redirectToCourses}>
+        <Button
+          color="secondary"
+          startIcon={<ChevronLeftIcon />}
+          onClick={redirectToCourses}
+        >
           All Courses
         </Button>
       </div>
@@ -133,7 +137,8 @@ export default function InstructorDashboard() {
           orientation="vertical"
           sx={{
             borderRight: 1,
-            borderColor: "divider",
+            // borderColor: "divider",
+            borderColor: "secondary",
             minHeight: "50vh",
           }}
           value={tabIndex}
@@ -271,8 +276,9 @@ function CourseInfo({ course }) {
             <CourseImage url={courseImage?.url} />
             {!file && !courseImage && (
               <Button
-                fullWidth
+                color="secondary"
                 component="label"
+                fullWidth
                 startIcon={<CloudUploadIcon />}
               >
                 UPLOAD CUSTOM IMAGE
@@ -291,7 +297,9 @@ function CourseInfo({ course }) {
                 >
                   |
                 </Typography>
-                <Button onClick={handleDeleteCourseImage}>DELETE</Button>
+                <Button color="secondary" onClick={handleDeleteCourseImage}>
+                  DELETE
+                </Button>
               </Box>
             )}
             {file && (
@@ -364,7 +372,12 @@ function Announcements({
             Get started by add your first assignment!
           </Typography>
           <div className="flex flex-center">
-            <Button onClick={handleOpen} startIcon={<AddIcon />} size="large">
+            <Button
+              color="secondary"
+              onClick={handleOpen}
+              startIcon={<AddIcon />}
+              size="large"
+            >
               ADD ANNOUNCEMENT
             </Button>
           </div>
@@ -377,7 +390,11 @@ function Announcements({
     return (
       <Panel>
         <Box className="course-list-actions-container">
-          <Button onClick={handleOpen} startIcon={<AddIcon />}>
+          <Button
+            color="secondary"
+            onClick={handleOpen}
+            startIcon={<AddIcon />}
+          >
             NEW ANNOUNCEMENT
           </Button>
         </Box>
@@ -474,7 +491,12 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
             Get started by add your first assignment!
           </Typography>
           <div className="flex flex-center">
-            <Button onClick={handleOpen} startIcon={<AddIcon />} size="large">
+            <Button
+              color="secondary"
+              onClick={handleOpen}
+              startIcon={<AddIcon />}
+              size="large"
+            >
               ADD ASSIGNMENT
             </Button>
           </div>
@@ -487,7 +509,11 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
     return (
       <Panel>
         <Box className="course-list-actions-container">
-          <Button onClick={handleOpen} startIcon={<AddIcon />}>
+          <Button
+            color="secondary"
+            onClick={handleOpen}
+            startIcon={<AddIcon />}
+          >
             ADD ASSIGNMENT
           </Button>
         </Box>
@@ -594,7 +620,12 @@ function Resources({ course, handleOpen }) {
             Get started by adding your first resource!
           </Typography>
           <div className="flex flex-center">
-            <Button onClick={handleOpen} startIcon={<AddIcon />} size="large">
+            <Button
+              color="secondary"
+              onClick={handleOpen}
+              startIcon={<AddIcon />}
+              size="large"
+            >
               ADD RESOURCE
             </Button>
           </div>
@@ -607,7 +638,11 @@ function Resources({ course, handleOpen }) {
     return (
       <Panel>
         <Box className="course-list-actions-container">
-          <Button onClick={handleOpen} startIcon={<AddIcon />}>
+          <Button
+            color="secondary"
+            onClick={handleOpen}
+            startIcon={<AddIcon />}
+          >
             Add Resource
           </Button>
         </Box>
@@ -796,7 +831,11 @@ function Grades({ course, user }) {
       <Box sx={{ pt: "20px" }}>
         <BtnContainer right>
           <Tooltip title="add manually graded assignment">
-            <Button onClick={openManualGrade} startIcon={<AddIcon />}>
+            <Button
+              color="secondary"
+              onClick={openManualGrade}
+              startIcon={<AddIcon />}
+            >
               COLUMN
             </Button>
           </Tooltip>
@@ -806,7 +845,11 @@ function Grades({ course, user }) {
           >
             |
           </Typography>
-          <Button onClick={downloadGradebook} startIcon={<DownloadIcon />}>
+          <Button
+            color="secondary"
+            onClick={downloadGradebook}
+            startIcon={<DownloadIcon />}
+          >
             Download CSV
           </Button>
         </BtnContainer>

@@ -82,7 +82,11 @@ export default function StudentDashboard() {
   return (
     <div className="dashboard-container relative">
       <div style={{ position: "absolute" }}>
-        <Button startIcon={<ChevronLeftIcon />} onClick={redirectToCourses}>
+        <Button
+          color="secondary"
+          startIcon={<ChevronLeftIcon />}
+          onClick={redirectToCourses}
+        >
           All Courses
         </Button>
       </div>
@@ -251,6 +255,7 @@ function Assignments({ course }) {
             <ListItem
               secondaryAction={
                 <Button
+                  color="secondary"
                   endIcon={<NavigateNextIcon />}
                   onClick={() => redirectToAsgmt(asgmt)}
                 >
@@ -335,6 +340,7 @@ function Resources({ course }) {
             <ListItem
               secondaryAction={
                 <Button
+                  color="secondary"
                   endIcon={<NavigateNextIcon />}
                   onClick={() => redirectToResource(resource)}
                 >

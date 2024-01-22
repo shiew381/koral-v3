@@ -235,7 +235,12 @@ function LinkList({ links, searchTerm, selLink, setSelLink, user }) {
 
 function AddLinkBtn({ onClick }) {
   return (
-    <Button fullWidth onClick={onClick} startIcon={<AddIcon />}>
+    <Button
+      color="secondary"
+      fullWidth
+      onClick={onClick}
+      startIcon={<AddIcon />}
+    >
       ADD LINK
     </Button>
   );
@@ -279,8 +284,14 @@ function LinkDetails({ link }) {
       </Typography>
       <VertDivider />
 
-      <Link href={link.url} target="blank" rel="noreferrer" underline="hover">
-        open in new tab{" "}
+      <Link
+        color="secondary"
+        href={link.url}
+        target="blank"
+        rel="noreferrer"
+        underline="hover"
+      >
+        open in new tab
         <OpenInNewIcon
           fontSize="5px"
           sx={{ position: "relative", top: "3px" }}

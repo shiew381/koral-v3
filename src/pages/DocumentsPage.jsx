@@ -309,6 +309,7 @@ function UploadDocument({ file, uploadProgress, handleSelectFile }) {
     return (
       <Box>
         <Button
+          color="secondary"
           component="label"
           startIcon={<CloudUploadIcon />}
           sx={{ p: 2 }}
@@ -372,8 +373,14 @@ function DocDetails({ doc }) {
         size: {fileSize.toFixed(2)} MB
       </Typography>
       <VertDivider />
-      <Link href={doc.url} target="blank" rel="noreferrer" underline="hover">
-        open in new tab{" "}
+      <Link
+        color="secondary"
+        href={doc.url}
+        target="blank"
+        rel="noreferrer"
+        underline="hover"
+      >
+        open in new tab
         <OpenInNewIcon
           fontSize="5px"
           sx={{ position: "relative", top: "3px" }}

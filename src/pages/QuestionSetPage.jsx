@@ -189,6 +189,7 @@ export default function QuestionSetPage() {
               <Box className="add-question-container">
                 <Divider sx={{ mb: 2 }} />
                 <Button
+                  color="secondary"
                   fullWidth
                   startIcon={<AddIcon />}
                   onClick={handleAddQuestion}
@@ -216,8 +217,12 @@ export default function QuestionSetPage() {
                     size="small"
                     value={mode}
                   >
-                    <ToggleButton value="preview">Preview</ToggleButton>
-                    <ToggleButton value="test">Test</ToggleButton>
+                    <ToggleButton color="secondary" value="preview">
+                      Preview
+                    </ToggleButton>
+                    <ToggleButton color="secondary" value="test">
+                      Test
+                    </ToggleButton>
                   </ToggleButtonGroup>
                 )}
               </div>
@@ -235,7 +240,7 @@ export default function QuestionSetPage() {
               <br />
               {selQuestion && (
                 <Box align="center">
-                  <Button onClick={handleDeleteQuestion}>
+                  <Button color="secondary" onClick={handleDeleteQuestion}>
                     Delete Question
                   </Button>
                 </Box>
@@ -284,7 +289,11 @@ export function BackToQSets() {
 
   return (
     <div className="page-actions">
-      <Button startIcon={<ChevronLeftIcon />} onClick={navigateToQSets}>
+      <Button
+        color="secondary"
+        startIcon={<ChevronLeftIcon />}
+        onClick={navigateToQSets}
+      >
         All Question Sets
       </Button>
     </div>
@@ -304,7 +313,7 @@ function GetStarted({ handleAddQuestion }) {
       <Box display="flex" sx={{ justifyContent: "center" }}>
         <Button
           align="center"
-          color="primary"
+          color="secondary"
           onClick={handleAddQuestion}
           size="large"
         >
@@ -355,6 +364,7 @@ function QuestionCard({
             <Attempts question={question} handleClick={handleOpenAttempts} />
             <VertDivider />
             <Button
+              color="secondary"
               onClick={handleEditQuestion}
               startIcon={<EditIcon />}
               sx={{ p: 1, mr: 1 }}
@@ -403,7 +413,12 @@ function Points({ question, handleClick }) {
   const label = pointsPossible === 1 ? "point" : "points";
 
   return (
-    <Link onClick={handleClick} underline="hover" style={{ cursor: "pointer" }}>
+    <Link
+      color="secondary"
+      onClick={handleClick}
+      underline="hover"
+      style={{ cursor: "pointer" }}
+    >
       {pointsPossible + " " + label}
     </Link>
   );
@@ -418,7 +433,12 @@ function Attempts({ question, handleClick }) {
   if (!attemptsPossible) return null;
 
   return (
-    <Link onClick={handleClick} underline="hover" style={{ cursor: "pointer" }}>
+    <Link
+      color="secondary"
+      onClick={handleClick}
+      underline="hover"
+      style={{ cursor: "pointer" }}
+    >
       {attemptsPossible + " " + label}
     </Link>
   );

@@ -15,10 +15,11 @@ export function BackToStudentDashboard({ location }) {
   return (
     <div className="page-actions">
       <Button
+        color="secondary"
         startIcon={<ChevronLeftIcon />}
         onClick={redirectToStudentDashboard}
       >
-        Course Dashboard
+        COURSE DASHBOARD
       </Button>
     </div>
   );
