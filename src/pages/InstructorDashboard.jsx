@@ -133,14 +133,15 @@ export default function InstructorDashboard() {
       <div className="tabs-vert-container">
         <Tabs
           className="tabs-vert"
+          indicatorColor="secondary"
           onChange={selectTab}
           orientation="vertical"
           sx={{
             borderRight: 1,
-            // borderColor: "divider",
-            borderColor: "secondary",
+            borderColor: "divider",
             minHeight: "50vh",
           }}
+          textColor="secondary"
           value={tabIndex}
         >
           <Tab label="Course Info" />
@@ -152,7 +153,14 @@ export default function InstructorDashboard() {
         </Tabs>
       </div>
       <div className="tabs-horiz-container">
-        <Tabs value={tabIndex} onChange={selectTab} variant="scrollable">
+        <Tabs
+          className="tabs-horiz"
+          indicatorColor="secondary"
+          onChange={selectTab}
+          textColor="secondary"
+          value={tabIndex}
+          variant="scrollable"
+        >
           <Tab label="Course Info" />
           <Tab label="Announcements" />
           <Tab label="Assignments" />
@@ -956,6 +964,7 @@ function GradebookCellInfo({
 
     return (
       <Link
+        color="secondary"
         href="#"
         underline="none"
         onClick={() => {
@@ -977,6 +986,7 @@ function GradebookCellInfo({
   if (submissionExists) {
     return (
       <Link
+        color="secondary"
         href="#"
         underline="none"
         onClick={() => {

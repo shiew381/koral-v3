@@ -93,6 +93,7 @@ export default function StudentDashboard() {
       <div className="tabs-vert-container">
         <Tabs
           className="tabs-vert"
+          indicatorColor="secondary"
           onChange={selectTab}
           orientation="vertical"
           sx={{
@@ -100,6 +101,7 @@ export default function StudentDashboard() {
             borderColor: "divider",
             minHeight: "50vh",
           }}
+          textColor="secondary"
           value={tabIndex}
         >
           <Tab label="Course Info" />
@@ -110,7 +112,13 @@ export default function StudentDashboard() {
         </Tabs>
       </div>
       <div className="tabs-horiz-container">
-        <Tabs value={tabIndex} onChange={selectTab} variant="scrollable">
+        <Tabs
+          indicatorColor="secondary"
+          onChange={selectTab}
+          textColor="secondary"
+          value={tabIndex}
+          variant="scrollable"
+        >
           <Tab label="Course Info" />
           <Tab label="Announcements" />
           <Tab label="Assignments" />
