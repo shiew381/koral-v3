@@ -241,7 +241,7 @@ export default function QuestionSetPage() {
               {selQuestion && (
                 <Box align="center">
                   <Button color="secondary" onClick={handleDeleteQuestion}>
-                    Delete Question
+                    DELETE QUESTION
                   </Button>
                 </Box>
               )}
@@ -289,11 +289,7 @@ export function BackToQSets() {
 
   return (
     <div className="page-actions">
-      <Button
-        color="secondary"
-        startIcon={<ChevronLeftIcon />}
-        onClick={navigateToQSets}
-      >
+      <Button startIcon={<ChevronLeftIcon />} onClick={navigateToQSets}>
         All Question Sets
       </Button>
     </div>

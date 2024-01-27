@@ -542,7 +542,9 @@ function QuestionSetsPanel({ libID, library }) {
                     <Typography color="text.secondary" sx={{ pl: "10px" }}>
                       Question ID: {selQuestion.id}
                     </Typography>
-                    <Button onClick={handleOpenEdit}>Edit</Button>
+                    <Button color="secondary" onClick={handleOpenEdit}>
+                      Edit
+                    </Button>
                   </div>
                 )}
                 {type === "multipart" && (
@@ -594,7 +596,9 @@ function QuestionSetsPanel({ libID, library }) {
                 width="600px"
                 sx={{ p: "20px" }}
               >
-                <Button onClick={deleteQuestion}>DELETE QUESTION</Button>
+                <Button color="secondary" onClick={deleteQuestion}>
+                  DELETE QUESTION
+                </Button>
               </Box>
             )}
           </Box>

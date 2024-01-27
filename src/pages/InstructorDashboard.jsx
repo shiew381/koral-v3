@@ -122,18 +122,13 @@ export default function InstructorDashboard() {
   return (
     <div className="dashboard-container relative">
       <div style={{ position: "absolute" }}>
-        <Button
-          color="secondary"
-          startIcon={<ChevronLeftIcon />}
-          onClick={redirectToCourses}
-        >
+        <Button startIcon={<ChevronLeftIcon />} onClick={redirectToCourses}>
           All Courses
         </Button>
       </div>
       <div className="tabs-vert-container">
         <Tabs
           className="tabs-vert"
-          indicatorColor="secondary"
           onChange={selectTab}
           orientation="vertical"
           sx={{
@@ -141,7 +136,6 @@ export default function InstructorDashboard() {
             borderColor: "divider",
             minHeight: "50vh",
           }}
-          textColor="secondary"
           value={tabIndex}
         >
           <Tab label="Course Info" />
