@@ -47,6 +47,7 @@ export default function App() {
               <NavMenu open={open} />
               <Routes>
                 <Route path="/" element={<HomePage />} />
+                <Route path="classroom/courses" element={<CoursesPage />} />
                 <Route
                   path="classroom/courses/:title/:courseID/instructor/dashboard"
                   element={<InstructorDashboard />}
@@ -63,17 +64,16 @@ export default function App() {
                   path="classroom/courses/:title/:courseID/resource/:resourceTitle/:resourceID"
                   element={<CourseResourcePage />}
                 />
-                <Route path="classroom/courses" element={<CoursesPage />} />
                 <Route path="content/documents" element={<DocumentsPage />} />
                 <Route path="content/images" element={<ImagesPage />} />
                 <Route path="content/links" element={<LinksPage />} />
                 <Route
-                  path="content/question-sets/:title/:qSetID"
-                  element={<QuestionSetPage />}
-                />
-                <Route
                   path="content/question-sets"
                   element={<QuestionSetsPage />}
+                />
+                <Route
+                  path="content/question-sets/:title/:qSetID"
+                  element={<QuestionSetPage />}
                 />
                 <Route path="community/libraries" element={<LibrariesPage />} />
                 <Route

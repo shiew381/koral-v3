@@ -44,19 +44,26 @@ export default function CoursesPage() {
   }
 
   useEffect(() => {
-    if (!user) return;
-    fetchUserInfo(user, setUserInfo);
-  }, [user]);
+    const userID = user?.uid || null;
+
+    if (!userID) {
+      setUserInfo(null);
+      return;
+    } else {
+      fetchUserInfo(user, setUserInfo);
+      return;
+    }
+  }, [user?.uid]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     fetchInstructorCourses(user, setInstructorCourses);
-  }, [user]);
+  }, [user?.uid]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     fetchStudentCourses(user, setStudentCourses, setLoading);
-  }, [user]);
+  }, [user?.uid]);
 
   if (!user) {
     return null;
