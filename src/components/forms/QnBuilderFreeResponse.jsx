@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
-import { cleanEditorHTML } from "../../utils/questionSetUtils";
+import {
+  cleanEditorHTML,
+  convertSpecialTags,
+} from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
 import { Box, Divider } from "@mui/material";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
@@ -60,7 +63,7 @@ export function FreeResponse({
 
   useEffect(
     () => {
-      promptRef.current.innerHTML = initVal.prompt;
+      promptRef.current.innerHTML = convertSpecialTags(initVal.prompt);
       exampleResponseRef.current.innerHTML = initVal.exampleResponse;
     },
     //eslint-disable-next-line

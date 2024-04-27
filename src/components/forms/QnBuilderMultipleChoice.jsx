@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { generateRandomCode } from "../../utils/commonUtils";
-import { cleanEditorHTML } from "../../utils/questionSetUtils";
+import {
+  cleanEditorHTML,
+  convertSpecialTags,
+} from "../../utils/questionSetUtils";
 import { Editor } from "../common/Editor";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { Box, Button, Checkbox, IconButton, Typography } from "@mui/material";
@@ -119,10 +122,10 @@ export function MultipleChoice({
 
     answerChoices.forEach((el) => {
       const elem = document.getElementById(el.id);
-      cleanEditorHTML(elem);
+
       tidiedAnswerChoices.push({
         id: el.id,
-        text: elem?.innerHTML,
+        text: cleanEditorHTML(elem),
         isCorrect: el.isCorrect,
       });
     });
@@ -132,10 +135,11 @@ export function MultipleChoice({
   useEffect(
     () => {
       if (!selQuestion) return;
-      promptRef.current.innerHTML = initVal.prompt;
+      promptRef.current.innerHTML = convertSpecialTags(initVal.prompt);
+
       answerChoices.forEach((el, ind) => {
         const elem = document.getElementById(el.id);
-        elem.innerHTML = initVal.answerChoices[ind].text;
+        elem.innerHTML = convertSpecialTags(initVal.answerChoices[ind].text);
       });
     },
     //eslint-disable-next-line

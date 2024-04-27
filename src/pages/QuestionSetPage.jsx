@@ -209,6 +209,25 @@ export default function QuestionSetPage() {
                   qIndex={qIndex}
                   questions={questions}
                 />
+                <span style={{ flexGrow: 1 }}></span>
+                <span
+                  className="show-for-mobile"
+                  style={{
+                    paddingRight: "3px",
+                    position: "relative",
+                    top: "1px",
+                  }}
+                >
+                  <Button
+                    color="secondary"
+                    fullWidth
+                    onClick={handleAddQuestion}
+                    startIcon={<AddIcon />}
+                    sx={{ borderRadius: 0 }}
+                  >
+                    Add Question
+                  </Button>
+                </span>
                 {questions.length > 0 && (
                   <ToggleButtonGroup
                     color="primary"
@@ -226,6 +245,7 @@ export default function QuestionSetPage() {
                   </ToggleButtonGroup>
                 )}
               </div>
+
               <QuestionCard
                 goForward={goForward}
                 handleEditQuestion={handleEditQuestion}

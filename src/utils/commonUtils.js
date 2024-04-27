@@ -90,6 +90,7 @@ export function searchifyStr(str) {
 export function searchifyTags(rawTags) {
   function isArticle(str) {
     switch (str) {
+      case "in":
       case "of":
       case "the":
       case "and":

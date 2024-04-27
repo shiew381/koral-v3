@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   cleanChemField,
   cleanEditorHTML,
+  convertSpecialTags,
   toChemFormulaStr,
 } from "../../utils/questionSetUtils";
 import {
@@ -98,7 +99,7 @@ export function ShortAnswer({
 
   useEffect(
     () => {
-      promptRef.current.innerHTML = initVal.prompt;
+      promptRef.current.innerHTML = convertSpecialTags(initVal.prompt);
     },
     //eslint-disable-next-line
     [selQuestion?.id]

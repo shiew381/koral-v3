@@ -332,7 +332,7 @@ div.equation-container {
   border-radius: 8px;
   display: flex;
   font-family: Computer Modern, Minion, Utopia, serif;
-
+  font-size: 18px;
   justify-content: center;
   min-width: 30px;
   min-height: 30px;

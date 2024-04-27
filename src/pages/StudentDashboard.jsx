@@ -107,9 +107,8 @@ export default function StudentDashboard() {
       </div>
       <div className="tabs-horiz-container">
         <Tabs
-          indicatorColor="secondary"
+          className="tabs-horiz"
           onChange={selectTab}
-          textColor="secondary"
           value={tabIndex}
           variant="scrollable"
         >

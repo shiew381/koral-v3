@@ -63,7 +63,13 @@ export function cleanEditorHTML(elem) {
   resizeHandles.forEach((handle) => handle.remove());
   const editableElems = elem.querySelectorAll(["[contenteditable=true]"]);
   editableElems.forEach((elem) => elem.removeAttribute("contenteditable"));
-  return elem.innerHTML;
+  const cleanedHTML = elem.innerHTML
+    .replaceAll("&lt;InlineTeX&gt;", "<InlineTeX>")
+    .replaceAll("&lt;/InlineTeX&gt;", "</InlineTeX>")
+    .replaceAll("&lt;BlockTeX&gt;", "<BlockTeX>")
+    .replaceAll("&lt;/BlockTeX&gt;", "</BlockTeX>");
+
+  return cleanedHTML;
 }
 
 export function cleanChemField(elem) {
@@ -182,6 +188,14 @@ export function convertElemtoStr(elem) {
   }
 
   return stringifiedForm.trim();
+}
+
+export function convertSpecialTags(str) {
+  return str
+    .replaceAll("<InlineTeX>", "&lt;InlineTeX&gt;")
+    .replaceAll("</InlineTeX>", "&lt;/InlineTeX&gt;")
+    .replaceAll("<BlockTeX>", "&lt;BlockTeX&gt;")
+    .replaceAll("</BlockTeX>", "&lt;/BlockTeX&gt;");
 }
 
 export function findChemSymbols(str) {

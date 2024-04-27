@@ -149,9 +149,7 @@ export default function InstructorDashboard() {
       <div className="tabs-horiz-container">
         <Tabs
           className="tabs-horiz"
-          indicatorColor="secondary"
           onChange={selectTab}
-          textColor="secondary"
           value={tabIndex}
           variant="scrollable"
         >
