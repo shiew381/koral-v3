@@ -369,7 +369,7 @@ function Announcements({
       <Panel center>
         <div style={{ position: "relative", bottom: "80px" }}>
           <Typography sx={{ mb: 2 }}>
-            Get started by add your first assignment!
+            Get started by add your first announcement!
           </Typography>
           <div className="flex flex-center">
             <Button

@@ -1,3 +1,7 @@
+.absolute {
+  display: absolute;
+}
+
 .block {
   display: block;
 }

@@ -88,7 +88,7 @@ export default function LibraryPage() {
 
   return (
     <div className="library-container relative">
-      <div style={{ position: "absolute" }}>
+      <div className="absolute">
         <Button startIcon={<ChevronLeftIcon />} onClick={redirectToLibraries}>
           All Libraries
         </Button>
@@ -199,9 +199,11 @@ function QuestionSetsPanel({ libID, library }) {
   }
 
   function handleBack() {
+    const activeTerm = searchTerm?.toLowerCase().trim();
+
     fetchLibraryQnsBefore(
       library,
-      searchTerm,
+      activeTerm,
       countPerPage,
       firstDoc,
       isEditor,
@@ -229,9 +231,11 @@ function QuestionSetsPanel({ libID, library }) {
   }
 
   function handleNext() {
+    const activeTerm = searchTerm?.toLowerCase().trim();
+
     fetchLibraryQnsAfter(
       library,
-      searchTerm,
+      activeTerm,
       countPerPage,
       lastDoc,
       isEditor,
@@ -270,7 +274,8 @@ function QuestionSetsPanel({ libID, library }) {
   }
 
   function handleSearch(term) {
-    const activeTerm = term || searchTerm;
+    const activeTerm =
+      term?.toLowerCase().trim() || searchTerm?.toLowerCase().trim();
 
     fetchLibraryQuestions(
       library,
