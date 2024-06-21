@@ -82,13 +82,11 @@ export default function LinksPage() {
     return (
       <Page>
         <PageHeader title="Links" />
-        <div className="flex flex-center" style={{ height: "50vh" }}>
-          <BuildFirstItem
-            handleOpen={handleOpen}
-            item="link"
-            message="Welcome to your links! Embed content from other websites here."
-          />
-        </div>
+        <BuildFirstItem
+          handleOpen={handleOpen}
+          item="link"
+          message="Welcome to your links! Embed content from other websites here."
+        />
         <AddLinkForm open={open} handleClose={handleClose} user={user} />
       </Page>
     );

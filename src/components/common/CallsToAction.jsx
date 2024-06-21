@@ -1,19 +1,32 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { BtnContainer } from "./Buttons";
 import AddIcon from "@mui/icons-material/Add";
 
 export function BuildFirstItem({ handleOpen, item, message }) {
   return (
-    <Box className="build-first-item">
-      <Typography align="center" color="primary" variant="h6">
-        {message}
-      </Typography>
-      <br />
-      <BtnContainer center>
-        <Button onClick={handleOpen} size="large" startIcon={<AddIcon />}>
-          New {item}
-        </Button>
-      </BtnContainer>
-    </Box>
+    <div
+      className="flex flex-center"
+      style={{ height: "50vh", padding: "20px" }}
+    >
+      <div>
+        <Typography align="center" color="primary" variant="h6">
+          {message}
+        </Typography>
+        <br />
+        <BtnContainer center>
+          <Button
+            fullWidth
+            color="secondary"
+            onClick={handleOpen}
+            size="large"
+            startIcon={<AddIcon />}
+            sx={{ p: 2 }}
+            variant="outlined"
+          >
+            New {item}
+          </Button>
+        </BtnContainer>
+      </div>
+    </div>
   );
 }

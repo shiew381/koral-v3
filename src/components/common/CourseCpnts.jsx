@@ -15,7 +15,7 @@ export function BackToStudentDashboard({ location }) {
   return (
     <div className="page-actions">
       <Button
-        color="secondary"
+        color="primary"
         startIcon={<ChevronLeftIcon />}
         onClick={redirectToStudentDashboard}
       >

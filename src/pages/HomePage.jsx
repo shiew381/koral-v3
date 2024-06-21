@@ -54,8 +54,8 @@ export default function HomePage() {
   return (
     <Box height="100vh" className="flex flex-center">
       <Box className="flex flex-center flex-wrap" width="750px">
-        <Box sx={{ p: "50px" }}>
-          <img src={imgURL} alt="app logo" width="300px" />
+        <Box sx={{ p: "40px" }}>
+          <img src={imgURL} alt="app logo" width="320px" />
         </Box>
 
         {user ? (
@@ -113,7 +113,6 @@ function LoginPanel({ navigateToCourses, openResetPwd, openSignup }) {
     <Box width="300px" onKeyUp={handleEnter} sx={{ mx: 3 }}>
       <EmailField onChange={handleEmail} value={email} />
       <PasswordField onChange={handlePassword} value={password} />
-
       <SubmitBtn
         fullWidth
         disabled={submitting}

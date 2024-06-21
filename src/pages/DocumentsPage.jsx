@@ -129,16 +129,15 @@ export default function DocumentsPage() {
     return (
       <Page>
         <PageHeader title="Documents" />
-        <div className="flex flex-center " style={{ height: "50vh" }}>
-          <Box className="build-first-item">
-            <Typography
-              align="center"
-              color="primary"
-              sx={{ mb: 2 }}
-              variant="h6"
-            >
+        <div
+          className="flex flex-center"
+          style={{ height: "50vh", padding: "20px" }}
+        >
+          <div>
+            <Typography align="center" color="primary" variant="h6">
               Welcome to your documents! Choose a PDF file to upload.
             </Typography>
+            <br />
             <UploadDocument
               file={file}
               handleSelectFile={handleSelectFile}
@@ -149,7 +148,7 @@ export default function DocumentsPage() {
                 {errorMessage}
               </Alert>
             )}
-          </Box>
+          </div>
         </div>
       </Page>
     );
@@ -307,18 +306,17 @@ function DocList({
 function UploadDocument({ file, uploadProgress, handleSelectFile }) {
   if (!file) {
     return (
-      <Box>
-        <Button
-          color="secondary"
-          component="label"
-          startIcon={<CloudUploadIcon />}
-          sx={{ p: 2 }}
-          fullWidth
-        >
-          UPLOAD DOCUMENT
-          <input type="file" hidden onChange={handleSelectFile} />
-        </Button>
-      </Box>
+      <Button
+        color="secondary"
+        component="label"
+        fullWidth
+        startIcon={<CloudUploadIcon />}
+        sx={{ p: 2 }}
+        variant="outlined"
+      >
+        UPLOAD DOCUMENT
+        <input type="file" hidden onChange={handleSelectFile} />
+      </Button>
     );
   }
 

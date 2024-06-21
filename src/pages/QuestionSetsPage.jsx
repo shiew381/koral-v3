@@ -98,64 +98,71 @@ export default function QuestionSetsPage() {
     );
   }
 
-  return (
-    <Page>
-      <PageHeader title="Question Sets" />
-      {qSets.length === 0 && (
-        <div className="flex flex-center" style={{ height: "50vh" }}>
-          <BuildFirstItem
-            handleOpen={handleOpen}
-            item="question set"
-            message="Welcome to your question sets! Build quizzes, exams, and other assessments here."
-          />
-        </div>
-      )}
-      {qSets.length > 0 && (
-        <Box className="flex flex-col flex-align-center pad-x-responsive">
-          <Box sx={{ width: "100%" }}>
-            <Box className="flex flex-align-center" sx={{ mb: "20px" }}>
-              <SearchField
-                onChange={handleSearchTerm}
-                placeholder="search by title"
-                value={searchTerm}
-              />
-              <AddQSetBtn onClick={handleOpen} />
-            </Box>
-            {filtered.length === 0 ? (
-              <Box sx={{ p: 2 }}>
-                No question sets with name containing &quot;{searchTerm}&quot;
-              </Box>
-            ) : (
-              filtered.map((qSet) => (
-                <QSetCard
-                  deleteQSet={deleteQSet}
-                  key={qSet.id}
-                  handleOpenTitle={handleOpenTitle}
-                  openAdaptiveForm={openAdaptiveForm}
-                  setSelQSet={setSelQSet}
-                  qSet={qSet}
-                  user={user}
+  if (qSets.length === 0) {
+    return (
+      <Page>
+        <PageHeader title="Question Sets" />
+        <BuildFirstItem
+          handleOpen={handleOpen}
+          item="question set"
+          message="Welcome to your question sets! Build quizzes, exams, and other assessments here."
+        />
+        <AddQSetForm open={open} handleClose={handleClose} user={user} />
+      </Page>
+    );
+  }
+
+  if (qSets.length > 0) {
+    return (
+      <Page>
+        <PageHeader title="Question Sets" />
+        {qSets.length > 0 && (
+          <Box className="flex flex-col flex-align-center pad-x-responsive">
+            <Box sx={{ width: "100%" }}>
+              <Box className="flex flex-align-center" sx={{ mb: "20px" }}>
+                <SearchField
+                  onChange={handleSearchTerm}
+                  placeholder="search by title"
+                  value={searchTerm}
                 />
-              ))
-            )}
+                <AddQSetBtn onClick={handleOpen} />
+              </Box>
+              {filtered.length === 0 ? (
+                <Box sx={{ p: 2 }}>
+                  No question sets with name containing &quot;{searchTerm}&quot;
+                </Box>
+              ) : (
+                filtered.map((qSet) => (
+                  <QSetCard
+                    deleteQSet={deleteQSet}
+                    key={qSet.id}
+                    handleOpenTitle={handleOpenTitle}
+                    openAdaptiveForm={openAdaptiveForm}
+                    setSelQSet={setSelQSet}
+                    qSet={qSet}
+                    user={user}
+                  />
+                ))
+              )}
+            </Box>
           </Box>
-        </Box>
-      )}
-      <AddQSetForm open={open} handleClose={handleClose} user={user} />
-      <EditQSetTitleForm
-        open={openTitle}
-        handleClose={handleCloseTitle}
-        qSet={selQSet}
-        user={user}
-      />
-      <AdaptiveParamsForm
-        qSet={selQSet}
-        open={adaptiveFormOpen}
-        handleClose={closeAdaptiveForm}
-        user={user}
-      />
-    </Page>
-  );
+        )}
+        <AddQSetForm open={open} handleClose={handleClose} user={user} />
+        <EditQSetTitleForm
+          open={openTitle}
+          handleClose={handleCloseTitle}
+          qSet={selQSet}
+          user={user}
+        />
+        <AdaptiveParamsForm
+          qSet={selQSet}
+          open={adaptiveFormOpen}
+          handleClose={closeAdaptiveForm}
+          user={user}
+        />
+      </Page>
+    );
+  }
 }
 
 function AddQSetBtn({ onClick }) {

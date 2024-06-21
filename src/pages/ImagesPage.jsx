@@ -114,16 +114,15 @@ export default function ImagesPage() {
     return (
       <Page>
         <PageHeader title="Images" />
-        <div className="flex flex-center" style={{ height: "50vh" }}>
-          <Box className="build-first-item">
-            <Typography
-              align="center"
-              color="primary"
-              sx={{ mb: 2 }}
-              variant="h6"
-            >
+        <div
+          className="flex flex-center"
+          style={{ height: "50vh", padding: "20px" }}
+        >
+          <div>
+            <Typography align="center" color="primary" variant="h6">
               Welcome to your images! Choose a JPEG or PNG file to upload.
             </Typography>
+            <br />
             <UploadImage
               file={file}
               handleSelectFile={handleSelectFile}
@@ -134,7 +133,7 @@ export default function ImagesPage() {
                 {errorMessage}
               </Alert>
             )}
-          </Box>
+          </div>
         </div>
       </Page>
     );
@@ -246,17 +245,17 @@ function ImageDetails({ info }) {
 function UploadImage({ file, uploadProgress, handleSelectFile }) {
   if (!file) {
     return (
-      <Box sx={{ width: "170px" }}>
-        <Button
-          color="secondary"
-          component="label"
-          startIcon={<CloudUploadIcon />}
-          sx={{ px: 2 }}
-        >
-          upload image
-          <input type="file" hidden onChange={handleSelectFile} />
-        </Button>
-      </Box>
+      <Button
+        color="secondary"
+        component="label"
+        fullWidth
+        startIcon={<CloudUploadIcon />}
+        sx={{ p: 2 }}
+        variant="outlined"
+      >
+        upload image
+        <input type="file" hidden onChange={handleSelectFile} />
+      </Button>
     );
   }
 

@@ -107,8 +107,6 @@
 
 .build-first-item {
   align-items: center;
-  border: 1px solid #187a7a;
-  border-radius: 10px;
   display: flex;
   padding-left: 40px;
   padding-right: 40px;
