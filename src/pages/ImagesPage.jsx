@@ -126,6 +126,7 @@ export default function ImagesPage() {
             <UploadImage
               file={file}
               handleSelectFile={handleSelectFile}
+              outlined
               uploadProgress={uploadProgress}
             />
             {error && (
@@ -144,21 +145,22 @@ export default function ImagesPage() {
       <Page>
         <PageHeader title="Images" />
         <Box sx={{ px: 3 }}>
-          <Box
-            className="flex flex-align-center flex-space-between flex-wrap"
-            sx={{ pb: 2 }}
-            width="450px"
-          >
-            <SearchField
-              onChange={handleSearchTerm}
-              placeholder="search by title"
-              value={searchTerm}
-            />
-            <UploadImage
-              file={file}
-              handleSelectFile={handleSelectFile}
-              uploadProgress={uploadProgress}
-            />
+          <Box className="flex flex-row" sx={{ pb: 2 }}>
+            <Box style={{ minWidth: "200px", marginRight: "30px" }}>
+              <SearchField
+                onChange={handleSearchTerm}
+                placeholder="search by title"
+                value={searchTerm}
+              />
+            </Box>
+
+            <Box style={{ minWidth: "200px" }}>
+              <UploadImage
+                file={file}
+                handleSelectFile={handleSelectFile}
+                uploadProgress={uploadProgress}
+              />
+            </Box>
           </Box>
           {filtered.length === 0 && (
             <Box sx={{ p: 2 }}>
@@ -242,7 +244,7 @@ function ImageDetails({ info }) {
   );
 }
 
-function UploadImage({ file, uploadProgress, handleSelectFile }) {
+function UploadImage({ file, uploadProgress, handleSelectFile, outlined }) {
   if (!file) {
     return (
       <Button
@@ -251,7 +253,7 @@ function UploadImage({ file, uploadProgress, handleSelectFile }) {
         fullWidth
         startIcon={<CloudUploadIcon />}
         sx={{ p: 2 }}
-        variant="outlined"
+        variant={outlined ? "outlined" : "text"}
       >
         upload image
         <input type="file" hidden onChange={handleSelectFile} />

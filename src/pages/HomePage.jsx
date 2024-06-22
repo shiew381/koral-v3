@@ -153,6 +153,7 @@ function ContinueToCoursesPanel({ user, navigateToCourses }) {
         {user.email}
       </Typography>
       <Button
+        color="secondary"
         fullWidth
         onClick={navigateToCourses}
         variant="contained"
@@ -162,6 +163,7 @@ function ContinueToCoursesPanel({ user, navigateToCourses }) {
         CONTINUE TO COURSES
       </Button>
       <Button
+        color="secondary"
         fullWidth
         variant="outlined"
         endIcon={<LockIcon />}
