@@ -17,6 +17,7 @@ import {
   insertParentheses,
   insertSqrt,
   insertVector,
+  insertTeX,
 } from "../../utils/editorUtils.js";
 import {
   BtnGroupEquation,
@@ -31,6 +32,7 @@ import {
   Symbols,
   VectorTemplateBtn,
   EditorLabel,
+  BtnGroupTeX,
 } from "./EditorCpnts";
 import { greekLowercase, greekUppercase } from "../../lists/greekLetters.js";
 import { arrows } from "../../lists/arrows";
@@ -489,11 +491,19 @@ export function Editor({
         return;
       }
       case "Space": {
-        const preCaretText = anchorNode.data?.slice(0, anchorOffset);
-        const superscripts = preCaretText.match(/\^(\w|-)+/);
-        const subscripts = preCaretText.match(/_(\w|-)+/);
+        console.log("anchor");
+        console.log(anchorNode);
 
-        const longUnderline = preCaretText.match(/_{2,10}/);
+        const texActive = anchorNode.classList?.contains("tex-container");
+        const preCaretText = anchorNode.data?.slice(0, anchorOffset);
+        const superscripts = preCaretText?.match(/\^(\w|-)+/);
+        const subscripts = preCaretText?.match(/_(\w|-)+/);
+        const longUnderline = preCaretText?.match(/_{2,10}/);
+
+        if (texActive) {
+          console.log("inside tex container");
+          return;
+        }
 
         // return if long series of underscores (user probably intends fill-in-the-blank)
         if (longUnderline?.length > 0) {
@@ -934,6 +944,7 @@ function EditorToolbar({
   const showList = !activeGroup && toolbarOptions.includes("list");
   const showImage = !activeGroup && toolbarOptions.includes("image");
   const showEquation = !activeGroup && toolbarOptions.includes("equation");
+  const showTeX = !activeGroup && toolbarOptions.includes("TeX");
 
   function handleTab(event) {
     const value = event.target.attributes.value.nodeValue;
@@ -963,6 +974,15 @@ function EditorToolbar({
           insertEquation={() => insertEquation(setActiveGroup)}
         />
       )}
+      {showTeX && (
+        <BtnGroupTeX
+          disabled={disabled}
+          insertTeX={() => {
+            insertTeX(setActiveGroup);
+            console.log("inserting TeX");
+          }}
+        />
+      )}
       {type == "image" && (
         <Button
           className="editor-btn"
@@ -972,6 +992,7 @@ function EditorToolbar({
           DELETE IMAGE
         </Button>
       )}
+
       {type === "equation" && (
         <div>
           <EquationTab handleTab={handleTab} tab={tab} value="templates" />
@@ -980,7 +1001,6 @@ function EditorToolbar({
           <EquationTab handleTab={handleTab} tab={tab} value="math" />
         </div>
       )}
-
       {type === "equation" && tab === "templates" && (
         <div className="eq-symbols-container">
           <ParenTemplateBtn caption="parentheses" onClick={insertParentheses} />

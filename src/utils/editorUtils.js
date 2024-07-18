@@ -99,6 +99,104 @@ export function insertChar(char) {
   }
 }
 
+export function insertTeX(setActiveGroup) {
+  const selection = document.getSelection();
+  const anchorNode = selection.anchorNode;
+  const offset = selection.anchorOffset;
+  const parent = anchorNode?.parentElement;
+  const grandParent = parent?.parentElement;
+  const newGroupID = generateRandomCode(4);
+  const noEditorContent = anchorNode.classList?.contains("editor-content");
+  const blockTeX =
+    parent.classList?.contains("editor-content") &&
+    anchorNode.tagName === "DIV";
+  const inlineTeX =
+    parent.classList?.contains("editor-content") && anchorNode.nodeType === 3;
+
+  // const newEquation = document.createElement("span");
+  // newEquation.classList.add("equation");
+  // newEquation.setAttribute("id", `${newGroupID}-equation`);
+  // newEquation.contentEditable = "true";
+
+  // const newTeXCode = document.createElement("span");
+  // newTeXCode.classList.add("texcode");
+  // newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
+  // newTeXCode.contentEditable = "true";
+
+  const newTeXCode = document.createElement("INPUT");
+  newTeXCode.classList.add("texcode");
+  newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
+  newTeXCode.setAttribute("type", "text");
+  newTeXCode.setAttribute("display", "inline");
+
+  const newTextNode = document.createTextNode("\u00A0");
+  newTeXCode.appendChild(newTextNode);
+
+  console.log("entering insertTeX");
+  console.log("parent:");
+  console.log(parent);
+  console.log("anchorNode:");
+  console.log(anchorNode);
+
+  if (!selection.isCollapsed) {
+    return;
+  }
+
+  if (noEditorContent) {
+    const newTeXContainer = document.createElement("div");
+    newTeXContainer.classList.add("tex-container");
+    newTeXContainer.style.margin = "auto";
+
+    anchorNode.appendChild(newTeXContainer);
+    newTeXContainer.appendChild(newTeXCode);
+    insertBreak(newTeXContainer, "before");
+    insertBreak(newTeXContainer, "after");
+    newTeXCode.focus();
+
+    //TODO: handlekeydown spacebar
+  }
+
+  if (blockTeX) {
+    const newTeXContainer = document.createElement("div");
+    newTeXContainer.classList.add("tex-container");
+    newTeXContainer.style.margin = "auto";
+    newTeXCode.style.textAlign = "center";
+
+    anchorNode.after(newTeXContainer);
+    newTeXContainer.appendChild(newTeXCode);
+    insertBreak(newTeXContainer, "after");
+    newTeXCode.focus();
+
+    //TODO: handlekeydown spacebar...error message pops of if ^ present
+  }
+
+  if (inlineTeX) {
+    const newTeXContainer = document.createElement("span");
+    const afterSplitNode = anchorNode.splitText(offset);
+
+    newTeXContainer.classList.add("tex-container");
+    newTeXCode.style.textAlign = "left";
+    afterSplitNode.before(newTeXContainer);
+    newTeXContainer.appendChild(newTeXCode);
+    newTeXCode.focus();
+
+    //TODO: modify below to check length of afterSplitNode, if text is longer than certain length, don't add new space
+    if (afterSplitNode.length === 0) {
+      afterSplitNode.data = "\u00A0";
+    }
+  }
+
+  // handle inline insertion (if caret is within text node)
+
+  // const range = new Range();
+  // range.setStart(newTextNode, 0);
+  // range.setEnd(newTextNode, 0);
+  // selection.removeAllRanges();
+  // selection.addRange(range);
+
+  // setActiveGroup({ id: newGroupID, type: "equation" });
+}
+
 export function insertEquation(setActiveGroup) {
   const selection = document.getSelection();
   const anchorNode = selection.anchorNode;

@@ -175,8 +175,9 @@ export function MultipleChoice({
           "font style",
           "superscript/subscript",
           "list",
-          "equation",
           "image",
+          "equation",
+          "TeX",
         ]}
       />
       <Box className="answer-choices-container">
@@ -239,7 +240,7 @@ function AnswerChoiceField({ id, imagePath, handleAutoSave }) {
         label="answer choice"
         onImageUploadSuccess={handleAutoSave}
         onImageDeleteSuccess={handleAutoSave}
-        toolbarOptions={["superscript/subscript", "equation", "image"]}
+        toolbarOptions={["superscript/subscript", "image", "TeX"]}
       />
     </Box>
   );
