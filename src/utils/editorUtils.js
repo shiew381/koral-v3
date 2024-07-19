@@ -19,6 +19,12 @@ export function backspaceEqElem(anchorNode, anchorOffset, prevElem) {
   }
 }
 
+export function backspaceTeXElem(anchorNode, anchorOffset, prevElem) {
+  const length = prevElem.firstChild.value.length;
+  prevElem.firstChild.setSelectionRange(0, length);
+  prevElem.firstChild.focus();
+}
+
 export function deleteEqElem(anchorNode, anchorOffset, elem) {
   const validElem =
     elem?.classList?.contains("eq-fraction") ||
@@ -104,39 +110,32 @@ export function insertTeX(setActiveGroup) {
   const anchorNode = selection.anchorNode;
   const offset = selection.anchorOffset;
   const parent = anchorNode?.parentElement;
-  const grandParent = parent?.parentElement;
   const newGroupID = generateRandomCode(4);
   const noEditorContent = anchorNode.classList?.contains("editor-content");
-  const blockTeX =
-    parent.classList?.contains("editor-content") &&
-    anchorNode.tagName === "DIV";
-  const inlineTeX =
-    parent.classList?.contains("editor-content") && anchorNode.nodeType === 3;
+  const newLine =
+    anchorNode.tagName === "DIV" && anchorNode.innerHTML === "<br>";
+  const emptyLine =
+    parent.tagName === "DIV" && anchorNode.textContent.trim() === "";
 
-  // const newEquation = document.createElement("span");
-  // newEquation.classList.add("equation");
-  // newEquation.setAttribute("id", `${newGroupID}-equation`);
-  // newEquation.contentEditable = "true";
-
-  // const newTeXCode = document.createElement("span");
-  // newTeXCode.classList.add("texcode");
-  // newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
-  // newTeXCode.contentEditable = "true";
+  const inlineTeX = anchorNode.nodeType === 3;
 
   const newTeXCode = document.createElement("INPUT");
   newTeXCode.classList.add("texcode");
   newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
   newTeXCode.setAttribute("type", "text");
-  newTeXCode.setAttribute("display", "inline");
+  //need to remove event listener?
+  newTeXCode.addEventListener("focus", () => {
+    setActiveGroup({ id: newGroupID, type: "texcode" });
+  });
+
+  newTeXCode.addEventListener("keydown", (e) => {
+    console.log("keydown!");
+    const sel = document.getSelection();
+    console.log(sel.anchorNode.firstChild);
+  });
 
   const newTextNode = document.createTextNode("\u00A0");
   newTeXCode.appendChild(newTextNode);
-
-  console.log("entering insertTeX");
-  console.log("parent:");
-  console.log(parent);
-  console.log("anchorNode:");
-  console.log(anchorNode);
 
   if (!selection.isCollapsed) {
     return;
@@ -146,26 +145,43 @@ export function insertTeX(setActiveGroup) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
     newTeXContainer.style.margin = "auto";
+    newTeXCode.style.textAlign = "center";
 
     anchorNode.appendChild(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     insertBreak(newTeXContainer, "before");
     insertBreak(newTeXContainer, "after");
     newTeXCode.focus();
-
+    return;
     //TODO: handlekeydown spacebar
   }
 
-  if (blockTeX) {
+  if (newLine) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
     newTeXContainer.style.margin = "auto";
     newTeXCode.style.textAlign = "center";
 
-    anchorNode.after(newTeXContainer);
+    anchorNode.replaceWith(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     insertBreak(newTeXContainer, "after");
     newTeXCode.focus();
+    return;
+
+    //TODO: handlekeydown spacebar
+  }
+
+  if (emptyLine) {
+    const newTeXContainer = document.createElement("div");
+    newTeXContainer.classList.add("tex-container");
+    newTeXContainer.style.margin = "auto";
+    newTeXCode.style.textAlign = "center";
+
+    parent.replaceWith(newTeXContainer);
+    newTeXContainer.appendChild(newTeXCode);
+    insertBreak(newTeXContainer, "after");
+    newTeXCode.focus();
+    return;
 
     //TODO: handlekeydown spacebar...error message pops of if ^ present
   }
@@ -184,17 +200,8 @@ export function insertTeX(setActiveGroup) {
     if (afterSplitNode.length === 0) {
       afterSplitNode.data = "\u00A0";
     }
+    return;
   }
-
-  // handle inline insertion (if caret is within text node)
-
-  // const range = new Range();
-  // range.setStart(newTextNode, 0);
-  // range.setEnd(newTextNode, 0);
-  // selection.removeAllRanges();
-  // selection.addRange(range);
-
-  // setActiveGroup({ id: newGroupID, type: "equation" });
 }
 
 export function insertEquation(setActiveGroup) {
@@ -320,6 +327,17 @@ export function insertList() {
     return;
   }
 }
+
+// export function insertTeXFrac(e) {
+//   e.preventDefault();
+//   const selection = document.getSelection();
+//   const anchorNode = selection.anchorNode;
+//   const anchorOffset = selection.anchorOffset;
+//   console.log(selection);
+//   console.log(anchorNode.firstChild);
+
+//   console.log(e.relatedTarget);
+// }
 
 export function insertFraction() {
   const newID = generateRandomCode(4);

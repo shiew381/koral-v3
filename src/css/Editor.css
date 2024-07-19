@@ -384,6 +384,8 @@ span.equation-container {
 
 .tex-container {
   bottom: 2px;
+  margin-left: 5px;
+  margin-right: 5px;
   position: relative;
   vertical-align: middle;
 }

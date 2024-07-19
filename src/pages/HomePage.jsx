@@ -153,7 +153,7 @@ function ContinueToCoursesPanel({ user, navigateToCourses }) {
         {user.email}
       </Typography>
       <Button
-        color="secondary"
+        color="primary"
         fullWidth
         onClick={navigateToCourses}
         variant="contained"

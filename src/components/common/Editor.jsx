@@ -18,6 +18,7 @@ import {
   insertSqrt,
   insertVector,
   insertTeX,
+  backspaceTeXElem,
 } from "../../utils/editorUtils.js";
 import {
   BtnGroupEquation,
@@ -37,7 +38,7 @@ import {
 import { greekLowercase, greekUppercase } from "../../lists/greekLetters.js";
 import { arrows } from "../../lists/arrows";
 import { mathSymbols } from "../../lists/mathSymbols";
-import { Box, Button } from "@mui/material";
+import { Box, Button, ToggleButtonGroup } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import "../../css/Editor.css";
 
@@ -393,6 +394,17 @@ export function Editor({
       case "Backspace": {
         const prevElem = anchorNode?.previousSibling;
 
+        if (
+          anchorNode.classList?.contains("tex-container") &&
+          anchorNode.firstChild.value === ""
+        ) {
+          e.preventDefault();
+          anchorNode.remove();
+          parent.focus();
+          parent.normalize();
+          return;
+        }
+
         if (prevElem?.classList?.contains("equation-container")) {
           prevElem.remove();
           return;
@@ -405,6 +417,12 @@ export function Editor({
           displayImageResizeHandles(prevElem.firstChild);
           return;
         }
+        if (prevElem?.classList?.contains("tex-container")) {
+          e.preventDefault();
+          backspaceTeXElem(anchorNode, anchorOffset, prevElem);
+          return;
+        }
+
         if (prevElem?.classList?.contains("eq-elem")) {
           backspaceEqElem(anchorNode, anchorOffset, prevElem);
           return;
@@ -898,7 +916,7 @@ export function Editor({
         onFocus={handleFocus}
       >
         <EditorLabel label={label} handleClick={() => setActiveGroup(null)} />
-
+        {/* <pre>{JSON.stringify(activeGroup)}</pre> */}
         <div
           className="editor-content-area editor-content"
           contentEditable
@@ -977,10 +995,7 @@ function EditorToolbar({
       {showTeX && (
         <BtnGroupTeX
           disabled={disabled}
-          insertTeX={() => {
-            insertTeX(setActiveGroup);
-            console.log("inserting TeX");
-          }}
+          insertTeX={() => insertTeX(setActiveGroup)}
         />
       )}
       {type == "image" && (
@@ -991,6 +1006,26 @@ function EditorToolbar({
         >
           DELETE IMAGE
         </Button>
+      )}
+      {type === "texcode" && (
+        <div>
+          <FractionTemplateBtn
+            caption="fraction"
+            onClick={(e) => {
+              // insertTeXFrac(e);
+              e.preventDefault();
+              const sel = document.getSelection();
+
+              console.log(sel);
+              console.log(sel.anchorNode.firstChild.value);
+              console.log(e);
+            }}
+          />
+          <SqrtTemplateBtn
+            caption="square root"
+            onClick={() => console.log("inserting squre root")}
+          />
+        </div>
       )}
 
       {type === "equation" && (

@@ -59,10 +59,22 @@ export function countNumBrkt(str) {
 
 export function cleanEditorHTML(elem) {
   if (!elem) return;
-  const resizeHandles = elem.querySelectorAll("div.img-resize-handle");
+  const clone = elem.cloneNode(true);
+
+  const resizeHandles = clone.querySelectorAll("div.img-resize-handle");
+  const editableElems = clone.querySelectorAll(["[contenteditable=true]"]);
+  const texElems = elem.querySelectorAll(
+    "div.tex-container",
+    "span.tex-container"
+  );
+
+  console.log("clone");
+  console.log(clone);
   resizeHandles.forEach((handle) => handle.remove());
-  const editableElems = elem.querySelectorAll(["[contenteditable=true]"]);
   editableElems.forEach((elem) => elem.removeAttribute("contenteditable"));
+
+  console.log(texElems);
+
   const cleanedHTML = elem.innerHTML
     .replaceAll("&lt;InlineTeX&gt;", "<InlineTeX>")
     .replaceAll("&lt;/InlineTeX&gt;", "</InlineTeX>")

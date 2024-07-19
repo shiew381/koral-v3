@@ -324,7 +324,7 @@ function GetStarted({ handleAddQuestion }) {
         color="primary"
         sx={{ mt: "120px", mb: "20px" }}
       >
-        Amazing questions are waiting to be written!
+        Amazing questions await!
       </Typography>
       <Box display="flex" sx={{ justifyContent: "center" }}>
         <Button
