@@ -38,7 +38,7 @@ import {
 import { greekLowercase, greekUppercase } from "../../lists/greekLetters.js";
 import { arrows } from "../../lists/arrows";
 import { mathSymbols } from "../../lists/mathSymbols";
-import { Box, Button, ToggleButtonGroup } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import "../../css/Editor.css";
 
@@ -509,9 +509,6 @@ export function Editor({
         return;
       }
       case "Space": {
-        console.log("anchor");
-        console.log(anchorNode);
-
         const texActive = anchorNode.classList?.contains("tex-container");
         const preCaretText = anchorNode.data?.slice(0, anchorOffset);
         const superscripts = preCaretText?.match(/\^(\w|-)+/);
@@ -519,7 +516,7 @@ export function Editor({
         const longUnderline = preCaretText?.match(/_{2,10}/);
 
         if (texActive) {
-          console.log("inside tex container");
+          // skip superscript and subscript handling when focus is inside tex input field
           return;
         }
 
@@ -592,6 +589,15 @@ export function Editor({
       }
       default:
         return;
+    }
+  }
+
+  function handleKeyUp(e) {
+    if (activeGroup?.type === "texcode") {
+      setActiveGroup((prev) => ({
+        ...prev,
+        caretPos: e.target.selectionEnd,
+      }));
     }
   }
 
@@ -670,6 +676,14 @@ export function Editor({
       setAction("");
       window.getSelection().removeAllRanges();
       return;
+    }
+
+    if (e.target.classList.contains("texcode")) {
+      console.log("clicked!!!");
+      setActiveGroup((prev) => ({
+        ...prev,
+        caretPos: e.target.selectionEnd,
+      }));
     }
   }
 
@@ -916,7 +930,7 @@ export function Editor({
         onFocus={handleFocus}
       >
         <EditorLabel label={label} handleClick={() => setActiveGroup(null)} />
-        {/* <pre>{JSON.stringify(activeGroup)}</pre> */}
+        <pre>{JSON.stringify(activeGroup?.caretPos)}</pre>
         <div
           className="editor-content-area editor-content"
           contentEditable
@@ -926,6 +940,7 @@ export function Editor({
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyUp}
           suppressContentEditableWarning
         ></div>
 
@@ -1012,13 +1027,18 @@ function EditorToolbar({
           <FractionTemplateBtn
             caption="fraction"
             onClick={(e) => {
-              // insertTeXFrac(e);
               e.preventDefault();
-              const sel = document.getSelection();
 
-              console.log(sel);
-              console.log(sel.anchorNode.firstChild.value);
-              console.log(e);
+              const selElem = document.getElementById(
+                `${activeGroup.id}-texcode`
+              );
+
+              const caretPos = activeGroup.caretPos;
+              const length = selElem.value.length;
+              const preText = selElem.value.slice(0, caretPos);
+              const postText = selElem.value.slice(caretPos, length);
+
+              selElem.value = preText + "\\frac{}{}" + postText;
             }}
           />
           <SqrtTemplateBtn

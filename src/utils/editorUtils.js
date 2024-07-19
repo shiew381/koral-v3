@@ -123,15 +123,13 @@ export function insertTeX(setActiveGroup) {
   newTeXCode.classList.add("texcode");
   newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
   newTeXCode.setAttribute("type", "text");
-  //need to remove event listener?
-  newTeXCode.addEventListener("focus", () => {
-    setActiveGroup({ id: newGroupID, type: "texcode" });
-  });
-
-  newTeXCode.addEventListener("keydown", (e) => {
-    console.log("keydown!");
-    const sel = document.getSelection();
-    console.log(sel.anchorNode.firstChild);
+  // need to remove event listener?
+  newTeXCode.addEventListener("focus", (e) => {
+    setActiveGroup({
+      id: newGroupID,
+      type: "texcode",
+      caretPos: e.target.selectionStart,
+    });
   });
 
   const newTextNode = document.createTextNode("\u00A0");
