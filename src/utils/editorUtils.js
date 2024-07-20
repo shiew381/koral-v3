@@ -65,7 +65,7 @@ export function handleArrowRight(anchorNode, anchorOffset, elem) {
   }
 }
 
-export function insertTeXTemplate(type, activeGroup) {
+export function insertTeXTemplate(type, activeGroup, setActiveGroup) {
   const selElem = document.getElementById(`${activeGroup.id}-texcode`);
   const caretPos = activeGroup.caretPos;
   const length = selElem.value.length;
@@ -78,12 +78,14 @@ export function insertTeXTemplate(type, activeGroup) {
       selElem.value = preText + "\\frac{x}{y}" + postText;
       selElem.focus();
       selElem.setSelectionRange(initPos + 11, initPos + 11);
+      setActiveGroup((prev) => ({ ...prev, caretPos: initPos + 11 }));
       return;
     }
     case "sqrt": {
       selElem.value = preText + "\\sqrt{x}" + postText;
       selElem.focus();
       selElem.setSelectionRange(initPos + 8, initPos + 8);
+      setActiveGroup((prev) => ({ ...prev, caretPos: initPos + 8 }));
       return;
     }
     case "sum": {
@@ -95,7 +97,8 @@ export function insertTeXTemplate(type, activeGroup) {
     case "parentheses": {
       selElem.value = preText + "\\left( x \\right)" + postText;
       selElem.focus();
-      selElem.setSelectionRange(initPos + 8, initPos + 8);
+      selElem.setSelectionRange(initPos + 16, initPos + 16);
+      setActiveGroup((prev) => ({ ...prev, caretPos: initPos + 8 }));
       return;
     }
     default:
@@ -137,7 +140,7 @@ export function insertChar(char) {
   }
 }
 
-export function insertTeXField(setActiveGroup) {
+export function insertTeXField(setActiveGroup, inlineTeXOnly) {
   const selection = document.getSelection();
   const anchorNode = selection.anchorNode;
   const offset = selection.anchorOffset;
@@ -166,11 +169,23 @@ export function insertTeXField(setActiveGroup) {
     return;
   }
 
+  if (inlineTeXOnly && emptyLine) {
+    const newTeXContainer = document.createElement("span");
+    newTeXContainer.classList.add("tex-container");
+    newTeXCode.style.textAlign = "left";
+    anchorNode.replaceWith(newTeXContainer);
+    newTeXContainer.appendChild(newTeXCode);
+    newTeXCode.focus();
+    setActiveGroup(initState);
+
+    return;
+  }
+
   if (noEditorContent || newLine || emptyLine) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
     newTeXCode.style.textAlign = "center";
-    anchorNode.appendChild(newTeXContainer);
+    anchorNode.replaceWith(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     newTeXCode.focus();
     insertBreak(newTeXContainer, "after");

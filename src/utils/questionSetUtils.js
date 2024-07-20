@@ -72,11 +72,11 @@ export function cleanEditorHTML(elem) {
     let text = "";
 
     if (node.style.textAlign === "center") {
-      text = ` <BlockTeX>${node.value}</BlockTeX> `;
+      text = `<BlockTeX>${node.value}</BlockTeX>`;
     }
 
     if (node.style.textAlign === "left") {
-      text = ` <InlineTeX>${node.value}</InlineTeX> `;
+      text = `<InlineTeX>${node.value}</InlineTeX>`;
     }
 
     const newTextNode = document.createTextNode(text);

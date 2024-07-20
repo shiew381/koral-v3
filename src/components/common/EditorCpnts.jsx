@@ -254,6 +254,14 @@ export function FractionTemplateBtn({ caption, onClick }) {
   );
 }
 
+export function RemoveTeXFieldBtn({ caption, onClick }) {
+  return (
+    <TemplateBtn caption={caption} onClick={onClick}>
+      DELETE
+    </TemplateBtn>
+  );
+}
+
 export function SqrtTemplateBtn({ caption, onClick }) {
   return (
     <TemplateBtn caption={caption} onClick={onClick}>

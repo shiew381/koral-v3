@@ -34,6 +34,7 @@ import {
   VectorTemplateBtn,
   EditorLabel,
   BtnGroupTeX,
+  RemoveTeXFieldBtn,
 } from "./EditorCpnts";
 import { greekLowercase, greekUppercase } from "../../lists/greekLetters.js";
 import { arrows } from "../../lists/arrows";
@@ -46,6 +47,7 @@ export function Editor({
   editorRef,
   id,
   imagePath,
+  inlineTeXOnly,
   label,
   onImageDeleteSuccess,
   onImageUploadSuccess,
@@ -394,17 +396,6 @@ export function Editor({
       case "Backspace": {
         const prevElem = anchorNode?.previousSibling;
 
-        if (
-          anchorNode.classList?.contains("tex-container") &&
-          anchorNode.firstChild.value === ""
-        ) {
-          e.preventDefault();
-          anchorNode.remove();
-          parent.focus();
-          parent.normalize();
-          return;
-        }
-
         if (prevElem?.classList?.contains("equation-container")) {
           prevElem.remove();
           return;
@@ -417,11 +408,58 @@ export function Editor({
           displayImageResizeHandles(prevElem.firstChild);
           return;
         }
+
+        // if (prevElem?.previousSibling?.classList?.contains("tex-container")) {
+        //   // highlight texfield input
+        //   e.preventDefault();
+        //   const length = prevElem.previousSibling.firstChild.value.length;
+        //   prevElem.previousSibling.firstChild.setSelectionRange(0, length);
+        //   prevElem.previousSibling.firstChild.focus();
+        //   setActiveGroup({
+        //     id: prevElem.previousSibling.firstChild.id.slice(0, 4),
+        //     type: "texcode",
+        //     caretPos: 0,
+        //   });
+        //   return;
+        // }
+
         if (prevElem?.classList?.contains("tex-container")) {
-          const length = prevElem.firstChild.value.length;
+          // highlight texfield input
           e.preventDefault();
+          const length = prevElem.firstChild.value.length;
           prevElem.firstChild.setSelectionRange(0, length);
           prevElem.firstChild.focus();
+          setActiveGroup({
+            id: prevElem.firstChild.id.slice(0, 4),
+            type: "texcode",
+            caretPos: 0,
+          });
+          return;
+        }
+
+        if (
+          anchorNode.classList?.contains("tex-container") &&
+          anchorNode.firstChild.value === ""
+        ) {
+          const prevSibling = anchorNode?.previousSibling;
+          e.preventDefault();
+
+          if (!prevSibling) {
+            const newDiv = document.createElement("div");
+            const newBr = document.createElement("br");
+            anchorNode.replaceWith(newDiv);
+            newDiv.appendChild(newBr);
+            newDiv.parentElement.focus();
+          } else {
+            let range = new Range();
+            range.setStart(prevSibling, prevSibling.length);
+            range.setEnd(prevSibling, prevSibling.length);
+            document.getSelection().removeAllRanges();
+            document.getSelection().addRange(range);
+            anchorNode.remove();
+            parent.normalize();
+          }
+
           return;
         }
 
@@ -923,6 +961,7 @@ export function Editor({
         file={file}
         handleFormat={handleFormat}
         handleSelectFile={handleSelectFile}
+        inlineTeXOnly={inlineTeXOnly}
         setActiveGroup={setActiveGroup}
         toolbarOptions={toolbarOptions}
         uploadProgress={uploadProgress}
@@ -969,6 +1008,7 @@ function EditorToolbar({
   file,
   handleFormat,
   handleSelectFile,
+  inlineTeXOnly,
   toolbarOptions,
   uploadProgress,
 }) {
@@ -1013,7 +1053,7 @@ function EditorToolbar({
       {showTeX && (
         <BtnGroupTeX
           disabled={disabled}
-          insertTeX={() => insertTeXField(setActiveGroup)}
+          insertTeX={() => insertTeXField(setActiveGroup, inlineTeXOnly)}
         />
       )}
       {type == "image" && (
@@ -1029,15 +1069,31 @@ function EditorToolbar({
         <div>
           <FractionTemplateBtn
             caption="fraction"
-            onClick={() => insertTeXTemplate("fraction", activeGroup)}
+            onClick={() =>
+              insertTeXTemplate("fraction", activeGroup, setActiveGroup)
+            }
           />
           <SqrtTemplateBtn
             caption="square root"
-            onClick={() => insertTeXTemplate("sqrt", activeGroup)}
+            onClick={() =>
+              insertTeXTemplate("sqrt", activeGroup, setActiveGroup)
+            }
           />
           <ParenTemplateBtn
             caption="parentheses"
-            onClick={() => insertTeXTemplate("parentheses", activeGroup)}
+            onClick={() =>
+              insertTeXTemplate("parentheses", activeGroup, setActiveGroup)
+            }
+          />
+          <RemoveTeXFieldBtn
+            caption="delete TeX field"
+            onClick={() => {
+              const elem = document.getElementById(`${activeGroup.id}-texcode`);
+              const grandParent = elem.parentElement.parentElement;
+              elem.parentElement.remove();
+              grandParent.normalize();
+              setActiveGroup(null);
+            }}
           />
         </div>
       )}

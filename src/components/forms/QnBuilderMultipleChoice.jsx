@@ -241,6 +241,7 @@ function AnswerChoiceField({ id, imagePath, handleAutoSave }) {
         editorRef={editorRef}
         id={id}
         imagePath={imagePath}
+        inlineTeXOnly
         label="answer choice"
         onImageUploadSuccess={handleAutoSave}
         onImageDeleteSuccess={handleAutoSave}
