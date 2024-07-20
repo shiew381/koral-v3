@@ -63,6 +63,11 @@ export function FreeResponse({
 
   useEffect(
     () => {
+      if (!selQuestion) {
+        promptRef.current.innerHTML = initVal.prompt;
+        return;
+      }
+
       promptRef.current.innerHTML = convertSpecialTags(initVal.prompt);
       exampleResponseRef.current.innerHTML = initVal.exampleResponse;
     },

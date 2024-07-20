@@ -99,6 +99,11 @@ export function ShortAnswer({
 
   useEffect(
     () => {
+      if (!selQuestion) {
+        promptRef.current.innerHTML = initVal.prompt;
+        return;
+      }
+
       promptRef.current.innerHTML = convertSpecialTags(initVal.prompt);
     },
     //eslint-disable-next-line

@@ -134,7 +134,11 @@ export function MultipleChoice({
 
   useEffect(
     () => {
-      if (!selQuestion) return;
+      if (!selQuestion) {
+        promptRef.current.innerHTML = initVal.prompt;
+        return;
+      }
+
       promptRef.current.innerHTML = convertSpecialTags(initVal.prompt);
 
       answerChoices.forEach((el, ind) => {

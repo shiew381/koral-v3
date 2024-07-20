@@ -934,8 +934,6 @@ export function Editor({
         onFocus={handleFocus}
       >
         <EditorLabel label={label} handleClick={() => setActiveGroup(null)} />
-        <pre>{JSON.stringify(activeGroup)}</pre>
-
         <div
           className="editor-content-area editor-content"
           contentEditable

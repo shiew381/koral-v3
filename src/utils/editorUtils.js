@@ -71,26 +71,31 @@ export function insertTeXTemplate(type, activeGroup) {
   const length = selElem.value.length;
   const preText = selElem.value.slice(0, caretPos);
   const postText = selElem.value.slice(caretPos, length);
+  const initPos = preText.length;
 
   switch (type) {
     case "fraction": {
       selElem.value = preText + "\\frac{x}{y}" + postText;
       selElem.focus();
+      selElem.setSelectionRange(initPos + 11, initPos + 11);
       return;
     }
     case "sqrt": {
       selElem.value = preText + "\\sqrt{x}" + postText;
       selElem.focus();
+      selElem.setSelectionRange(initPos + 8, initPos + 8);
       return;
     }
     case "sum": {
       selElem.value = preText + "\\sum_{x}^{y}" + postText;
       selElem.focus();
+
       return;
     }
     case "parentheses": {
       selElem.value = preText + "\\left( x \\right)" + postText;
       selElem.focus();
+      selElem.setSelectionRange(initPos + 8, initPos + 8);
       return;
     }
     default:
@@ -146,6 +151,12 @@ export function insertTeXField(setActiveGroup) {
 
   const textNode = anchorNode.nodeType === 3;
 
+  const initState = {
+    id: newGroupID,
+    type: "texcode",
+    caretPos: 0,
+  };
+
   const newTeXCode = document.createElement("INPUT");
   newTeXCode.classList.add("texcode");
   newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
@@ -155,59 +166,20 @@ export function insertTeXField(setActiveGroup) {
     return;
   }
 
-  if (noEditorContent) {
+  if (noEditorContent || newLine || emptyLine) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
-    // newTeXContainer.style.margin = "auto";
     newTeXCode.style.textAlign = "center";
     anchorNode.appendChild(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
-    insertBreak(newTeXContainer, "before");
-    insertBreak(newTeXContainer, "after");
     newTeXCode.focus();
-    setActiveGroup({
-      id: newGroupID,
-      type: "texcode",
-      caretPos: 0,
-    });
-    return;
-    //TODO: handlekeydown spacebar
-  }
-
-  if (newLine) {
-    const newTeXContainer = document.createElement("div");
-    newTeXContainer.classList.add("tex-container");
-    newTeXCode.style.textAlign = "center";
-    anchorNode.replaceWith(newTeXContainer);
-    newTeXContainer.appendChild(newTeXCode);
     insertBreak(newTeXContainer, "after");
-    newTeXCode.focus();
-    setActiveGroup({
-      id: newGroupID,
-      type: "texcode",
-      caretPos: 0,
-    });
+    setActiveGroup(initState);
+
+    if (noEditorContent) {
+      insertBreak(newTeXContainer, "before");
+    }
     return;
-
-    //TODO: handlekeydown spacebar
-  }
-
-  if (emptyLine) {
-    const newTeXContainer = document.createElement("div");
-    newTeXContainer.classList.add("tex-container");
-    newTeXCode.style.textAlign = "center";
-    parent.replaceWith(newTeXContainer);
-    newTeXContainer.appendChild(newTeXCode);
-    insertBreak(newTeXContainer, "after");
-    newTeXCode.focus();
-    setActiveGroup({
-      id: newGroupID,
-      type: "texcode",
-      caretPos: 0,
-    });
-    return;
-
-    //TODO: handlekeydown spacebar...error message pops of if ^ present
   }
 
   if (textNode) {
@@ -218,11 +190,7 @@ export function insertTeXField(setActiveGroup) {
     afterSplitNode.before(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     newTeXCode.focus();
-    setActiveGroup({
-      id: newGroupID,
-      type: "texcode",
-      caretPos: 0,
-    });
+    setActiveGroup(initState);
 
     //TODO: modify below to check length of afterSplitNode, if text is longer than certain length, don't add new space
     if (afterSplitNode.length === 0) {

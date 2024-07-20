@@ -69,12 +69,24 @@ export function cleanEditorHTML(elem) {
   editableNodes.forEach((node) => node.removeAttribute("contenteditable"));
 
   texNodes.forEach((node) => {
-    const text = ` <BlockTeX>${node.value}</BlockTeX> `;
+    let text = "";
+
+    if (node.style.textAlign === "center") {
+      text = ` <BlockTeX>${node.value}</BlockTeX> `;
+    }
+
+    if (node.style.textAlign === "left") {
+      text = ` <InlineTeX>${node.value}</InlineTeX> `;
+    }
+
     const newTextNode = document.createTextNode(text);
     node.parentElement.replaceWith(newTextNode);
   });
 
-  return clone.innerHTML.replaceAll("&lt;", "<").replaceAll("&gt;", ">");
+  return clone.innerHTML
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&nbsp;", " ");
 }
 
 export function cleanChemField(elem) {
@@ -197,14 +209,17 @@ export function convertElemtoStr(elem) {
 
 export function convertSpecialTags(str) {
   let strCopy = str.slice();
-  console.log(str);
-  const blockTeXFrags = str.match(/<BlockTeX>.*<\/BlockTeX>/g);
 
-  if (!blockTeXFrags) {
+  const blockTeXFrags = str.match(/<BlockTeX>.*?<\/BlockTeX>/g);
+  const inlineTeXFrags = str.match(/<InlineTeX>.*?<\/InlineTeX>/g);
+
+  if (!blockTeXFrags && !inlineTeXFrags) {
     return strCopy;
-  } else {
+  }
+
+  if (blockTeXFrags?.length > 0) {
     blockTeXFrags.forEach((frag) => {
-      const value = frag.slice(10, -11);
+      const value = frag.slice(10, -11).replaceAll(" ", "&nbsp;");
       const newID = generateRandomCode(4);
 
       strCopy = strCopy.replace(
@@ -212,23 +227,21 @@ export function convertSpecialTags(str) {
         `<div class=tex-container><input class=texcode id=${newID}-texcode type=text style=text-align:center value=${value}></div>`
       );
     });
-
-    console.log(strCopy);
-    return strCopy;
   }
-  // console.log([...found]);
-  // const newStr = str
-  //   .replaceAll(
-  //     "<BlockTeX>",
-  //     `<div class=tex-container><input class=texcode type=text value=pizza>`
-  //   )
-  //   .replaceAll("</BlockTeX>", "</div>");
 
-  // return str
-  //   .replaceAll("<InlineTeX>", "&lt;InlineTeX&gt;")
-  //   .replaceAll("</InlineTeX>", "&lt;/InlineTeX&gt;")
-  //   .replaceAll("<BlockTeX>", "&lt;BlockTeX&gt;")
-  //   .replaceAll("</BlockTeX>", "&lt;/BlockTeX&gt;");
+  if (inlineTeXFrags?.length > 0) {
+    inlineTeXFrags.forEach((frag) => {
+      const value = frag.slice(11, -12).replaceAll(" ", "&nbsp;");
+      const newID = generateRandomCode(4);
+
+      strCopy = strCopy.replace(
+        frag,
+        `<span class=tex-container><input class=texcode id=${newID}-texcode type=text style=text-align:left value=${value}></span>`
+      );
+    });
+  }
+
+  return strCopy;
 }
 
 export function findChemSymbols(str) {
