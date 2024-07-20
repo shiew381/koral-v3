@@ -72,23 +72,21 @@ export function MultipleChoice({
   }
 
   function handleSave() {
-    const promptValue = cleanEditorHTML(promptRef.current);
-    console.log(promptValue);
-    // const values = add
-    //   ? {
-    //       type: "multiple choice",
-    //       prompt: cleanEditorHTML(promptRef.current),
-    //       answerChoices: tidyAnswerChoices(),
-    //       pointsPossible: 1,
-    //       attemptsPossible: 5,
-    //     }
-    //   : {
-    //       ...selQuestion,
-    //       prompt: cleanEditorHTML(promptRef.current),
-    //       answerChoices: tidyAnswerChoices(),
-    //     };
+    const values = add
+      ? {
+          type: "multiple choice",
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+          pointsPossible: 1,
+          attemptsPossible: 5,
+        }
+      : {
+          ...selQuestion,
+          prompt: cleanEditorHTML(promptRef.current),
+          answerChoices: tidyAnswerChoices(),
+        };
 
-    // saveQuestion(values);
+    saveQuestion(values);
   }
 
   function handleCheckbox(e, ind) {

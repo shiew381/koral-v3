@@ -17,8 +17,8 @@ import {
   insertParentheses,
   insertSqrt,
   insertVector,
-  insertTeX,
-  backspaceTeXElem,
+  insertTeXField,
+  insertTeXTemplate,
 } from "../../utils/editorUtils.js";
 import {
   BtnGroupEquation,
@@ -418,8 +418,10 @@ export function Editor({
           return;
         }
         if (prevElem?.classList?.contains("tex-container")) {
+          const length = prevElem.firstChild.value.length;
           e.preventDefault();
-          backspaceTeXElem(anchorNode, anchorOffset, prevElem);
+          prevElem.firstChild.setSelectionRange(0, length);
+          prevElem.firstChild.focus();
           return;
         }
 
@@ -626,6 +628,9 @@ export function Editor({
   }
 
   function handleMouseUp(e) {
+    const classList = e.target.classList;
+    const parentClassList = e.target.parentElement?.classList;
+
     if (action === "resizing image") {
       updateImageSize(e);
       setAction("");
@@ -635,9 +640,6 @@ export function Editor({
       setActiveTarget(null);
       return;
     }
-
-    const classList = e.target.classList;
-    const parentClassList = e.target.parentElement?.classList;
 
     if (classList?.contains("editor-img")) {
       const groupID = e.target.id.slice(0, 4);
@@ -679,11 +681,13 @@ export function Editor({
     }
 
     if (e.target.classList.contains("texcode")) {
-      console.log("clicked!!!");
-      setActiveGroup((prev) => ({
-        ...prev,
-        caretPos: e.target.selectionEnd,
-      }));
+      const groupID = e.target.id.slice(0, 4);
+      setActiveGroup({
+        id: groupID,
+        type: "texcode",
+        caretPos: e.target.selectionStart,
+      });
+      return;
     }
   }
 
@@ -930,7 +934,8 @@ export function Editor({
         onFocus={handleFocus}
       >
         <EditorLabel label={label} handleClick={() => setActiveGroup(null)} />
-        <pre>{JSON.stringify(activeGroup?.caretPos)}</pre>
+        <pre>{JSON.stringify(activeGroup)}</pre>
+
         <div
           className="editor-content-area editor-content"
           contentEditable
@@ -1010,7 +1015,7 @@ function EditorToolbar({
       {showTeX && (
         <BtnGroupTeX
           disabled={disabled}
-          insertTeX={() => insertTeX(setActiveGroup)}
+          insertTeX={() => insertTeXField(setActiveGroup)}
         />
       )}
       {type == "image" && (
@@ -1026,24 +1031,15 @@ function EditorToolbar({
         <div>
           <FractionTemplateBtn
             caption="fraction"
-            onClick={(e) => {
-              e.preventDefault();
-
-              const selElem = document.getElementById(
-                `${activeGroup.id}-texcode`
-              );
-
-              const caretPos = activeGroup.caretPos;
-              const length = selElem.value.length;
-              const preText = selElem.value.slice(0, caretPos);
-              const postText = selElem.value.slice(caretPos, length);
-
-              selElem.value = preText + "\\frac{}{}" + postText;
-            }}
+            onClick={() => insertTeXTemplate("fraction", activeGroup)}
           />
           <SqrtTemplateBtn
             caption="square root"
-            onClick={() => console.log("inserting squre root")}
+            onClick={() => insertTeXTemplate("sqrt", activeGroup)}
+          />
+          <ParenTemplateBtn
+            caption="parentheses"
+            onClick={() => insertTeXTemplate("parentheses", activeGroup)}
           />
         </div>
       )}

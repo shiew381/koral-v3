@@ -1,4 +1,4 @@
-import { compareDates, pickRandomInt } from "./commonUtils";
+import { compareDates, generateRandomCode, pickRandomInt } from "./commonUtils";
 
 export function calculateProgress(rule, objective, submissionHistory) {
   const zeroScore = { percentage: 0, count: 0 };
@@ -62,26 +62,19 @@ export function cleanEditorHTML(elem) {
   const clone = elem.cloneNode(true);
 
   const resizeHandles = clone.querySelectorAll("div.img-resize-handle");
-  const editableElems = clone.querySelectorAll(["[contenteditable=true]"]);
-  const texElems = elem.querySelectorAll(
-    "div.tex-container",
-    "span.tex-container"
-  );
+  const editableNodes = clone.querySelectorAll(["[contenteditable=true]"]);
+  const texNodes = clone.querySelectorAll("input.texcode");
 
-  console.log("clone");
-  console.log(clone);
   resizeHandles.forEach((handle) => handle.remove());
-  editableElems.forEach((elem) => elem.removeAttribute("contenteditable"));
+  editableNodes.forEach((node) => node.removeAttribute("contenteditable"));
 
-  console.log(texElems);
+  texNodes.forEach((node) => {
+    const text = ` <BlockTeX>${node.value}</BlockTeX> `;
+    const newTextNode = document.createTextNode(text);
+    node.parentElement.replaceWith(newTextNode);
+  });
 
-  const cleanedHTML = elem.innerHTML
-    .replaceAll("&lt;InlineTeX&gt;", "<InlineTeX>")
-    .replaceAll("&lt;/InlineTeX&gt;", "</InlineTeX>")
-    .replaceAll("&lt;BlockTeX&gt;", "<BlockTeX>")
-    .replaceAll("&lt;/BlockTeX&gt;", "</BlockTeX>");
-
-  return cleanedHTML;
+  return clone.innerHTML.replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 }
 
 export function cleanChemField(elem) {
@@ -203,11 +196,39 @@ export function convertElemtoStr(elem) {
 }
 
 export function convertSpecialTags(str) {
-  return str
-    .replaceAll("<InlineTeX>", "&lt;InlineTeX&gt;")
-    .replaceAll("</InlineTeX>", "&lt;/InlineTeX&gt;")
-    .replaceAll("<BlockTeX>", "&lt;BlockTeX&gt;")
-    .replaceAll("</BlockTeX>", "&lt;/BlockTeX&gt;");
+  let strCopy = str.slice();
+  console.log(str);
+  const blockTeXFrags = str.match(/<BlockTeX>.*<\/BlockTeX>/g);
+
+  if (!blockTeXFrags) {
+    return strCopy;
+  } else {
+    blockTeXFrags.forEach((frag) => {
+      const value = frag.slice(10, -11);
+      const newID = generateRandomCode(4);
+
+      strCopy = strCopy.replace(
+        frag,
+        `<div class=tex-container><input class=texcode id=${newID}-texcode type=text style=text-align:center value=${value}></div>`
+      );
+    });
+
+    console.log(strCopy);
+    return strCopy;
+  }
+  // console.log([...found]);
+  // const newStr = str
+  //   .replaceAll(
+  //     "<BlockTeX>",
+  //     `<div class=tex-container><input class=texcode type=text value=pizza>`
+  //   )
+  //   .replaceAll("</BlockTeX>", "</div>");
+
+  // return str
+  //   .replaceAll("<InlineTeX>", "&lt;InlineTeX&gt;")
+  //   .replaceAll("</InlineTeX>", "&lt;/InlineTeX&gt;")
+  //   .replaceAll("<BlockTeX>", "&lt;BlockTeX&gt;")
+  //   .replaceAll("</BlockTeX>", "&lt;/BlockTeX&gt;");
 }
 
 export function findChemSymbols(str) {

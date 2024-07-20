@@ -19,12 +19,6 @@ export function backspaceEqElem(anchorNode, anchorOffset, prevElem) {
   }
 }
 
-export function backspaceTeXElem(anchorNode, anchorOffset, prevElem) {
-  const length = prevElem.firstChild.value.length;
-  prevElem.firstChild.setSelectionRange(0, length);
-  prevElem.firstChild.focus();
-}
-
 export function deleteEqElem(anchorNode, anchorOffset, elem) {
   const validElem =
     elem?.classList?.contains("eq-fraction") ||
@@ -71,6 +65,39 @@ export function handleArrowRight(anchorNode, anchorOffset, elem) {
   }
 }
 
+export function insertTeXTemplate(type, activeGroup) {
+  const selElem = document.getElementById(`${activeGroup.id}-texcode`);
+  const caretPos = activeGroup.caretPos;
+  const length = selElem.value.length;
+  const preText = selElem.value.slice(0, caretPos);
+  const postText = selElem.value.slice(caretPos, length);
+
+  switch (type) {
+    case "fraction": {
+      selElem.value = preText + "\\frac{x}{y}" + postText;
+      selElem.focus();
+      return;
+    }
+    case "sqrt": {
+      selElem.value = preText + "\\sqrt{x}" + postText;
+      selElem.focus();
+      return;
+    }
+    case "sum": {
+      selElem.value = preText + "\\sum_{x}^{y}" + postText;
+      selElem.focus();
+      return;
+    }
+    case "parentheses": {
+      selElem.value = preText + "\\left( x \\right)" + postText;
+      selElem.focus();
+      return;
+    }
+    default:
+      break;
+  }
+}
+
 export function insertChar(char) {
   const selection = document.getSelection();
   const anchorNode = selection.anchorNode;
@@ -105,7 +132,7 @@ export function insertChar(char) {
   }
 }
 
-export function insertTeX(setActiveGroup) {
+export function insertTeXField(setActiveGroup) {
   const selection = document.getSelection();
   const anchorNode = selection.anchorNode;
   const offset = selection.anchorOffset;
@@ -117,23 +144,12 @@ export function insertTeX(setActiveGroup) {
   const emptyLine =
     parent.tagName === "DIV" && anchorNode.textContent.trim() === "";
 
-  const inlineTeX = anchorNode.nodeType === 3;
+  const textNode = anchorNode.nodeType === 3;
 
   const newTeXCode = document.createElement("INPUT");
   newTeXCode.classList.add("texcode");
   newTeXCode.setAttribute("id", `${newGroupID}-texcode`);
   newTeXCode.setAttribute("type", "text");
-  // need to remove event listener?
-  newTeXCode.addEventListener("focus", (e) => {
-    setActiveGroup({
-      id: newGroupID,
-      type: "texcode",
-      caretPos: e.target.selectionStart,
-    });
-  });
-
-  const newTextNode = document.createTextNode("\u00A0");
-  newTeXCode.appendChild(newTextNode);
 
   if (!selection.isCollapsed) {
     return;
@@ -142,14 +158,18 @@ export function insertTeX(setActiveGroup) {
   if (noEditorContent) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
-    newTeXContainer.style.margin = "auto";
+    // newTeXContainer.style.margin = "auto";
     newTeXCode.style.textAlign = "center";
-
     anchorNode.appendChild(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     insertBreak(newTeXContainer, "before");
     insertBreak(newTeXContainer, "after");
     newTeXCode.focus();
+    setActiveGroup({
+      id: newGroupID,
+      type: "texcode",
+      caretPos: 0,
+    });
     return;
     //TODO: handlekeydown spacebar
   }
@@ -157,13 +177,16 @@ export function insertTeX(setActiveGroup) {
   if (newLine) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
-    newTeXContainer.style.margin = "auto";
     newTeXCode.style.textAlign = "center";
-
     anchorNode.replaceWith(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     insertBreak(newTeXContainer, "after");
     newTeXCode.focus();
+    setActiveGroup({
+      id: newGroupID,
+      type: "texcode",
+      caretPos: 0,
+    });
     return;
 
     //TODO: handlekeydown spacebar
@@ -172,27 +195,34 @@ export function insertTeX(setActiveGroup) {
   if (emptyLine) {
     const newTeXContainer = document.createElement("div");
     newTeXContainer.classList.add("tex-container");
-    newTeXContainer.style.margin = "auto";
     newTeXCode.style.textAlign = "center";
-
     parent.replaceWith(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     insertBreak(newTeXContainer, "after");
     newTeXCode.focus();
+    setActiveGroup({
+      id: newGroupID,
+      type: "texcode",
+      caretPos: 0,
+    });
     return;
 
     //TODO: handlekeydown spacebar...error message pops of if ^ present
   }
 
-  if (inlineTeX) {
+  if (textNode) {
     const newTeXContainer = document.createElement("span");
     const afterSplitNode = anchorNode.splitText(offset);
-
     newTeXContainer.classList.add("tex-container");
     newTeXCode.style.textAlign = "left";
     afterSplitNode.before(newTeXContainer);
     newTeXContainer.appendChild(newTeXCode);
     newTeXCode.focus();
+    setActiveGroup({
+      id: newGroupID,
+      type: "texcode",
+      caretPos: 0,
+    });
 
     //TODO: modify below to check length of afterSplitNode, if text is longer than certain length, don't add new space
     if (afterSplitNode.length === 0) {
@@ -325,17 +355,6 @@ export function insertList() {
     return;
   }
 }
-
-// export function insertTeXFrac(e) {
-//   e.preventDefault();
-//   const selection = document.getSelection();
-//   const anchorNode = selection.anchorNode;
-//   const anchorOffset = selection.anchorOffset;
-//   console.log(selection);
-//   console.log(anchorNode.firstChild);
-
-//   console.log(e.relatedTarget);
-// }
 
 export function insertFraction() {
   const newID = generateRandomCode(4);

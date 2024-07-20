@@ -395,8 +395,8 @@ span.equation-container {
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 8px;
   border: none;
-  font-family: Computer Modern, Minion, Utopia, serif;
-  font-size: 18px;
+  /* font-family: Computer Modern, Minion, Utopia, serif; */
+  font-size: 16px;
 
   min-width: 30px;
   min-height: 30px;

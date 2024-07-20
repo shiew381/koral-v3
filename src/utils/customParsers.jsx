@@ -9,9 +9,9 @@ export function fullParse(str) {
   return parse(str, {
     replace: (domNode) => {
       if (domNode.name === "inlinetex") {
-        return <TeX>{String.raw`${domNode.children[0].data}`}</TeX>;
+        return <TeX>{String.raw`${domNode.children[0]?.data}`}</TeX>;
       } else if (domNode.name === "blocktex") {
-        return <TeX block>{String.raw`${domNode.children[0].data}`}</TeX>;
+        return <TeX block>{String.raw`${domNode.children[0]?.data}`}</TeX>;
       } else {
         return "";
       }
