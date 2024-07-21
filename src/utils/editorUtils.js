@@ -90,6 +90,8 @@ export function insertTeXTemplate(type, activeGroup, setActiveGroup) {
     }
     case "sum": {
       selElem.value = preText + "\\sum_{x}^{y}" + postText;
+      selElem.setSelectionRange(initPos + 12, initPos + 12);
+      setActiveGroup((prev) => ({ ...prev, caretPos: initPos + 12 }));
       selElem.focus();
 
       return;
@@ -98,7 +100,7 @@ export function insertTeXTemplate(type, activeGroup, setActiveGroup) {
       selElem.value = preText + "\\left( x \\right)" + postText;
       selElem.focus();
       selElem.setSelectionRange(initPos + 16, initPos + 16);
-      setActiveGroup((prev) => ({ ...prev, caretPos: initPos + 8 }));
+      setActiveGroup((prev) => ({ ...prev, caretPos: initPos + 16 }));
       return;
     }
     default:
