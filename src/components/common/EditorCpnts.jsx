@@ -270,6 +270,14 @@ export function SqrtTemplateBtn({ caption, onClick }) {
   );
 }
 
+export function SumTemplateBtn({ caption, onClick }) {
+  return (
+    <TemplateBtn caption={caption} onClick={onClick}>
+      <FunctionsIcon color="action" />
+    </TemplateBtn>
+  );
+}
+
 export function VectorTemplateBtn({ caption, onClick }) {
   return (
     <TemplateBtn caption={caption} onClick={onClick}>

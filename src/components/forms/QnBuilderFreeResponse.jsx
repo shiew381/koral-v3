@@ -90,8 +90,8 @@ export function FreeResponse({
           "font style",
           "superscript/subscript",
           "list",
-          "equation",
           "image",
+          "TeX",
         ]}
       />
       <Divider sx={{ my: 3 }} />
@@ -107,8 +107,8 @@ export function FreeResponse({
             "font style",
             "superscript/subscript",
             "list",
-            "equation",
             "image",
+            "TeX",
           ]}
         />
       </Box>

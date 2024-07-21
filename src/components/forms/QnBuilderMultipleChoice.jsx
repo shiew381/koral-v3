@@ -180,7 +180,6 @@ export function MultipleChoice({
           "superscript/subscript",
           "list",
           "image",
-          "equation",
           "TeX",
         ]}
       />

@@ -140,8 +140,8 @@ export function ShortAnswer({
           "font style",
           "superscript/subscript",
           "list",
-          "equation",
           "image",
+          "TeX",
         ]}
       />
       <Box sx={{ p: 3 }}>

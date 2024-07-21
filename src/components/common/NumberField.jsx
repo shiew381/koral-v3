@@ -133,25 +133,42 @@ export function NumberField({
         const anchorOffset = selection.anchorOffset;
 
         const preCaretText = anchorNode.data?.slice(0, anchorOffset);
+        const postCaretText = anchorNode.data?.slice(
+          anchorOffset,
+          anchorNode.data.length
+        );
         const superscripts = preCaretText?.match(/\^(\w|−)+/);
         const subscripts = preCaretText?.match(/_(\w|−)+/);
 
         if (superscripts?.length > 0) {
           e.preventDefault();
-          const textFragment = superscripts[0].slice(1);
-          const tempNode = anchorNode.splitText(
-            anchorOffset - textFragment.length - 1
-          );
-          const endNode = tempNode.splitText(textFragment.length + 1);
-          endNode.previousSibling.remove();
-          const newElem = document.createElement("sup");
-          newElem.innerText = textFragment;
-          endNode.before(newElem);
-
           const range = new Range();
-          //lastChild is the text node within the new sup element
-          range.setStart(newElem.lastChild, newElem.lastChild.data.length);
-          range.setEnd(newElem.lastChild, newElem.lastChild.data.length);
+          const argText = superscripts[0];
+          const argIndex = preCaretText.indexOf(argText);
+          const preArgText = preCaretText.slice(0, argIndex);
+          const postArgText = preCaretText.slice(
+            argIndex + argText.length,
+            preCaretText.length
+          );
+          const argTextNode = document.createTextNode(
+            argText.slice(1).replace("-", "−")
+          );
+          const preArgTextNode = document.createTextNode(preArgText);
+          const postArgTextNode = document.createTextNode(postArgText);
+          const postCaretTextNode =
+            postCaretText.length > 0
+              ? document.createTextNode(postCaretText)
+              : document.createTextNode("\u00A0");
+
+          const newSup = document.createElement("sup");
+          newSup.appendChild(argTextNode);
+          anchorNode.replaceWith(preArgTextNode);
+          preArgTextNode.after(newSup);
+          newSup.after(postArgTextNode);
+          postArgTextNode.after(postCaretTextNode);
+
+          range.setStart(postArgTextNode, postArgText.length);
+          range.setEnd(postArgTextNode, postArgText.length);
           selection.removeAllRanges();
           selection.addRange(range);
           return;
@@ -159,20 +176,31 @@ export function NumberField({
 
         if (subscripts?.length > 0) {
           e.preventDefault();
-          const textFragment = subscripts[0].slice(1);
-          const tempNode = anchorNode.splitText(
-            anchorOffset - textFragment.length - 1
-          );
-          const endNode = tempNode.splitText(textFragment.length + 1);
-          endNode.previousSibling.remove();
-          const newElem = document.createElement("sub");
-          newElem.innerText = textFragment;
-          endNode.before(newElem);
-
           const range = new Range();
-          //lastChild is the text node within the new sup element
-          range.setStart(newElem.lastChild, newElem.lastChild.data.length);
-          range.setEnd(newElem.lastChild, newElem.lastChild.data.length);
+          const argText = subscripts[0];
+          const argIndex = preCaretText.indexOf(argText);
+          const preArgText = preCaretText.slice(0, argIndex);
+          const postArgText = preCaretText.slice(
+            argIndex + argText.length,
+            preCaretText.length
+          );
+          const argTextNode = document.createTextNode(argText.slice(1));
+          const preArgTextNode = document.createTextNode(preArgText);
+          const postArgTextNode = document.createTextNode(postArgText);
+          const postCaretTextNode =
+            postCaretText.length > 0
+              ? document.createTextNode(postCaretText)
+              : document.createTextNode("\u00A0");
+
+          const newSub = document.createElement("sub");
+          newSub.appendChild(argTextNode);
+          anchorNode.replaceWith(preArgTextNode);
+          preArgTextNode.after(newSub);
+          newSub.after(postArgTextNode);
+          postArgTextNode.after(postCaretTextNode);
+
+          range.setStart(postArgTextNode, postArgText.length);
+          range.setEnd(postArgTextNode, postArgText.length);
           selection.removeAllRanges();
           selection.addRange(range);
           return;
