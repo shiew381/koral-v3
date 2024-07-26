@@ -410,7 +410,12 @@ export function Editor({
           return;
         }
 
-        if (prevElem?.classList?.contains("tex-container")) {
+        if (
+          prevElem?.classList?.contains("tex-container") &&
+          anchorOffset <= 1
+        ) {
+          console.log("hello");
+          console.log(anchorOffset);
           // highlight texfield input
           e.preventDefault();
           const length = prevElem.firstChild.value.length;
@@ -430,6 +435,8 @@ export function Editor({
         ) {
           const prevSibling = anchorNode?.previousSibling;
           e.preventDefault();
+
+          console.log("goodbye");
 
           if (!prevSibling) {
             const newDiv = document.createElement("div");
