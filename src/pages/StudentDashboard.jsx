@@ -21,19 +21,26 @@ import {
   Tabs,
   Tab,
   Typography,
+  ListItemButton,
+  Chip,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { Page, LoadingIndicator } from "../components/common/Pages";
 import {
-  AssignmentIcon,
   CourseImage,
   CourseSummary,
   Panel,
   ResourceIcon,
 } from "../components/common/DashboardCpnts";
 import { formatGrade } from "../utils/gradeUtils";
+import {
+  FilterActions,
+  FilterChip,
+  FilterMenu,
+} from "../components/common/Filters";
+import { getFilters } from "../utils/filterUtils";
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -210,6 +217,25 @@ function Assignments({ course }) {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selFilter, setSelFilter] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterOptions = getFilters(assignments);
+  const filteredAsgmts = selFilter
+    ? assignments.filter((asgmt) => asgmt.labels?.includes(selFilter))
+    : assignments.filter((asgmt) => asgmt);
+
+  function handleOpenFilter() {
+    setFilterOpen(true);
+  }
+
+  function handleCloseFilter() {
+    setFilterOpen(false);
+  }
+
+  function handleFilterSelect(topic) {
+    setSelFilter(topic);
+    handleCloseFilter();
+  }
 
   function redirectToAsgmt(asgmt) {
     const courseTitle = encodeURI(
@@ -250,23 +276,20 @@ function Assignments({ course }) {
 
   return (
     <Panel>
-      <List className="course-item-list" sx={{ pt: "60px" }}>
-        {assignments.map((asgmt, ind) => (
+      <Box className="course-list-actions-container">
+        <FilterActions>
+          <FilterChip
+            filter={selFilter}
+            label="label"
+            handleOpen={handleOpenFilter}
+            setFilter={setSelFilter}
+          />
+        </FilterActions>
+      </Box>
+      <List className="course-item-list">
+        {filteredAsgmts.map((asgmt, ind) => (
           <div key={asgmt.id}>
-            <ListItem
-              secondaryAction={
-                <Button
-                  color="secondary"
-                  endIcon={<NavigateNextIcon />}
-                  onClick={() => redirectToAsgmt(asgmt)}
-                >
-                  VIEW
-                </Button>
-              }
-            >
-              <ListItemIcon>
-                <AssignmentIcon type={asgmt.type} />
-              </ListItemIcon>
+            <ListItemButton onClick={() => redirectToAsgmt(asgmt)}>
               <ListItemText
                 primary={asgmt.title}
                 secondary={
@@ -279,14 +302,32 @@ function Assignments({ course }) {
                     {asgmt.hasDateOpen && <br />}
                     {asgmt.hasDateDue &&
                       `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
+                    <div style={{ paddingTop: "10px" }}>
+                      {asgmt.labels?.map((label) => (
+                        <Chip
+                          key={asgmt.id + label}
+                          label={label}
+                          size="small"
+                          sx={{ mb: 1, mr: 1 }}
+                        />
+                      ))}
+                    </div>
                   </>
                 }
               />
-            </ListItem>
+            </ListItemButton>
+
             {ind < assignments.length - 1 && <Divider />}
           </div>
         ))}
       </List>
+      <FilterMenu
+        label="Label"
+        open={filterOpen}
+        handleClose={handleCloseFilter}
+        handleSelect={handleFilterSelect}
+        items={filterOptions}
+      />
     </Panel>
   );
 }

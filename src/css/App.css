@@ -137,6 +137,14 @@
   width: 60vw;
 }
 
+.filter-actions {
+  align-items: center;
+  display: flex;
+  /* flex-wrap: wrap; */
+  /* padding: 18px;
+  padding-top: 30px; */
+}
+
 .gradebook-container {
   max-width: 80vw;
   max-height: calc(90vh - 80px);

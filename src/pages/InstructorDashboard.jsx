@@ -16,6 +16,7 @@ import {
   fetchGrades,
   fetchResources,
   fetchStudents,
+  updateAsgmtLabels,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import { formatGrade } from "../utils/gradeUtils";
@@ -35,6 +36,7 @@ import {
   Typography,
   Link,
   Tooltip,
+  Chip,
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -42,7 +44,6 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import AddIcon from "@mui/icons-material/Add";
 import DownloadIcon from "@mui/icons-material/Download";
 import {
-  AssignmentIcon,
   CourseImage,
   CourseSummary,
   Panel,
@@ -60,6 +61,13 @@ import { AsgmtAnalytics } from "../components/student-analytics/AsgmtAnalytics";
 import { AddManualGradeColumn } from "../components/forms/AddManualGradeColumn";
 import { EditManualGrade } from "../components/forms/EditManualGrade";
 import CloneCourseForm from "../components/forms/CloneCourseForm.jsx";
+import { AsgmtLabelForm } from "../components/forms/AsgmtLabelForm.jsx";
+import {
+  FilterActions,
+  FilterChip,
+  FilterMenu,
+} from "../components/common/Filters.jsx";
+import { getFilters } from "../utils/filterUtils.js";
 
 export default function InstructorDashboard() {
   const navigate = useNavigate();
@@ -71,6 +79,8 @@ export default function InstructorDashboard() {
   const [asgmtOpen, setAsgmtOpen] = useState(false);
   const [resourceOpen, setResourceOpen] = useState(false);
   const [anncmtOpen, setAnncmtOpen] = useState(false);
+  const [labelOpen, setLabelOpen] = useState(false);
+
   const [selAnncmt, setSelAnncmt] = useState(null);
   const [selAsgmt, setSelAsgmt] = useState(null);
   const [edit, setEdit] = useState(false);
@@ -99,6 +109,14 @@ export default function InstructorDashboard() {
   function handleAsgmtClose() {
     setAsgmtOpen(false);
     setEdit(false);
+  }
+
+  function handleLabelOpen() {
+    setLabelOpen(true);
+  }
+
+  function handleLabelClose() {
+    setLabelOpen(false);
   }
 
   function handleResourceOpen() {
@@ -176,6 +194,7 @@ export default function InstructorDashboard() {
         <Assignments
           course={course}
           handleOpen={handleAsgmtOpen}
+          handleLabelOpen={handleLabelOpen}
           selAsgmt={selAsgmt}
           setSelAsgmt={setSelAsgmt}
           setEdit={setEdit}
@@ -209,6 +228,12 @@ export default function InstructorDashboard() {
         selAnncmt={selAnncmt}
         setSelAnncmt={setSelAnncmt}
         user={user}
+      />
+      <AsgmtLabelForm
+        course={course}
+        selAsgmt={selAsgmt}
+        open={labelOpen}
+        handleClose={handleLabelClose}
       />
     </div>
   );
@@ -458,15 +483,48 @@ function Announcements({
   }
 }
 
-function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
+function Assignments({
+  course,
+  handleOpen,
+  handleLabelOpen,
+  selAsgmt,
+  setEdit,
+  setSelAsgmt,
+}) {
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState([]);
+  const [selFilter, setSelFilter] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterOptions = getFilters(assignments);
+  const filteredAsgmts = selFilter
+    ? assignments.filter((asgmt) => asgmt.labels?.includes(selFilter))
+    : assignments.filter((asgmt) => asgmt);
 
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
 
   function handleCloseMenu() {
     setAnchorEl(null);
+  }
+
+  function handleDeleteLabel(asgmt, label) {
+    const existingLabels = asgmt.labels;
+    const updatedLabels = existingLabels.filter((el) => el !== label);
+    const logMessage = () => console.log("deleting assignment label");
+    updateAsgmtLabels(course, asgmt, updatedLabels, logMessage, logMessage);
+  }
+
+  function handleOpenFilter() {
+    setFilterOpen(true);
+  }
+
+  function handleCloseFilter() {
+    setFilterOpen(false);
+  }
+
+  function handleFilterSelect(topic) {
+    setSelFilter(topic);
+    handleCloseFilter();
   }
 
   useEffect(
@@ -509,6 +567,14 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
     return (
       <Panel>
         <Box className="course-list-actions-container">
+          <FilterActions>
+            <FilterChip
+              filter={selFilter}
+              label="label"
+              handleOpen={handleOpenFilter}
+              setFilter={setSelFilter}
+            />
+          </FilterActions>
           <Button
             color="secondary"
             onClick={handleOpen}
@@ -521,7 +587,7 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
           <Divider sx={{ px: 3 }} />
         </Box>
         <List className="course-item-list">
-          {assignments.map((asgmt) => (
+          {filteredAsgmts.map((asgmt) => (
             <div key={asgmt.id}>
               <ListItem
                 secondaryAction={
@@ -532,9 +598,6 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
                   />
                 }
               >
-                <ListItemIcon>
-                  <AssignmentIcon type={asgmt.type} />
-                </ListItemIcon>
                 <ListItemText
                   primary={asgmt.title}
                   secondary={
@@ -547,6 +610,28 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
                       {asgmt.hasDateOpen && <br />}
                       {asgmt.hasDateDue &&
                         `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
+                      <div style={{ paddingTop: "5px", paddingBottom: "5px" }}>
+                        {asgmt.labels?.map((label) => (
+                          <Chip
+                            key={label}
+                            label={label}
+                            onDelete={() => handleDeleteLabel(asgmt, label)}
+                            size="small"
+                            sx={{ mr: 1, mb: 1 }}
+                          />
+                        ))}
+                        <Chip
+                          icon={<AddIcon />}
+                          onClick={() => {
+                            handleLabelOpen();
+                            setSelAsgmt(asgmt);
+                          }}
+                          label="label"
+                          size="small"
+                          sx={{ mr: 1, mb: 1 }}
+                          variant="outlined"
+                        />
+                      </div>
                     </>
                   }
                 />
@@ -555,6 +640,13 @@ function Assignments({ course, handleOpen, selAsgmt, setEdit, setSelAsgmt }) {
             </div>
           ))}
         </List>
+        <FilterMenu
+          label="Label"
+          open={filterOpen}
+          handleClose={handleCloseFilter}
+          handleSelect={handleFilterSelect}
+          items={filterOptions}
+        />
         <MoreOptionsMenu
           anchorEl={anchorEl}
           handleClose={handleCloseMenu}

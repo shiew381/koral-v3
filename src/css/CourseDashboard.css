@@ -31,8 +31,12 @@
 
 .course-list-actions-container {
   padding-top: 60px;
+  padding-bottom: 30px;
   width: 90%;
   max-width: 500px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .course-item-list {

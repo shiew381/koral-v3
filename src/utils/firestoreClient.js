@@ -1445,6 +1445,23 @@ export function updateAssignment(
     .finally(() => setTimeout(() => setSubmitting(false), 500));
 }
 
+export function updateAsgmtLabels(
+  course,
+  selAsgmt,
+  labels,
+  handleClose,
+  setSubmitting
+) {
+  const ref = doc(db, "courses", course.id, "assignments", selAsgmt.id);
+  const values = { labels: labels };
+
+  setSubmitting(true);
+  updateDoc(ref, values)
+    .then(() => setTimeout(() => handleClose(), 800))
+    .catch((error) => console.log(error))
+    .finally(() => setTimeout(() => setSubmitting(false), 500));
+}
+
 export function updateSearchSuggestions(
   suggestions,
   libID,
