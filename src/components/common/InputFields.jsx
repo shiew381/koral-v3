@@ -1,4 +1,12 @@
-import { CircularProgress, IconButton, TextField } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  FormControl,
+  IconButton,
+  Input,
+  InputAdornment,
+  TextField,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
@@ -157,6 +165,30 @@ export function FirstNameField({ onChange, value }) {
       value={value}
       variant="filled"
     />
+  );
+}
+
+export function LabelField({ handleClick, onChange, value }) {
+  return (
+    <FormControl fullWidth sx={{ mb: 2 }} variant="standard">
+      <Input
+        onChange={onChange}
+        value={value}
+        type="text"
+        placeholder="new label"
+        endAdornment={
+          <InputAdornment position="end">
+            <Button
+              aria-label="toggle password visibility"
+              onClick={handleClick}
+              disabled={!value}
+            >
+              ADD
+            </Button>
+          </InputAdornment>
+        }
+      />
+    </FormControl>
   );
 }
 

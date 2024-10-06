@@ -28,12 +28,6 @@ export function AnnouncementForm({
     message: message,
   };
 
-  function handleKeyUp(e) {
-    if (e.code === "Enter") {
-      handleSubmit();
-    }
-  }
-
   function handleSubmit() {
     if (add) {
       addAnnouncement(course, values, handleClose, setSubmitting);
@@ -55,7 +49,7 @@ export function AnnouncementForm({
   useEffect(resetForm, [open]);
 
   return (
-    <Lightbox open={open} onClose={handleClose} handleKeyUp={handleKeyUp}>
+    <Lightbox open={open} onClose={handleClose}>
       <LightboxHeader
         title={edit ? "Update Announcement" : "New Announcement"}
       />

@@ -24,14 +24,6 @@ import {
 } from "../../utils/firestoreClient";
 import { getInitDueDate } from "../../utils/dateUtils";
 
-function getTitle(type, selItem) {
-  if (type === "question set") {
-    return selItem?.title;
-  } else {
-    return "";
-  }
-}
-
 export function AssignmentForm({
   course,
   edit,
@@ -70,7 +62,7 @@ export function AssignmentForm({
 
   const values = {
     type: type,
-    title: edit ? selAsgmt.title : getTitle(type, selItem),
+    title: edit ? selAsgmt?.title : getTitle(type, selItem),
     totalPointsPossible: edit
       ? selAsgmt.totalPointsPossible
       : selItem?.totalPointsPossible,
@@ -344,4 +336,12 @@ function DateSettings({
       </tbody>
     </table>
   );
+}
+
+function getTitle(type, selItem) {
+  if (type === "question set") {
+    return selItem?.title;
+  } else {
+    return "";
+  }
 }

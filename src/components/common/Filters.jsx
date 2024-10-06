@@ -13,7 +13,7 @@ export function FilterActions({ children }) {
   return (
     <div className="filter-actions">
       <Typography
-        sx={{ paddingLeft: "15px", paddingRight: "10px" }}
+        sx={{ paddingLeft: "5px", paddingRight: "10px" }}
         color="text.secondary"
       >
         filter by:

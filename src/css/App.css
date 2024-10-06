@@ -117,6 +117,12 @@
   width: 80vw;
 }
 
+.course-asgmt-list-item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  position: relative;
+}
+
 .example-free-response {
   min-height: 80px;
   font-family: Lato;

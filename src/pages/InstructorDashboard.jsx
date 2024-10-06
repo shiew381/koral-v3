@@ -16,7 +16,7 @@ import {
   fetchGrades,
   fetchResources,
   fetchStudents,
-  updateAsgmtLabels,
+  // updateAsgmtLabels,
 } from "../utils/firestoreClient";
 import { formatDate, formatTimeAndDate } from "../utils/dateUtils";
 import { formatGrade } from "../utils/gradeUtils";
@@ -61,7 +61,7 @@ import { AsgmtAnalytics } from "../components/student-analytics/AsgmtAnalytics";
 import { AddManualGradeColumn } from "../components/forms/AddManualGradeColumn";
 import { EditManualGrade } from "../components/forms/EditManualGrade";
 import CloneCourseForm from "../components/forms/CloneCourseForm.jsx";
-import { AsgmtLabelForm } from "../components/forms/AsgmtLabelForm.jsx";
+import { AsgmtLabelsForm } from "../components/forms/AsgmtLabelForm.jsx";
 import {
   FilterActions,
   FilterChip,
@@ -200,7 +200,7 @@ export default function InstructorDashboard() {
           setEdit={setEdit}
         />
       )}
-      {tabIndex == 3 && (
+      {tabIndex === 3 && (
         <Resources course={course} handleOpen={handleResourceOpen} />
       )}
       {tabIndex === 4 && <Grades course={course} user={user} />}
@@ -211,30 +211,36 @@ export default function InstructorDashboard() {
         open={resourceOpen}
         user={user}
       />
-      <AssignmentForm
-        course={course}
-        edit={edit}
-        handleClose={handleAsgmtClose}
-        open={asgmtOpen}
-        selAsgmt={selAsgmt}
-        setSelAsgmt={setSelAsgmt}
-        user={user}
-      />
-      <AnnouncementForm
-        course={course}
-        edit={edit}
-        handleClose={handleAnncmtClose}
-        open={anncmtOpen}
-        selAnncmt={selAnncmt}
-        setSelAnncmt={setSelAnncmt}
-        user={user}
-      />
-      <AsgmtLabelForm
-        course={course}
-        selAsgmt={selAsgmt}
-        open={labelOpen}
-        handleClose={handleLabelClose}
-      />
+      {tabIndex === 1 && (
+        <AnnouncementForm
+          course={course}
+          edit={edit}
+          handleClose={handleAnncmtClose}
+          open={anncmtOpen}
+          selAnncmt={selAnncmt}
+          setSelAnncmt={setSelAnncmt}
+          user={user}
+        />
+      )}
+      {tabIndex === 2 && (
+        <AssignmentForm
+          course={course}
+          edit={edit}
+          handleClose={handleAsgmtClose}
+          open={asgmtOpen}
+          selAsgmt={selAsgmt}
+          setSelAsgmt={setSelAsgmt}
+          user={user}
+        />
+      )}
+      {tabIndex === 2 && (
+        <AsgmtLabelsForm
+          course={course}
+          asgmt={selAsgmt}
+          open={labelOpen}
+          handleClose={handleLabelClose}
+        />
+      )}
     </div>
   );
 }
@@ -507,13 +513,6 @@ function Assignments({
     setAnchorEl(null);
   }
 
-  function handleDeleteLabel(asgmt, label) {
-    const existingLabels = asgmt.labels;
-    const updatedLabels = existingLabels.filter((el) => el !== label);
-    const logMessage = () => console.log("deleting assignment label");
-    updateAsgmtLabels(course, asgmt, updatedLabels, logMessage, logMessage);
-  }
-
   function handleOpenFilter() {
     setFilterOpen(true);
   }
@@ -583,63 +582,32 @@ function Assignments({
             ADD ASSIGNMENT
           </Button>
         </Box>
-        <Box className="course-divider-container">
-          <Divider sx={{ px: 3 }} />
-        </Box>
-        <List className="course-item-list">
+        <div className="course-asgmt-list-container">
           {filteredAsgmts.map((asgmt) => (
-            <div key={asgmt.id}>
-              <ListItem
-                secondaryAction={
-                  <MoreOptionsBtn
-                    item={asgmt}
-                    setAnchorEl={setAnchorEl}
-                    setSelItem={setSelAsgmt}
+            <div key={asgmt.id} className="course-asgmt-list-item">
+              <Typography>{asgmt.title}</Typography>
+              <AsmgtDateInfo aasgmt={asgmt} />
+              <div style={{ paddingTop: "8px" }}>
+                {asgmt.labels?.map((label) => (
+                  <Chip
+                    key={label}
+                    label={label}
+                    size="small"
+                    sx={{ mr: 1, mb: 1 }}
                   />
-                }
-              >
-                <ListItemText
-                  primary={asgmt.title}
-                  secondary={
-                    <>
-                      {!asgmt.hasDateOpen &&
-                        !asgmt.hasDateDue &&
-                        "always available"}
-                      {asgmt.hasDateOpen &&
-                        `Open: ${formatTimeAndDate(asgmt.dateOpen)}`}
-                      {asgmt.hasDateOpen && <br />}
-                      {asgmt.hasDateDue &&
-                        `Due: ${formatTimeAndDate(asgmt.dateDue)}`}
-                      <div style={{ paddingTop: "5px", paddingBottom: "5px" }}>
-                        {asgmt.labels?.map((label) => (
-                          <Chip
-                            key={label}
-                            label={label}
-                            onDelete={() => handleDeleteLabel(asgmt, label)}
-                            size="small"
-                            sx={{ mr: 1, mb: 1 }}
-                          />
-                        ))}
-                        <Chip
-                          icon={<AddIcon />}
-                          onClick={() => {
-                            handleLabelOpen();
-                            setSelAsgmt(asgmt);
-                          }}
-                          label="label"
-                          size="small"
-                          sx={{ mr: 1, mb: 1 }}
-                          variant="outlined"
-                        />
-                      </div>
-                    </>
-                  }
+                ))}
+              </div>
+              <div style={{ position: "absolute", right: "10px", top: "10px" }}>
+                <MoreOptionsBtn
+                  item={asgmt}
+                  setAnchorEl={setAnchorEl}
+                  setSelItem={setSelAsgmt}
                 />
-              </ListItem>
-              <Divider />
+              </div>
             </div>
           ))}
-        </List>
+        </div>
+
         <FilterMenu
           label="Label"
           open={filterOpen}
@@ -660,7 +628,22 @@ function Assignments({
                 setEdit(true);
               }}
             >
-              Edit
+              edit details
+            </ListItemButton>
+          </MenuOption>
+          <MenuOption>
+            <ListItemButton
+              onClick={() => {
+                handleLabelOpen();
+                handleCloseMenu();
+              }}
+            >
+              manage labels
+            </ListItemButton>
+          </MenuOption>
+          <MenuOption>
+            <ListItemButton href={getQSetUrl(selAsgmt)} target="_blank">
+              edit question set
             </ListItemButton>
           </MenuOption>
           <MenuOption>
@@ -670,13 +653,68 @@ function Assignments({
                 handleCloseMenu();
               }}
             >
-              Delete
+              delete
             </ListItemButton>
           </MenuOption>
         </MoreOptionsMenu>
       </Panel>
     );
   }
+}
+
+function AsmgtDateInfo({ asgmt }) {
+  const hasDateOpen = asgmt?.hasDateOpen;
+  const hasDateDue = asgmt?.hasDateDue;
+
+  if (!hasDateOpen && !hasDateDue) {
+    return (
+      <div>
+        <Typography color="text.secondary">always available</Typography>
+      </div>
+    );
+  }
+
+  if (hasDateOpen && hasDateDue) {
+    return (
+      <div>
+        <Typography color="text.secondary">
+          Open: {formatTimeAndDate(asgmt.dateOpen)}
+        </Typography>
+        <Typography color="text.secondary">
+          Due: {formatTimeAndDate(asgmt.dateDue)}
+        </Typography>
+      </div>
+    );
+  }
+
+  if (hasDateOpen) {
+    return (
+      <div>
+        <Typography color="text.secondary">
+          Open: {formatTimeAndDate(asgmt.dateOpen)}
+        </Typography>
+      </div>
+    );
+  }
+
+  if (hasDateDue) {
+    return (
+      <div>
+        <Typography color="text.secondary">
+          Due: {formatTimeAndDate(asgmt.dateDue)}
+        </Typography>
+      </div>
+    );
+  }
+}
+
+function getQSetUrl(selAsgmt) {
+  const docRef = selAsgmt?.source?.docRef;
+  const docRefArr = docRef?.split("/");
+  const qSetID = docRefArr?.pop();
+
+  const title = encodeURI(selAsgmt?.title.replace(/\s/g, "-"));
+  return `/content/question-sets/${title}/${qSetID}`;
 }
 
 function Resources({ course, handleOpen }) {

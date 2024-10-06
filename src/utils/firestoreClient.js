@@ -1447,13 +1447,12 @@ export function updateAssignment(
 
 export function updateAsgmtLabels(
   course,
-  selAsgmt,
-  labels,
+  asgmt,
+  values,
   handleClose,
   setSubmitting
 ) {
-  const ref = doc(db, "courses", course.id, "assignments", selAsgmt.id);
-  const values = { labels: labels };
+  const ref = doc(db, "courses", course.id, "assignments", asgmt.id);
 
   setSubmitting(true);
   updateDoc(ref, values)

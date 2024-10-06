@@ -24,6 +24,16 @@
   min-height: calc(100vh - 70px);
 }
 
+.course-asgmt-list-container {
+  padding-top: 60px;
+  padding-bottom: 30px;
+  width: 90%;
+  max-width: 500px;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-between;
+}
+
 .course-divider-container {
   width: 90%;
   max-width: 500px;
