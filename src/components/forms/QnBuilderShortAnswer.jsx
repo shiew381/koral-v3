@@ -15,9 +15,6 @@ import {
   TextField,
   Typography,
   Select,
-  Chip,
-  Tabs,
-  Tab,
 } from "@mui/material";
 import { BtnContainer, SubmitBtn } from "../common/Buttons";
 import { NumberField } from "../common/NumberField";
@@ -26,6 +23,8 @@ import { Editor } from "../common/Editor";
 import { UnitField } from "../common/UnitField";
 import { ChemFormulaField } from "../common/ChemFormulaField";
 import { generateRandomCode } from "../../utils/commonUtils";
+import HelperTextOptions from "../common/InputHelpers";
+import { coordCmpdOptions } from "../../lists/helperOptions";
 
 export function ShortAnswer({
   autoSaveQuestion,
@@ -75,13 +74,13 @@ export function ShortAnswer({
     autoSaveQuestion(values);
   }
 
-  function handleSave(e, correctAnswer) {
+  function handleSave(e, fieldVals) {
     const values = add
       ? {
           type: "short answer",
           subtype: subtype,
           prompt: cleanEditorHTML(promptRef.current),
-          correctAnswer: correctAnswer,
+          ...fieldVals,
           scoring: scoring,
           pointsPossible: 1,
           attemptsPossible: 5,
@@ -89,7 +88,7 @@ export function ShortAnswer({
       : {
           ...selQuestion,
           prompt: cleanEditorHTML(promptRef.current),
-          correctAnswer: correctAnswer,
+          ...fieldVals,
           scoring: scoring,
         };
 
@@ -310,36 +309,6 @@ function Text({
   );
 }
 
-const textOptions = [
-  { value: "mono", category: "quantifiers" },
-  { value: "bis", category: "quantifiers" },
-  { value: "di", category: "quantifiers" },
-  { value: "hexa", category: "quantifiers" },
-  { value: "penta", category: "quantifiers" },
-  { value: "tetra", category: "quantifiers" },
-  { value: "tetrakis", category: "quantifiers" },
-  { value: "tris", category: "quantifiers" },
-  { value: "tri", category: "quantifiers" },
-  { value: "ammine", category: "ligands" },
-  { value: "aqua", category: "ligands" },
-  { value: "carbonyl", category: "ligands" },
-  { value: "cyano", category: "ligands" },
-  { value: "chloro", category: "ligands" },
-  { value: "ethylenediamine", category: "ligands" },
-  { value: "oxalato", category: "ligands" },
-  { value: "oxo", category: "ligands" },
-  { value: "chromium", category: "metals" },
-  { value: "cobalt", category: "metals" },
-  { value: "copper", category: "metals" },
-  { value: "iron", category: "metals" },
-  { value: "(I)", category: "oxidation states" },
-  { value: "(II)", category: "oxidation states" },
-  { value: "(III)", category: "oxidation states" },
-  { value: "(IV)", category: "oxidation states" },
-  { value: "(V)", category: "oxidation states" },
-  { value: "(VI)", category: "oxidation states" },
-];
-
 function TextWithOptions({
   edit,
   handleSubmit,
@@ -351,22 +320,12 @@ function TextWithOptions({
   const add = !edit;
   const textRef = useRef();
   const [loading, setLoading] = useState(true);
-  const categories = textOptions.map((option) => option.category);
-  const uniqueCategories = [...new Set(categories)];
-  const [tabIndex, setTabIndex] = useState(0);
-  const selCategory = uniqueCategories[tabIndex];
-  const shownOptions = textOptions
-    .filter((option) => option.category === selCategory)
-    .map((el) => el.value);
+  const [helperOptions, setHelperOptions] = useState(coordCmpdOptions);
 
   const defaultScoring = {
     acceptAltCap: true,
     acceptAltSpacing: true,
   };
-
-  function selectTab(e, newIndex) {
-    setTabIndex(newIndex);
-  }
 
   function handleAcceptAltCap(e) {
     const scoringCopy = { ...scoring };
@@ -382,20 +341,6 @@ function TextWithOptions({
       acceptAltCap: scoringCopy.acceptAltCap,
       acceptAltSpacing: e.target.checked,
     });
-  }
-
-  function handleInsert(textFragment) {
-    const elem = document.getElementById("option-field");
-    const selStart = elem.selectionStart;
-    const selEnd = elem.selectionEnd;
-    const currentText = textRef.current.value;
-    const textBefore = currentText.slice(0, selStart);
-    const textAfter = currentText.slice(selEnd, currentText.length - 1);
-    const newSelPos = textBefore.length + textFragment.length;
-
-    textRef.current.value = textBefore + textFragment + textAfter;
-    elem.focus();
-    elem.setSelectionRange(newSelPos, newSelPos);
   }
 
   useEffect(
@@ -422,9 +367,8 @@ function TextWithOptions({
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
           Response must match:
         </Typography>
-
         <TextField
-          id="option-field"
+          id="short-answer-text-field"
           inputRef={textRef}
           autoComplete="off"
           fullWidth
@@ -432,28 +376,17 @@ function TextWithOptions({
           variant="filled"
         />
       </Box>
-      {/* <input className="text with options field" type="text"></input> */}
+      <br />
       <br />
       <Box sx={{ px: "5%" }}>
         <Typography sx={{ mb: 1.5 }} color="text.secondary">
           Helper Options
         </Typography>
-        <Tabs value={tabIndex} onChange={selectTab} variant="scrollable">
-          {uniqueCategories.map((category) => (
-            <Tab label={category} key={category} />
-          ))}
-        </Tabs>
-
-        <div style={{ paddingTop: "10px" }}>
-          {shownOptions.map((option) => (
-            <Chip
-              label={option}
-              key={option}
-              onClick={() => handleInsert(option)}
-              sx={{ mb: "3px", mr: "3px" }}
-            />
-          ))}
-        </div>
+        <HelperTextOptions
+          id="short-answer-text-field"
+          inputRef={textRef}
+          options={coordCmpdOptions}
+        />
       </Box>
       <br />
       <br />
@@ -490,7 +423,12 @@ function TextWithOptions({
         <SubmitBtn
           disabled={submitting}
           label="SAVE"
-          onClick={(e) => handleSubmit(e, { text: textRef.current.value })}
+          onClick={(e) =>
+            handleSubmit(e, {
+              correctAnswer: { text: textRef.current.value },
+              options: helperOptions,
+            })
+          }
           submitting={submitting}
         />
       </BtnContainer>

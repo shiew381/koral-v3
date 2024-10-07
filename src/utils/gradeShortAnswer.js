@@ -28,7 +28,7 @@ export function gradeShortAnswer(question, response) {
 
   //============================= SUBTYPE: TEXT =============================//
 
-  if (subtype === "text") {
+  if (subtype === "text" || subtype === "text with options") {
     const acceptAltCap = question.scoring.acceptAltCap;
     const acceptAltSpacing = question.scoring.acceptAltSpacing;
 

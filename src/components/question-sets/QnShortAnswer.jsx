@@ -15,6 +15,7 @@ import {
   CircularProgress,
   Divider,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
@@ -42,6 +43,7 @@ import {
   findUnknownChemSymbols,
   toChemFormulaStr,
 } from "../../utils/questionSetUtils";
+import HelperTextOptions from "../common/InputHelpers";
 
 export default function ShortAnswer({
   adaptive,
@@ -79,6 +81,25 @@ export default function ShortAnswer({
       />
       {subtype === "text" && (
         <ShortAnswerText
+          adaptive={adaptive}
+          adaptiveParams={adaptiveParams}
+          answeredCorrectly={answeredCorrectly}
+          attemptsExhausted={attemptsExhausted}
+          docRefParams={docRefParams}
+          goForward={goForward}
+          lastResponse={lastResponse}
+          mode={mode}
+          nextDisabled={nextDisabled}
+          oneToCompletion={oneToCompletion}
+          question={question}
+          submissions={submissions}
+          submitting={submitting}
+          setSubmitting={setSubmitting}
+          totalPointsAwarded={totalPointsAwarded}
+        />
+      )}
+      {subtype === "text with options" && (
+        <ShortAnswerTextWOptions
           adaptive={adaptive}
           adaptiveParams={adaptiveParams}
           answeredCorrectly={answeredCorrectly}
@@ -281,6 +302,175 @@ function ShortAnswerText({
               />
             </div>
           </div>
+        </div>
+
+        <BtnContainer right>
+          <Stack>
+            <Box sx={{ mb: 1 }}>
+              <AttemptCounter question={question} submissions={submissions} />
+              {mode === "test" && <VertDivider />}
+              {mode == "test" && (
+                <ClearSubmissions handleClick={handleClearSubmissions} />
+              )}
+            </Box>
+            {showSubmitBtn && (
+              <SubmitBtn
+                label="SUBMIT"
+                onClick={handleSubmit}
+                submitting={submitting}
+                disabled={disabled}
+              />
+            )}
+            {showNextBtn && (
+              <Button endIcon={<NavigateNextIcon />} onClick={goForward}>
+                NEXT
+              </Button>
+            )}
+          </Stack>
+        </BtnContainer>
+      </>
+    );
+  }
+}
+
+function ShortAnswerTextWOptions({
+  adaptive,
+  adaptiveParams,
+  answeredCorrectly,
+  attemptsExhausted,
+  docRefParams,
+  goForward,
+  lastResponse,
+  mode,
+  oneToCompletion,
+  question,
+  setSubmitting,
+  submissions,
+  submitting,
+  totalPointsAwarded,
+}) {
+  const [currentResponse, setCurrentResponse] = useState(null);
+  const responseChanged = currentResponse?.text !== lastResponse?.text;
+  const disabled = !responseChanged || submitting || attemptsExhausted;
+  const showSubmitBtn = !answeredCorrectly && !attemptsExhausted;
+  const showNextBtn = answeredCorrectly || attemptsExhausted;
+  const textRef = useRef();
+
+  function handleClearSubmissions() {
+    deleteQuestionSubmissions(question, docRefParams);
+    setCurrentResponse({ text: "" });
+    textRef.current.value = "";
+  }
+
+  function handleResponse(e) {
+    setCurrentResponse({
+      text: e.target.value,
+    });
+  }
+
+  function handleSubmit() {
+    const grade = gradeResponse(question, currentResponse);
+
+    const updatedPointsAwarded = getPointsAwarded(
+      grade,
+      totalPointsAwarded,
+      adaptive,
+      adaptiveParams,
+      oneToCompletion
+    );
+
+    if (mode === "course") {
+      saveQResponseFromCourse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        updatedPointsAwarded,
+        setSubmitting
+      );
+    }
+
+    if (mode === "test") {
+      saveQuestionResponse(
+        submissions,
+        docRefParams,
+        question,
+        currentResponse,
+        grade,
+        setSubmitting
+      );
+    }
+  }
+
+  useEffect(
+    () => {
+      if (
+        mode !== "preview" &&
+        mode !== "gradebook" &&
+        submissions?.length > 0
+      ) {
+        setCurrentResponse(lastResponse);
+      } else {
+        setCurrentResponse(null);
+      }
+    },
+    //eslint-disable-next-line
+    [question.id, mode]
+  );
+
+  if (mode === "preview") {
+    return (
+      <div className="correct-answer-preview-area">
+        <Typography color="text.secondary" sx={{ px: "20%" }}>
+          Response must match:
+        </Typography>
+        <div className="correct-answer-field-area">
+          <div className="correct-answer-field-container">
+            {fullParse(question.correctAnswer?.text || "")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode == "gradebook") {
+    return (
+      <div className="correct-answer-preview-area">
+        <div className="correct-answer-field-area">
+          <div className="correct-answer-field-container">
+            {parse(lastResponse?.text || "")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "test" || mode === "course") {
+    return (
+      <>
+        <div className="response-area">
+          <div className="response-field-area">
+            <pre>{JSON.stringify(currentResponse)}</pre>
+            <div className="response-field-container">
+              <TextField
+                id={`${question?.id}-input`}
+                inputRef={textRef}
+                autoComplete="off"
+                onChange={handleResponse}
+                fullWidth
+                placeholder="word / phrase"
+                variant="filled"
+              />
+            </div>
+          </div>
+          <HelperTextOptions
+            id={`${question?.id}-input`}
+            inputRef={textRef}
+            options={question?.options || []}
+            setCurrentResponse={setCurrentResponse}
+            mode={mode}
+          />
         </div>
 
         <BtnContainer right>

@@ -381,9 +381,10 @@ export function SearchField({
   );
 }
 
-export function ShortTextField({ onChange, value, disabled }) {
+export function ShortTextField({ id, onChange, value, disabled }) {
   return (
     <TextField
+      id={id}
       autoComplete="off"
       fullWidth
       label="word / phrase"
