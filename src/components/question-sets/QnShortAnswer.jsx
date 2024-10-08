@@ -430,6 +430,13 @@ function ShortAnswerTextWOptions({
             {fullParse(question.correctAnswer?.text || "")}
           </div>
         </div>
+        <HelperTextOptions
+          inputId={`${question?.id}-preview`}
+          inputRef={textRef}
+          options={question?.options || []}
+          setCurrentResponse={setCurrentResponse}
+          mode={mode}
+        />
       </div>
     );
   }
@@ -451,7 +458,6 @@ function ShortAnswerTextWOptions({
       <>
         <div className="response-area">
           <div className="response-field-area">
-            <pre>{JSON.stringify(currentResponse)}</pre>
             <div className="response-field-container">
               <TextField
                 id={`${question?.id}-input`}
@@ -464,15 +470,16 @@ function ShortAnswerTextWOptions({
               />
             </div>
           </div>
+          <br />
           <HelperTextOptions
-            id={`${question?.id}-input`}
+            inputId={`${question?.id}-input`}
             inputRef={textRef}
             options={question?.options || []}
             setCurrentResponse={setCurrentResponse}
             mode={mode}
           />
         </div>
-
+        <br />
         <BtnContainer right>
           <Stack>
             <Box sx={{ mb: 1 }}>

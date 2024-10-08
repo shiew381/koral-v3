@@ -383,9 +383,11 @@ function TextWithOptions({
           Helper Options
         </Typography>
         <HelperTextOptions
-          id="short-answer-text-field"
+          inputId="short-answer-text-field"
           inputRef={textRef}
-          options={coordCmpdOptions}
+          mode="builder"
+          options={helperOptions}
+          setHelperOptions={setHelperOptions}
         />
       </Box>
       <br />
@@ -394,7 +396,6 @@ function TextWithOptions({
         <Typography sx={{ mb: 1 }} color="text.secondary">
           Grading Options
         </Typography>
-
         {!loading && (
           <FormControlLabel
             label="accept alternate capitalization"
@@ -406,7 +407,6 @@ function TextWithOptions({
             }
           />
         )}
-
         {!loading && (
           <FormControlLabel
             label="accept alternate spacing"
