@@ -301,7 +301,9 @@ function Text({
         <SubmitBtn
           disabled={submitting}
           label="SAVE"
-          onClick={(e) => handleSubmit(e, { text: textRef.current.value })}
+          onClick={(e) =>
+            handleSubmit(e, { correctAnswer: { text: textRef.current.value } })
+          }
           submitting={submitting}
         />
       </BtnContainer>
@@ -512,7 +514,9 @@ function Number({
           disabled={submitting}
           label="SAVE"
           onClick={(e) =>
-            handleSubmit(e, { number: cleanEditorHTML(numberRef.current) })
+            handleSubmit(e, {
+              correctAnswer: { number: cleanEditorHTML(numberRef.current) },
+            })
           }
           submitting={submitting}
         />
@@ -611,8 +615,10 @@ function Measurement({
           label="SAVE"
           onClick={(e) =>
             handleSubmit(e, {
-              number: cleanEditorHTML(numberRef.current),
-              unit: cleanEditorHTML(unitRef.current),
+              correctAnswer: {
+                number: cleanEditorHTML(numberRef.current),
+                unit: cleanEditorHTML(unitRef.current),
+              },
             })
           }
           submitting={submitting}
@@ -666,7 +672,9 @@ function ChemicalFormula({ edit, handleSubmit, selQuestion, submitting }) {
           label="SAVE"
           onClick={(e) =>
             handleSubmit(e, {
-              formula: toChemFormulaStr(cleanChemField(fieldRef.current)),
+              correctAnswer: {
+                formula: toChemFormulaStr(cleanChemField(fieldRef.current)),
+              },
             })
           }
           submitting={submitting}
