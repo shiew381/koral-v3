@@ -56,7 +56,7 @@ export default function HelperTextOptions({
     const selStart = elem.selectionStart;
     const selEnd = elem.selectionEnd;
     const textBefore = value.slice(0, selStart);
-    const textAfter = value.slice(selEnd, value.length - 1);
+    const textAfter = value.slice(selEnd, value.length);
     const newSelPos = textBefore.length + textFrag.length;
 
     inputRef.current.value = textBefore + textFrag + textAfter;
