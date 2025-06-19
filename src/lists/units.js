@@ -68,8 +68,16 @@ export const units = [
 ];
 
 export const cmpdUnitMappings = [
-  { stdForm: "newton", baseForm: "kilogram^1*meter^1*second^-2" },
+  { stdForm: "coulomb", baseForm: "ampere^1*second^1" },
+  { stdForm: "henry", baseForm: "kilogram^1*meter^2*second^-2*ampere^-2" },
+  { stdForm: "farad", baseForm: "kilogram^-1*meter^-2*second^4*ampere^2" },
   { stdForm: "joule", baseForm: "kilogram^1*meter^2*second^-2" },
-  { stdForm: "molar", baseForm: "mole*liter^-1" },
-  { stdForm: "molal", baseForm: "mole*kilogram^-1" },
+  { stdForm: "molar", baseForm: "mole^1*liter^-1" },
+  { stdForm: "molal", baseForm: "mole^1*kilogram^-1" },
+  { stdForm: "newton", baseForm: "kilogram^1*meter^1*second^-2" },
+  { stdForm: "ohm", baseForm: "kilogram^1*meter^2*second^-3*ampere^-2" },
+  { stdForm: "pascal", baseForm: "kilogram^1*meter^-1*second^-2" },
+  { stdForm: "tesla", baseForm: "kilogram^1*second^-2*ampere^-1" },
+  { stdForm: "volt", baseForm: "kilogram^1*meter^2*second^-3*ampere^-1" },
+  { stdForm: "watt", baseForm: "kilogram^1*meter^2*second^-3" },
 ];
