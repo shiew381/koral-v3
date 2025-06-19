@@ -1,115 +1,75 @@
 export const units = [
-  //amount
-  { singular: "mole", plural: "moles", abbr: "mol" },
-  { singular: "millimole", plural: "millimoles", abbr: "mmol" },
-  { singular: "micromole", plural: "micromoles", abbr: "μmol" },
+  { stdForm: "angstrom", variant: "Å" },
+  { stdForm: "ampere", variant: "A" },
+  { stdForm: "atmosphere", variant: "atm" },
+  { stdForm: "becquerel", variant: "Bq" },
+  { stdForm: "candela", variant: "cd" },
+  { stdForm: "Celsius", variant: "°C" },
+  { stdForm: "centimeter", variant: "cm" },
+  { stdForm: "coulomb", variant: "C" },
+  { stdForm: "decibel", variant: "dB" },
+  { stdForm: "degree", variant: "°" },
+  { stdForm: "electronvolt", variant: "eV" },
+  { stdForm: "Fahrenheit", variant: "°F" },
+  { stdForm: "farad", variant: "F" },
+  { stdForm: "foot", variant: "ft" },
+  { stdForm: "gauss", variant: "G" },
+  { stdForm: "gram", variant: "g" },
+  { stdForm: "henry", variant: "H" },
+  { stdForm: "hertz", variant: "Hz" },
+  { stdForm: "hour", variant: "h" },
+  { stdForm: "hour", variant: "hr" },
+  { stdForm: "inches", variant: "in" },
+  { stdForm: "joule", variant: "J" },
+  { stdForm: "kelvin", variant: "K" },
+  { stdForm: "kilogram", variant: "kg" },
+  { stdForm: "kilojoule", variant: "kJ" },
+  { stdForm: "kilometer", variant: "km" },
+  { stdForm: "kiloohm", variant: "kΩ" },
+  { stdForm: "kilopascal", variant: "kPa" },
+  { stdForm: "kilowatt", variant: "kW" },
+  { stdForm: "liter", variant: "L" },
+  { stdForm: "meter", variant: "m" },
+  { stdForm: "megaelectronvolt", variant: "MeV" },
+  { stdForm: "megajoule", variant: "MJ" },
+  { stdForm: "megaohm", variant: "MΩ" },
+  { stdForm: "megawatt", variant: "MW" },
+  { stdForm: "mile", variant: "mi" },
+  { stdForm: "millifarad", variant: "mF" },
+  { stdForm: "milligram", variant: "mg" },
+  { stdForm: "millihenry", variant: "mH" },
+  { stdForm: "milliliter", variant: "mL" },
+  { stdForm: "millimeter", variant: "mm" },
+  { stdForm: "millimolar", variant: "mM" },
+  { stdForm: "millisecond", variant: "ms" },
+  { stdForm: "microcoulomb", variant: "µC" },
+  { stdForm: "microfarad", variant: "µF" },
+  { stdForm: "microgram", variant: "µg" },
+  { stdForm: "microhenry", variant: "µH" },
+  { stdForm: "microliter", variant: "µL" },
+  { stdForm: "micromolar", variant: "µM" },
+  { stdForm: "micrometer", variant: "µm" },
+  { stdForm: "microtesla", variant: "µT" },
+  { stdForm: "mole", variant: "mol" },
+  { stdForm: "molar", variant: "M" },
+  { stdForm: "newton", variant: "N" },
+  { stdForm: "nanometer", variant: "nm" },
+  { stdForm: "ohm", variant: "Ω" },
+  { stdForm: "ounce", variant: "oz" },
+  { stdForm: "pascal", variant: "Pa" },
+  { stdForm: "pound", variant: "lbs" },
+  { stdForm: "second", variant: "s" },
+  { stdForm: "second", variant: "sec" },
+  { stdForm: "tesla", variant: "T" },
+  { stdForm: "volt", variant: "V" },
+  { stdForm: "watt", variant: "W" },
+  { stdForm: "yard", variant: "yd" },
+  { stdForm: "year", variant: "yr" },
+];
 
-  //angle
-  { singular: "radian", plural: "radians", abbr: "rad" },
-  { singular: "degree", plural: "degrees", abbr: "°" },
-
-  //concentration
-  { singular: "molar", abbr: "M" },
-  { singular: "millimolar", abbr: "mM" },
-  { singular: "micromolar", abbr: "μM" },
-  { singular: "molal", plural: "molals" },
-  { singular: "parts per million", abbr: "ppm" },
-  { singular: "parts per billion", abbr: "ppb" },
-
-  //capacitance
-  { singular: "farad", plural: "farads", abbr: "F" },
-  { singular: "millifarad", plural: "millifarads", abbr: "mF" },
-  { singular: "microfarad", plural: "microfarads", abbr: "μF" },
-
-  //current
-  {
-    singular: "ampere",
-    plural: "amperes",
-    abbr: "A",
-    variants: ["amp", "amps"],
-  },
-
-  //energy
-  { singular: "joule", plural: "joules", abbr: "J" },
-  { singular: "kilojoule", plural: "kilojoules", abbr: "kJ" },
-  { singular: "megajoule", plural: "megajoules", abbr: "MJ" },
-  { singular: "electron volt", plural: "electron volts", abbr: "eV" },
-  { singular: "megaelectron volt", plural: "megaelectron volts", abbr: "MeV" },
-
-  //electric field
-  { singular: "volt", plural: "volts", abbr: "V" },
-
-  //frequency
-  { singular: "hertz", abbr: "Hz", variants: ["Hertz"] },
-
-  //force
-  {
-    singular: "newton",
-    plural: "newtons",
-    abbr: "N",
-    variant: ["Newton", "Newtons"],
-  },
-
-  //length
-  { singular: "kilometer", plural: "kilometers", abbr: "km" },
-  { singular: "meter", plural: "meters", abbr: "m" },
-  { singular: "centimeter", plural: "centimeters", abbr: "cm" },
-  { singular: "millimeter", plural: "millimeters", abbr: "mm" },
-  {
-    singular: "micrometer",
-    plural: "micrometers",
-    abbr: "μm",
-    variants: ["micron", "microns"],
-  },
-  { singular: "mile", plural: "miles", abbr: "mi" },
-  { singular: "yard", plural: "yards", abbr: "yd" },
-  { singular: "foot", plural: "feet", abbr: "ft" },
-  { singular: "inch", plural: "inches", abbr: "in" },
-
-  //magnetic flux
-  { singular: "tesla", plural: "teslas", abbr: "T" },
-  { singular: "gauss", abbr: "G", variants: ["Gs"] },
-
-  //mass
-  { singular: "gram", plural: "grams", abbr: "g" },
-  { singular: "kilogram", plural: "kilograms", abbr: "kg" },
-  { singular: "milligram", plural: "milligrams", abbr: "mg" },
-  { singular: "microgram", plural: "micrograms", abbr: "μg" },
-  { singular: "pound", plural: "pounds", abbr: "lbs", variants: ["lb"] },
-  { singular: "ounces", plural: "ounce", abbr: "oz" },
-  { singular: "ton", plural: "tons", abbr: "t" },
-  { singular: "megaton", plural: "metagons", abbr: "Mt" },
-
-  //power
-  { singular: "watt", plural: "watts", abbr: "W" },
-  { singular: "kilowatt", plural: "kilowatts", abbr: "kW" },
-  { singular: "megawatt", plural: "megawatts", abbr: "MW" },
-
-  //pressure
-  { singular: "atmosphere", plural: "atmospheres", abbr: "atm" },
-  { singular: "millimeters of mercury", abbr: "mm Hg", variants: ["mmHg"] },
-  { singular: "pascal", plural: "pascals", abbr: "Pa" },
-  { singular: "kilopascal", plural: "kilopascals", abbr: "kPa" },
-  { singular: "torr" },
-  { singular: "millitorr", variants: ["mTorr"] },
-
-  //resistance
-  { singular: "ohms", plural: "ohm", abbr: "Ω" },
-
-  //temperature
-  { singular: "kelvin", plural: "kelvins", abbr: "K" },
-  { singular: "Celsius", abbr: "°C", variants: ["celsius", "C"] },
-  { singular: "Fahrenheit", abbr: "°F", variant: ["fahrenheit", "F"] },
-
-  //time
-  { singular: "second", plural: "seconds", abbr: "s" },
-  { singular: "millisecond", plural: "milliseconds", abbr: "ms" },
-  { singular: "day", plural: "days", abbr: "d" },
-  { singular: "month", plural: "months", abbr: "mo" },
-  { singular: "year", plural: "years", abbr: "yr" },
-
-  //volume
-  { singular: "liter", plural: "liters", abbr: "L" },
-  { singular: "milliliter", plural: "milliliters", abbr: "mL" },
-  { singular: "microliter", plural: "microliters", abbr: "μL" },
+export const cmpdUnitMappings = [
+  { stdForm: "newton", baseForm: "kilogram^1*meter^1*second^-2" },
+  { stdForm: "joule", baseForm: "kilogram^1*meter^2*second^-2" },
+  { stdForm: "molar", baseForm: "mole*liter^-1" },
+  { stdForm: "molal", baseForm: "mole*kilogram^-1" },
 ];

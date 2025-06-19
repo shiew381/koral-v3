@@ -801,8 +801,8 @@ function ShortAnswerMeasurement({
         mode !== "gradebook" &&
         submissions?.length > 0
       ) {
-        numberRef.current.innerHTML = lastResponse.number;
-        unitRef.current.innerHTML = lastResponse.unit;
+        numberRef.current.innerHTML = lastResponse?.number || "";
+        unitRef.current.innerHTML = lastResponse?.unit || "";
       }
     },
     //eslint-disable-next-line

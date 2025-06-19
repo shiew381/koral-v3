@@ -1,5 +1,5 @@
 import { alphabetize, compareBases } from "./commonUtils";
-import { units } from "../lists/units";
+import { cmpdUnitMappings, units } from "../lists/units";
 import {
   checkIfNumBrktMatch,
   checkIfNumParenMatch,
@@ -350,36 +350,67 @@ export function gradeShortAnswer(question, response) {
   }
 }
 
-function calcMaxDepth(str) {
-  const numParen = countNumParen(str);
-  const numBrkt = countNumBrkt(str);
-  const totalParenAndBrkt = numParen + numBrkt;
+function alphabetizeExpr(str) {
+  let arr = toArrayForm(str);
+  arr = sortByFieldName(arr, "base");
+  arr = arr.map((el) => el.base + "^" + el.exp);
 
-  if (totalParenAndBrkt === 0) {
-    return 0;
-  }
+  return arr.join("*");
+}
+
+function applyDivisors(str) {
+  let strCopy = str.slice();
+
+  const divisors = strCopy.match(/\/(\w+)\^*(-*\d*)/g);
+
+  if (!divisors) return strCopy;
+
+  divisors.forEach((divisor) => {
+    const baseMatch = divisor.match(/\w+/);
+    const expMatch = divisor.match(/-*\d/);
+    let newExpr = "";
+
+    const base = baseMatch[0];
+    let exponent = expMatch ? Number(expMatch[0]) : 1;
+    exponent = exponent * -1;
+
+    newExpr = "*" + base + "^" + exponent.toString();
+
+    strCopy = strCopy.replace(divisor, newExpr);
+  });
+
+  return strCopy;
+}
+
+function calcMaxDepth(str) {
+  // returns the depth and index of the most deeply nested parentheses or bracket
+  // example: takes the input (a+b)^2 and returns 1
+  // example: takes the input [(a+b)^2]+c and returns 2
 
   let currentDepth = 0;
   let maxDepth = 0;
+  let maxDepthIndex = 0;
 
   for (let i = 0; i < str.length; i++) {
     const char = str.charAt(i);
     if (char === "(" || char === "[") {
       currentDepth++;
-      if (currentDepth >= maxDepth) {
+      if (currentDepth > maxDepth) {
         maxDepth = currentDepth;
+        maxDepthIndex = i;
       }
     } else if (char === ")" || char === "]") {
       currentDepth--;
     }
   }
-  return maxDepth;
+
+  return [maxDepth, maxDepthIndex];
 }
 
 function canonicalizeChemFormula(str) {
   let canonicalForm = str.slice();
   const maxDepthLimit = 3;
-  const maxDepth = calcMaxDepth(str);
+  const [maxDepth] = calcMaxDepth(str);
 
   console.log("max depth: " + maxDepth);
 
@@ -432,96 +463,82 @@ function canonicalizeChemFormula(str) {
 }
 
 function canonicalizeUnit(str) {
-  //TODO consolidate like units into single term m^2 m^3 => m^5
-  let canonicalForm = str.slice();
-  const maxDepthLimit = 3;
-  const maxDepth = calcMaxDepth(str);
+  const maxRounds = 5;
+  let expr = "";
 
-  if (maxDepth > maxDepthLimit) {
-    console.log(
-      `Nesting depth of ${maxDepth} exceeds maximum depth limit of ${maxDepthLimit}. Exiting canonicalization function...`
-    );
-    return null;
+  expr = toTidiedForm(str);
+  expr = substStdUnits(expr);
+  expr = substBaseUnits(expr);
+
+  console.log("CANONICALIZING UNIT");
+
+  for (let i = 1; i < maxRounds; i++) {
+    const [maxDepth, maxDepthIndex] = calcMaxDepth(expr);
+
+    console.log("=========================");
+    console.log("ROUND " + i);
+    console.log("enclosure depth: " + maxDepth);
+
+    if (maxDepth === 0) {
+      expr = applyDivisors(expr);
+      expr = mergeSameUnits(expr);
+      expr = alphabetizeExpr(expr);
+
+      console.log("final expr: " + expr);
+
+      i = maxRounds;
+      return expr;
+    }
+
+    // handle contents of innermost parentheses or bracket pair
+    if (maxDepth > 0) {
+      let enclosedExpr = "";
+      let endIndex = 0;
+      let endFragment = "";
+      let startFragment = "";
+      let startIndex = 0;
+      let outerExp = 1;
+      let isDivisor = false;
+
+      [enclosedExpr, startIndex, endIndex] = findEnclosed(expr, maxDepthIndex);
+
+      startFragment = expr.slice(0, startIndex);
+      endFragment = expr.slice(endIndex + 1);
+
+      enclosedExpr = applyDivisors(enclosedExpr);
+
+      [endFragment, outerExp] = getOuterExp(endFragment);
+
+      isDivisor = startFragment.trim().slice(-1) === "/";
+      isDivisor ? (startFragment = startFragment.slice(0, -1)) : null;
+      isDivisor ? (outerExp = outerExp * -1) : null;
+
+      enclosedExpr = distributeExp(enclosedExpr, outerExp);
+
+      expr = startFragment + enclosedExpr + endFragment;
+      console.log("expr: " + expr);
+    }
   }
+}
 
-  if (maxDepth === 0) {
-    canonicalForm = toProductForm(canonicalForm);
-    return canonicalForm;
+function distributeExp(str, num) {
+  let arr = toArrayForm(str);
+  arr = arr.map((el) => el.base + "^" + el.exp * num);
+  return arr.join("*");
+}
+
+function findEnclosed(str, startIndex) {
+  let endIndex = 0;
+  let enclosedStr = "";
+
+  for (let i = startIndex + 1; i < str.length; i++) {
+    const char = str.charAt(i);
+    if (char === ")" || char === "]") {
+      endIndex = i;
+      enclosedStr = str.slice(startIndex + 1, endIndex);
+      return [enclosedStr, startIndex, endIndex];
+    }
   }
-
-  const argStartIndex = findArgStartIndex(canonicalForm, maxDepth);
-  const argEndIndex = findArgEndIndex(canonicalForm, maxDepth);
-
-  //fragment before the opening parentheses or bracket
-  let startFragment =
-    argStartIndex > 1 ? canonicalForm.slice(0, argStartIndex - 1) : "";
-
-  //fragment before the closing parentheses or bracket
-  let endFragment =
-    canonicalForm.length - argEndIndex > 1
-      ? canonicalForm.slice(argEndIndex + 1, canonicalForm.length)
-      : "";
-
-  let arg = canonicalForm.slice(argStartIndex, argEndIndex);
-  console.log("simplifying: " + arg);
-  arg = toProductForm(arg);
-  if (!arg) {
-    console.log("error finding argument, exiting...");
-    return false;
-  }
-
-  console.log("simplified to: " + arg);
-
-  startFragment = startFragment.length > 0 ? startFragment.trim() : "";
-  endFragment = endFragment.length > 0 ? endFragment.trim() : "";
-
-  let charBefore = startFragment.slice(-1);
-  let charAfter = endFragment.slice(0, 1);
-
-  let outerExp = getOuterExponent(endFragment);
-
-  if (!outerExp) {
-    console.log("error finding outer exponent, exiting...");
-    return false;
-  }
-
-  outerExp = charBefore === "/" ? outerExp * -1 : outerExp;
-  arg = distributeExponent(arg, outerExp);
-
-  if (!arg) {
-    console.log("error finding argument, exiting...");
-    return false;
-  }
-
-  startFragment =
-    charBefore === "/" ? startFragment.slice(0, -1) : startFragment;
-
-  endFragment = trimOuterExponent(endFragment);
-
-  charBefore = startFragment.slice(-1);
-  charAfter = endFragment.slice(0, 1);
-
-  if (
-    endFragment.length > 0 &&
-    charAfter !== "*" &&
-    charAfter !== "/" &&
-    charAfter !== ")"
-  ) {
-    arg = arg + "*";
-  }
-
-  if (
-    startFragment.length > 0 &&
-    charBefore !== "*" &&
-    charBefore !== "(" &&
-    charBefore !== "^"
-  ) {
-    arg = "*" + arg;
-  }
-
-  canonicalForm = startFragment + arg + endFragment;
-
-  return sanitizeUnit(canonicalForm);
 }
 
 function checkIfCanonicalizedChemFormula(str) {
@@ -679,21 +696,6 @@ function chemFormulaToArray(str) {
   return formulaArr;
 }
 
-function distributeExponent(str, outerExp) {
-  const arr1 = str.trim().split("*");
-
-  const arr2 = arr1.map((el) => ({
-    base: getBase(el),
-    exp: outerExp * getExponent(el),
-  }));
-
-  const arr3 = arr2.map((el) => `${el.base}^${el.exp}`);
-
-  const distributedForm = arr3.join("*");
-
-  return distributedForm;
-}
-
 function distributeMultiplier(str, multiplier) {
   const arr = chemFormulaToArray(str);
   let newStr = "";
@@ -725,22 +727,6 @@ function factorialize(num) {
   }
 }
 
-function findArgStartIndex(str, targetDepth) {
-  if (targetDepth === 0) return 0;
-  let currentDepth = 0;
-
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charAt(i);
-    if (char === "(" || char === "[") {
-      currentDepth++;
-    }
-
-    if (currentDepth === targetDepth) {
-      return i + 1;
-    }
-  }
-}
-
 function findArgEndIndex(str, targetDepth) {
   if (targetDepth === 0) return str.length;
   let currentDepth = 0;
@@ -766,6 +752,28 @@ function findArgEndIndex(str, targetDepth) {
       return i + argLength + 1;
     }
   }
+}
+
+function findArgStartIndex(str, targetDepth) {
+  if (targetDepth === 0) return 0;
+  let currentDepth = 0;
+
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charAt(i);
+    if (char === "(" || char === "[") {
+      currentDepth++;
+    }
+
+    if (currentDepth === targetDepth) {
+      return i + 1;
+    }
+  }
+}
+
+function findStdUnit(str) {
+  const found = units.find((unit) => unit.variant === str);
+
+  return found ? found.stdForm : str.slice();
 }
 
 function findUnit(str) {
@@ -840,6 +848,14 @@ function getChemFormulaCharge(str) {
   return defaultValues;
 }
 
+function getBase(str) {
+  const hasExponent = str.includes("^");
+  if (!hasExponent) return str.slice();
+
+  const base = str.match(/\S+(?=\^)/)?.at(0);
+  return base?.trim();
+}
+
 function getExponent(str) {
   let strCopy = str.slice();
 
@@ -853,45 +869,6 @@ function getExponent(str) {
   } else {
     return exponent;
   }
-}
-
-function getOuterExponent(str) {
-  let strCopy = str.slice();
-  const firstChar = strCopy.slice(0, 1);
-  const hasExponent = firstChar === "^";
-
-  if (!hasExponent) return "1";
-
-  strCopy = strCopy.replace(/\^\s*/, "^");
-  const secondChar = str.slice(1, 2);
-
-  const argumentWrapped = secondChar === ")" || secondChar === "]";
-
-  if (argumentWrapped) {
-    return strCopy;
-  }
-
-  const exponentWrapped = secondChar === "(" || secondChar === "[";
-
-  if (exponentWrapped) {
-    let wrappedExp =
-      str.match(/(?<=\^)(\(|\[)-{0,1}(\d|\.)+(\)|\])/)?.at(0) || false;
-    let unwrappedExp = wrappedExp
-      .replace("(", "")
-      .replace(")", "")
-      .replace("[", "")
-      .replace("]", "");
-
-    return unwrappedExp;
-  }
-
-  if (!exponentWrapped) {
-    const exponent = str.match(/(?<=\^)-{0,1}(\d|\.)+/g)?.at(0) || false;
-
-    return exponent;
-  }
-
-  return false;
 }
 
 function getMultiplier(str) {
@@ -919,12 +896,14 @@ function getMultiplier(str) {
   }
 }
 
-function getBase(str) {
-  const hasExponent = str.includes("^");
-  if (!hasExponent) return str.slice();
+function getOuterExp(str) {
+  let newEndFragment = "";
+  const strCopy = str.slice();
+  const match = strCopy.match(/^\^(-*\d+)/);
+  const exponent = match ? Number(match[1]) : 1;
+  newEndFragment = match ? strCopy.replace(match[0], "") : strCopy;
 
-  const base = str.match(/\S+(?=\^)/)?.at(0);
-  return base?.trim();
+  return [newEndFragment, exponent];
 }
 
 function isNumber(str) {
@@ -946,16 +925,6 @@ function logExecutionTime() {
   console.log("===========================");
 }
 
-function logSpacer(num) {
-  if (!num) {
-    console.log("");
-    return;
-  }
-  for (let i = 0; i < num; i++) {
-    console.log("");
-  }
-}
-
 function logRoundEndMessage(str, round) {
   if (!str) {
     console.log(`Failed round ${round}. Exiting grading function...`);
@@ -971,6 +940,16 @@ function logRoundStartMessage(str, round) {
   console.log(str);
 }
 
+function logSpacer(num) {
+  if (!num) {
+    console.log("");
+    return;
+  }
+  for (let i = 0; i < num; i++) {
+    console.log("");
+  }
+}
+
 function logStartMessage(message, value) {
   console.log("");
   console.log(message);
@@ -978,6 +957,30 @@ function logStartMessage(message, value) {
   console.log("INITIAL FORM:");
   console.log(value);
   console.log("");
+}
+
+function mergeSameUnits(str) {
+  let updatedArr = [];
+  const arrForm = toArrayForm(str);
+  const allUnits = arrForm.map((el) => el.base);
+  const uniqueUnits = [...new Set(allUnits)];
+
+  if (uniqueUnits.length === allUnits.length) {
+    return str.slice();
+  } else {
+    updatedArr = uniqueUnits.map((unit) => ({ base: unit, exp: 0 }));
+
+    arrForm.forEach((el) => {
+      const foundIndex = uniqueUnits.findIndex((unit) => el.base === unit);
+
+      updatedArr[foundIndex].exp = updatedArr[foundIndex].exp + el.exp;
+    });
+
+    updatedArr = updatedArr.filter((el) => el.exp !== 0);
+    updatedArr = updatedArr.map((el) => el.base + "^" + el.exp);
+
+    return updatedArr.join("*");
+  }
 }
 
 function preCheckNumber(str) {
@@ -1104,17 +1107,6 @@ function sanitizeUnit(str) {
     .replace(/\s/g, "*");
 
   return tidiedStr;
-}
-
-function sortByChemSymbol(arr) {
-  function compare(a, b) {
-    if (a.symbol.toLowerCase() < b.symbol.toLowerCase()) return -1;
-    if (a.symbol.toLowerCase() > b.symbol.toLowerCase()) return 1;
-    return 0;
-  }
-
-  const sortedArr = arr.sort(compare);
-  return sortedArr;
 }
 
 function simplifyFractions(str) {
@@ -1381,14 +1373,6 @@ function standardizeUnitString(str) {
     }))
     .sort(compareBases);
 
-  // const arr3 = arr2.sort(compareBases);
-
-  // const arr3 = arr2.map((el) =>
-  //   isNaN(Number(el.base))
-  //     ? `${el.base}^${el.exp}`
-  //     : Math.pow(Number(el.base), Number(el.exp))
-  // );
-
   const newTerms = arr2.map((el) => `${el.base}^${el.exp}`);
 
   strCopy = newTerms.join("*");
@@ -1396,29 +1380,99 @@ function standardizeUnitString(str) {
   return sanitizeUnit(strCopy);
 }
 
-function toProductForm(str) {
-  let strCopy = str.slice();
-
-  //handle non-numerical terms
-  strCopy = strCopy.replace("/", "*/");
-  const terms = strCopy.split("*");
-
-  if (terms?.length > 0) {
-    terms.forEach((term) => {
-      if (isNaN(Number(term))) {
-        let base = getBase(term);
-        let exp = getExponent(term);
-
-        if (base.includes("/")) {
-          exp = exp * -1;
-          base = base.replace("/", "");
-        }
-        const value = `${base}^${exp}`;
-        strCopy = strCopy.replace(term, value);
-      }
-    });
+function sortByChemSymbol(arr) {
+  function compare(a, b) {
+    if (a.symbol.toLowerCase() < b.symbol.toLowerCase()) return -1;
+    if (a.symbol.toLowerCase() > b.symbol.toLowerCase()) return 1;
+    return 0;
   }
+
+  const sortedArr = arr.sort(compare);
+  return sortedArr;
+}
+
+function sortByFieldName(arr, fieldName) {
+  function compare(a, b) {
+    if (a[fieldName].toLowerCase() < b[fieldName].toLowerCase()) return -1;
+    if (a[fieldName].toLowerCase() > b[fieldName].toLowerCase()) return 1;
+    return 0;
+  }
+
+  const sortedArr = arr.toSorted(compare);
+  return sortedArr;
+}
+
+function substBaseUnits(str) {
+  let strCopy = str.slice();
+  cmpdUnitMappings.forEach((el) => {
+    if (strCopy.includes(el.stdForm)) {
+      const textFrag = "(" + el.baseForm + ")";
+      strCopy = strCopy.replaceAll(el.stdForm, textFrag);
+    }
+  });
   return strCopy;
+}
+
+function substStdUnits(str) {
+  let strCopy = str.slice();
+  let newStr = "";
+
+  const matches = strCopy.match(/[^\d*/\-()^\s]+/g);
+
+  if (!matches) return strCopy;
+
+  for (let i = 0; i < matches.length; i++) {
+    const match = strCopy.match(/[^\d*/\-()^\s]+/);
+    const unit = match[0];
+
+    const preText = strCopy.slice(0, match.index);
+    const postText = strCopy.slice(match.index + unit.length);
+    const stdUnit = findStdUnit(unit);
+
+    newStr = newStr + preText + stdUnit;
+
+    i === matches.length - 1 ? (newStr = newStr + postText) : null;
+
+    strCopy = postText;
+  }
+  return newStr;
+}
+
+function toArrayForm(str) {
+  console.log(str);
+  let strCopy = str.slice();
+  let arr = [];
+  const matches = strCopy.match(/[^\d*/\-()^\s]+/g);
+
+  for (let i = 0; i < matches.length; i++) {
+    const match = strCopy.match(/([A-Z]*[a-z]+)\^*(-*\d*)/);
+    const base = match[1];
+    const exp = match[2] ? Number(match[2]) : 1;
+    arr.push({ base: base, exp: exp });
+    strCopy = strCopy.replace(match[0], "");
+  }
+
+  return arr;
+}
+
+function toTidiedForm(str) {
+  let tidiedForm = str.slice();
+
+  tidiedForm = tidiedForm
+    .replaceAll(" ", " ")
+    .replaceAll(/\s+/g, " ")
+    .replaceAll("–", "-")
+    .replaceAll("×", "*")
+    .replaceAll(/\\/g, "/")
+    .replaceAll("<sup>", "^")
+    .replaceAll("</sup>", "")
+    .replaceAll(/\s*\/\s*/g, "/")
+    .replaceAll(/\s*\*\s*/g, "*")
+    .trim();
+
+  console.log(tidiedForm);
+
+  return tidiedForm;
 }
 
 function trimChemFormulaCharge(str) {
@@ -1441,30 +1495,4 @@ function trimChemFormulaCharge(str) {
   }
 
   return str;
-}
-
-function trimOuterExponent(str) {
-  let strCopy = str.slice();
-  const firstChar = strCopy.slice(0, 1);
-  const hasExponent = firstChar === "^";
-
-  if (!hasExponent) return strCopy;
-
-  strCopy = strCopy.replace(/\^\s*/, "^");
-  const secondChar = strCopy.slice(1, 2);
-
-  const exponentWrapped = secondChar === "(" || secondChar === "[";
-
-  if (exponentWrapped) {
-    let wrappedExp =
-      str.match(/(?<=\^)(\(|\[)-{0,1}(\d|\.)+(\)|\])/g)?.at(0) || false;
-    return strCopy.replace("^", "").replace(wrappedExp, "");
-  }
-
-  if (!exponentWrapped) {
-    const exponent = str.match(/(?<=\^)-{0,1}(\d|\.)+/g)?.at(0) || false;
-    return strCopy.replace("^", "").replace(exponent, "");
-  }
-
-  return strCopy;
 }
